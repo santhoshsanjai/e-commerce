@@ -104,4 +104,11 @@ Migrations are a controlled release step; the API never creates tables on start-
   - Dispatch: staff pick confirmed orders into a batch; the orders move to "Handed to courier" and a
     courier Excel file is generated, kept in the private bucket and downloadable again later. Every
     batch and download is audited. Column layout lives in `backend/app/modules/dispatch/excel.py`.
-  - Next: courier Excel import, manual status updates, completion.
+  - Courier import: staff upload the courier's status file, see a row-by-row preview (what changes,
+    what's unchanged, what's wrong), then apply it once. Re-uploading the same file changes
+    nothing. Header names and courier status words live in
+    `backend/app/modules/courier_import/parser.py`.
+  - Manual status updates on the order page, following the lifecycle map; stepping outside it needs
+    `orders.status.override` and a reason. Cancelling before handover restocks; cash on delivery is
+    marked paid when delivered; delivered orders are completed by hand.
+  - Phase 1 vertical slice complete. Next: Phase 2 (see the plan).
