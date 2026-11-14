@@ -1,0 +1,65 @@
+# Full local stack: `docker compose up --build`
+#   Buyer site  http://localhost:4200
+#   Admin       http://localhost:4300
+#   API docs    http://localhost:8000/docs
+name: ecommerce
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ecommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecommerce"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    build: ./backend
+    command: ["alembic", "upgrade", "head"]
+    environment: &api-env
+      ENVIRONMENT: local
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/ecommerce
+      CORS_ORIGINS: '["http://localhost:4200","http://localhost:4300"]'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: ./backend
+    environment: *api-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  buyer:
+    build:
+      context: ./frontend
+      args:
+        APP: buyer
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+
+  admin:
+    build:
+      context: ./frontend
+      args:
+        APP: admin
+    ports:
+      - "4300:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

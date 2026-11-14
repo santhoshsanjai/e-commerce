@@ -1,0 +1,38 @@
+// Design tokens: the single source for colours, spacing and type.
+// Brand colours are placeholders until branding is confirmed (decision 14).
+// Change --color-primary / --color-secondary here and every button, link, focus ring and accent follows.
+:root {
+  --color-primary: #1f4e79;
+  --color-primary-contrast: #ffffff;
+  --color-secondary: #f2a541;
+  --color-secondary-contrast: #1b1b1b;
+
+  --color-background: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-text: #202733;
+  --color-muted: #667085;
+  --color-border: #e4e7ec;
+
+  // Semantic status colours stay separate from brand colours.
+  --color-success: #16803c;
+  --color-warning: #b54708;
+  --color-danger: #b42318;
+
+  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 6%);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
