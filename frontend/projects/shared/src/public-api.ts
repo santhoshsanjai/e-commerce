@@ -11,3 +11,5 @@ export * from './lib/models/auth.models';
 export * from './lib/format/money.pipe';
 export * from './lib/models/catalog.models';
 export * from './lib/ui/availability-label';
+export * from './lib/models/order.models';
+export * from './lib/ui/order-status-badge';

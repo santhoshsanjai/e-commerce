@@ -50,7 +50,8 @@ def _clean_tables() -> Iterator[None]:
         conn.execute(
             text(
                 "TRUNCATE users, refresh_tokens, user_roles, audit_logs, categories, brands, "
-                "products, product_skus, product_attributes, product_media CASCADE"
+                "products, product_skus, product_attributes, product_media, addresses, carts, "
+                "cart_items, orders, order_items, order_status_events CASCADE"
             )
         )
 
@@ -115,6 +116,21 @@ def make_staff() -> Callable[..., dict[str, str]]:
         return {"email": email, "password": password}
 
     return factory
+
+
+@pytest.fixture
+def buyer_token(client) -> Callable[..., str]:
+    counter = {"n": 0}
+
+    def login(name: str = "Buyer") -> str:
+        counter["n"] += 1
+        creds = {"email": f"buyer{counter['n']}@example.com", "password": "buyer-password-1"}
+        client.post("/api/v1/auth/register", json={**creds, "full_name": f"{name} {counter['n']}"})
+        resp = client.post("/api/v1/auth/login", json=creds)
+        assert resp.status_code == 200, resp.text
+        return resp.json()["access_token"]
+
+    return login
 
 
 @pytest.fixture

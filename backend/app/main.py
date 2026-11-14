@@ -12,9 +12,14 @@ from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, request_id_var
 from app.infrastructure.database import SessionLocal
 from app.modules.access_control.router import router as access_control_router
+from app.modules.addresses.router import router as addresses_router
 from app.modules.auth.router import router as auth_router
+from app.modules.cart.router import router as cart_router
 from app.modules.catalog.router import admin_router as catalog_admin_router
 from app.modules.catalog.router import public_router as catalog_public_router
+from app.modules.checkout.router import router as checkout_router
+from app.modules.orders.router import admin_router as orders_admin_router
+from app.modules.orders.router import buyer_router as orders_buyer_router
 from app.modules.users.router import router as users_router
 
 logger = logging.getLogger("app")
@@ -78,6 +83,11 @@ def create_app() -> FastAPI:
     api.include_router(access_control_router)
     api.include_router(catalog_public_router)
     api.include_router(catalog_admin_router)
+    api.include_router(addresses_router)
+    api.include_router(cart_router)
+    api.include_router(checkout_router)
+    api.include_router(orders_buyer_router)
+    api.include_router(orders_admin_router)
     app.include_router(api)
     return app
 

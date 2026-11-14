@@ -24,6 +24,8 @@ ADMIN_ENDPOINTS = [
     ("POST", "/api/v1/admin/products/{product_id}/archive", "products.archive"),
     ("POST", "/api/v1/admin/products/{product_id}/media", "products.update"),
     ("DELETE", "/api/v1/admin/products/{product_id}/media/{media_id}", "products.update"),
+    ("GET", "/api/v1/admin/orders", "orders.view"),
+    ("GET", "/api/v1/admin/orders/{order_id}", "orders.view"),
 ]
 
 

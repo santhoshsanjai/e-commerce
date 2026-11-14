@@ -23,8 +23,13 @@
     font: inherit;
     background: var(--color-surface);
   }
-  input {
+  input[type='search'] {
     min-width: 240px;
+  }
+  label {
+    align-self: center;
+    font-size: var(--font-size-sm);
+    color: var(--color-muted);
   }
 }
 .table-wrap {
@@ -65,4 +70,7 @@ td img {
   align-items: center;
   gap: var(--space-4);
   margin-top: var(--space-4);
+}
+.nowrap {
+  white-space: nowrap;
 }

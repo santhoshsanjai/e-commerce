@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     max_image_bytes: int = 10 * 1024 * 1024
 
     default_currency: str = "INR"
+    # Flat delivery charge in minor units (decision 8 default: free delivery).
+    shipping_fee_minor: int = 0
 
     login_rate_limit_attempts: int = 5
     login_rate_limit_window_seconds: int = 300

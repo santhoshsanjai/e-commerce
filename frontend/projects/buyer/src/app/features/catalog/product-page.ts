@@ -1,10 +1,11 @@
-import { Component, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
-import { AVAILABILITY_LABEL, MoneyPipe } from '@shop/shared';
+import { Router, RouterLink } from '@angular/router';
+import { apiErrorMessage, AuthService, AVAILABILITY_LABEL, MoneyPipe } from '@shop/shared';
 import { tap } from 'rxjs';
+import { CartStore } from '../cart/cart.store';
 import { CatalogApi } from './catalog.api';
 
 @Component({
@@ -67,10 +68,29 @@ import { CatalogApi } from './catalog.api';
             {{ labels[p.availability] }}
           </p>
           <p>{{ p.short_description }}</p>
-          <button class="btn buy" type="button" [disabled]="p.availability === 'OUT_OF_STOCK'">
-            {{ p.availability === 'OUT_OF_STOCK' ? 'Out of stock' : 'Add to cart' }}
-          </button>
-          <p class="note">Cart and checkout are coming in the next update.</p>
+          <div class="buy-row">
+            <button
+              class="btn buy"
+              type="button"
+              [disabled]="p.availability === 'OUT_OF_STOCK' || adding()"
+              (click)="addToCart(p.sku_id)"
+            >
+              @if (p.availability === 'OUT_OF_STOCK') {
+                Out of stock
+              } @else {
+                {{ adding() ? 'Adding…' : 'Add to cart' }}
+              }
+            </button>
+            @if (added()) {
+              <a class="btn btn-secondary" routerLink="/cart">Go to cart</a>
+            }
+          </div>
+          @if (added()) {
+            <p class="note ok" role="status">Added to your cart.</p>
+          }
+          @if (cartError()) {
+            <p class="note err" role="alert">{{ cartError() }}</p>
+          }
 
           @if (p.description) {
             <h2>Description</h2>
@@ -167,9 +187,22 @@ import { CatalogApi } from './catalog.api';
     .buy {
       min-width: 200px;
     }
+    .buy-row {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+    .buy-row a {
+      text-decoration: none;
+    }
     .note {
-      color: var(--color-muted);
       font-size: var(--font-size-sm);
+    }
+    .note.ok {
+      color: var(--color-success);
+    }
+    .note.err {
+      color: var(--color-danger);
     }
     .description {
       white-space: pre-line;
@@ -196,6 +229,13 @@ import { CatalogApi } from './catalog.api';
 export class ProductPage {
   private readonly api = inject(CatalogApi);
   private readonly title = inject(Title);
+  private readonly auth = inject(AuthService);
+  private readonly cart = inject(CartStore);
+  private readonly router = inject(Router);
+
+  protected readonly adding = signal(false);
+  protected readonly added = signal(false);
+  protected readonly cartError = signal<string | null>(null);
 
   readonly slug = input.required<string>();
   protected readonly labels = AVAILABILITY_LABEL;
@@ -212,4 +252,23 @@ export class ProductPage {
     const media = this.product.value()?.media ?? [];
     return media.find((m) => m.is_primary) ?? media[0] ?? null;
   });
+
+  async addToCart(skuId: string): Promise<void> {
+    if (this.auth.user()?.user_type !== 'BUYER') {
+      // ADR 0004: sign-in is required before using the cart.
+      await this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+    this.adding.set(true);
+    this.added.set(false);
+    this.cartError.set(null);
+    try {
+      await this.cart.add(skuId);
+      this.added.set(true);
+    } catch (err) {
+      this.cartError.set(apiErrorMessage(err));
+    } finally {
+      this.adding.set(false);
+    }
+  }
 }
