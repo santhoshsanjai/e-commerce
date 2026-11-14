@@ -47,15 +47,44 @@ def _clean_tables() -> Iterator[None]:
 
     login_limiter.reset()
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE users, refresh_tokens, user_roles, audit_logs CASCADE"))
+        conn.execute(
+            text(
+                "TRUNCATE users, refresh_tokens, user_roles, audit_logs, categories, brands, "
+                "products, product_skus, product_attributes, product_media CASCADE"
+            )
+        )
+
+
+class FakeStorage:
+    """In-memory stand-in for S3 so tests never touch the network."""
+
+    def __init__(self) -> None:
+        self.objects: dict[str, tuple[bytes, str]] = {}
+
+    def put(self, key: str, data: bytes, content_type: str) -> None:
+        self.objects[key] = (data, content_type)
+
+    def delete(self, key: str) -> None:
+        self.objects.pop(key, None)
+
+    def public_url(self, key: str) -> str:
+        return f"https://cdn.test/{key}"
 
 
 @pytest.fixture
-def client() -> Iterator[TestClient]:
+def storage() -> FakeStorage:
+    return FakeStorage()
+
+
+@pytest.fixture
+def client(storage: FakeStorage) -> Iterator[TestClient]:
+    from app.infrastructure.storage import get_storage
     from app.main import app
 
+    app.dependency_overrides[get_storage] = lambda: storage
     with TestClient(app) as c:
         yield c
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture

@@ -10,4 +10,6 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', permission: 'dashboard.view' },
+  { label: 'Products', path: '/products', permission: 'products.view' },
+  { label: 'Categories', path: '/categories', permission: 'categories.view' },
 ];
