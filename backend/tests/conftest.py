@@ -71,6 +71,9 @@ class FakeStorage:
     def public_url(self, key: str) -> str:
         return f"https://cdn.test/{key}"
 
+    def get(self, key: str) -> bytes:
+        return self.objects[key][0]
+
 
 @pytest.fixture
 def storage() -> FakeStorage:
@@ -78,11 +81,18 @@ def storage() -> FakeStorage:
 
 
 @pytest.fixture
-def client(storage: FakeStorage) -> Iterator[TestClient]:
-    from app.infrastructure.storage import get_storage
+def files() -> FakeStorage:
+    """Stand-in for the private bucket (courier exports and imports)."""
+    return FakeStorage()
+
+
+@pytest.fixture
+def client(storage: FakeStorage, files: FakeStorage) -> Iterator[TestClient]:
+    from app.infrastructure.storage import get_file_store, get_storage
     from app.main import app
 
     app.dependency_overrides[get_storage] = lambda: storage
+    app.dependency_overrides[get_file_store] = lambda: files
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()

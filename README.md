@@ -101,5 +101,7 @@ Migrations are a controlled release step; the API never creates tables on start-
   - Cart and checkout: saved addresses (Indian PIN codes), server-side cart, cash-on-delivery checkout
     that locks stock and is safe to retry (`Idempotency-Key` header), order confirmation, My orders,
     admin order list (search, status and date filters) and order detail with status history.
-  - Next: dispatch batches and courier Excel export, courier Excel import, manual status updates,
-    completion.
+  - Dispatch: staff pick confirmed orders into a batch; the orders move to "Handed to courier" and a
+    courier Excel file is generated, kept in the private bucket and downloadable again later. Every
+    batch and download is audited. Column layout lives in `backend/app/modules/dispatch/excel.py`.
+  - Next: courier Excel import, manual status updates, completion.

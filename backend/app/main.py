@@ -18,6 +18,7 @@ from app.modules.cart.router import router as cart_router
 from app.modules.catalog.router import admin_router as catalog_admin_router
 from app.modules.catalog.router import public_router as catalog_public_router
 from app.modules.checkout.router import router as checkout_router
+from app.modules.dispatch.router import router as dispatch_router
 from app.modules.orders.router import admin_router as orders_admin_router
 from app.modules.orders.router import buyer_router as orders_buyer_router
 from app.modules.users.router import router as users_router
@@ -87,6 +88,7 @@ def create_app() -> FastAPI:
     api.include_router(cart_router)
     api.include_router(checkout_router)
     api.include_router(orders_buyer_router)
+    api.include_router(dispatch_router)
     api.include_router(orders_admin_router)
     app.include_router(api)
     return app

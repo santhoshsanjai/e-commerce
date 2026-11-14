@@ -13,6 +13,7 @@ from app.modules.catalog.models import (
     ProductMedia,
     ProductSku,
 )
+from app.modules.dispatch.models import DispatchBatch
 from app.modules.orders.models import Order, OrderItem, OrderStatusEvent
 from app.modules.users.models import User
 
@@ -23,6 +24,7 @@ __all__ = [
     "Cart",
     "CartItem",
     "Category",
+    "DispatchBatch",
     "Order",
     "OrderItem",
     "OrderStatusEvent",

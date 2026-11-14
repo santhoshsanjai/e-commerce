@@ -35,6 +35,8 @@
 .table-wrap {
   padding: 0;
   overflow-x: auto;
+  // Keeps absolutely positioned children (visually hidden labels) inside the scroll area.
+  position: relative;
 }
 table {
   width: 100%;

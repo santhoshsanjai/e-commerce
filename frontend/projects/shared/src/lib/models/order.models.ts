@@ -136,3 +136,18 @@ export interface AdminOrderDetail extends OrderDetail {
   customer_name: string;
   customer_email: string;
 }
+
+export interface DispatchBatch {
+  id: string;
+  batch_number: string;
+  order_count: number;
+  cod_total_minor: number;
+  currency: string;
+  file_name: string;
+  created_by_name: string | null;
+  created_at: string;
+}
+
+export interface DispatchBatchDetail extends DispatchBatch {
+  orders: AdminOrderListItem[];
+}
