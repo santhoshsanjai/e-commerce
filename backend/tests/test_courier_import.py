@@ -3,9 +3,11 @@ import zipfile
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
-from app.modules.dispatch.excel import IST
+from app.modules.courier_import.parser import CANONICAL_STATUS_WORDS, STATUS_WORDS
+from app.modules.courier_import.parser import _norm as parser_norm
+from app.shared.timezones import IST
 from tests.helpers import admin_id, auth, place_order
 
 IMPORTS = "/api/v1/admin/courier-imports"
@@ -234,3 +236,34 @@ def test_courier_times_are_read_as_ist_and_never_in_the_future(client, buyer_tok
     assert datetime.fromisoformat(exact["occurred_at"]).astimezone(IST).strftime(
         "%H:%M"
     ) == past.strftime("%H:%M")
+
+
+def test_our_export_round_trips_through_the_import(client, buyer_token, admin):
+    """The courier fills the orange columns on our own dispatch sheet and sends it back."""
+    n1, oid1, _ = handed_over(client, buyer_token, admin)
+    batch = client.get("/api/v1/admin/dispatch-batches", headers=admin).json()["items"][0]
+    sheet = client.get(f"/api/v1/admin/dispatch-batches/{batch['id']}/file", headers=admin).content
+
+    wb = load_workbook(io.BytesIO(sheet))
+    assert wb.sheetnames == ["Orders", "How to fill"]
+    ws = wb["Orders"]
+    headers = [c.value for c in ws[1]]
+    assert headers[-3:] == ["AWB No", "Courier Status", "Status Date"]
+    assert ws.data_validations.dataValidation  # status dropdown offered
+    ws.cell(row=2, column=headers.index("AWB No") + 1, value="DTDC12345")
+    ws.cell(row=2, column=headers.index("Courier Status") + 1, value="Out For Delivery")
+    buf = io.BytesIO()
+    wb.save(buf)
+
+    preview = upload(client, admin, buf.getvalue(), name=batch["file_name"]).json()
+    assert preview["summary"]["will_update"] == 1, preview["rows"]
+    client.post(f"{IMPORTS}/{preview['id']}/confirm", headers=admin)
+    order = client.get(f"/api/v1/admin/orders/{oid1}", headers=admin).json()
+    assert (order["status"], order["awb_number"]) == ("OUT_FOR_DELIVERY", "DTDC12345")
+    assert order["timeline"][-1]["reason"] == "Courier: Out For Delivery"
+    assert n1 == order["order_number"]
+
+
+def test_every_suggested_status_word_is_understood():
+    for word in CANONICAL_STATUS_WORDS:
+        assert parser_norm(word) in STATUS_WORDS, word

@@ -1,7 +1,8 @@
-"""Read a courier status file.
+"""Read a courier status file (our own format, see docs/courier-file-format.md and ADR 0008).
 
-Header names and status words differ between couriers. Both are listed here so the real courier's
-file can be supported by editing these two tables.
+The normal file is our own dispatch sheet sent back with AWB No, Courier Status and Status Date
+filled in. Header names and status words differ between couriers, so both are tables here: support
+a real courier's file by adding its headers and words.
 """
 
 import io
@@ -12,8 +13,8 @@ from datetime import UTC, datetime
 
 from openpyxl import load_workbook
 
-from app.modules.dispatch.excel import IST
 from app.modules.orders.lifecycle import OrderStatus
+from app.shared.timezones import IST
 
 MAX_ROWS = 5000
 
@@ -39,6 +40,18 @@ HEADER_ALIASES: dict[str, set[str]] = {
     },
 }
 
+# The words we ask the courier to use (dropdown and "How to fill" sheet in the export).
+CANONICAL_STATUS_WORDS: dict[str, str] = {
+    "Picked Up": "Collected from us",
+    "In Transit": "Moving between hubs",
+    "Out For Delivery": "With the delivery agent today",
+    "Delivered": "Handed to the customer (cash collected for COD)",
+    "Undelivered": "Delivery attempt failed; will retry or return",
+    "RTO In Transit": "Coming back to us",
+    "RTO Delivered": "Returned to us",
+}
+
+# Every word we accept, lower-case, mapped to our status. Includes the canonical words above.
 STATUS_WORDS: dict[str, OrderStatus] = {
     "dispatched": OrderStatus.DISPATCHED,
     "picked up": OrderStatus.DISPATCHED,
@@ -59,6 +72,7 @@ STATUS_WORDS: dict[str, OrderStatus] = {
     "rto": OrderStatus.RETURN_IN_TRANSIT,
     "rto initiated": OrderStatus.RETURN_IN_TRANSIT,
     "rto in transit": OrderStatus.RETURN_IN_TRANSIT,
+    "rto intransit": OrderStatus.RETURN_IN_TRANSIT,
     "return in transit": OrderStatus.RETURN_IN_TRANSIT,
     "rto delivered": OrderStatus.RETURNED,
     "returned": OrderStatus.RETURNED,
