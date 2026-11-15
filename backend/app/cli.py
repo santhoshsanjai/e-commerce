@@ -2,6 +2,7 @@
 
     python -m app.cli create-superadmin --email you@example.com --name "Your Name"
     python -m app.cli reset-mfa --email someone@example.com
+    python -m app.cli rotate-mfa-key
 
 reset-mfa is for a staff member who lost their phone when no other Super Admin can reset it in the
 admin portal: it removes their authenticator app and signs them out, and they set up a new app at
@@ -85,6 +86,16 @@ def reset_mfa(email: str) -> int:
     return 0
 
 
+def rotate_mfa_key() -> int:
+    """Re-encrypt authenticator secrets with the first key in MFA_ENCRYPTION_KEY."""
+    from app.modules.auth import mfa
+
+    with SessionLocal() as db:
+        count = mfa.reencrypt_all(db)
+    print(f"Re-encrypted two-step sign-in secrets for {count} account(s).")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="app.cli")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -93,11 +104,14 @@ def main() -> int:
     cmd.add_argument("--name", required=True)
     reset = sub.add_parser("reset-mfa")
     reset.add_argument("--email", required=True)
+    sub.add_parser("rotate-mfa-key")
     args = parser.parse_args()
     if args.command == "create-superadmin":
         return create_superadmin(args.email, args.name)
     if args.command == "reset-mfa":
         return reset_mfa(args.email)
+    if args.command == "rotate-mfa-key":
+        return rotate_mfa_key()
     return 1
 
 

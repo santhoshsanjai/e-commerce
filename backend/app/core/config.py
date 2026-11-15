@@ -77,7 +77,7 @@ class Settings(BaseSettings):
             raise ValueError("JWT_SECRET must be set for deployed environments")
         if (
             self.environment not in ("local", "test")
-            and self.mfa_encryption_key == LOCAL_DEV_MFA_KEY
+            and LOCAL_DEV_MFA_KEY in self.mfa_encryption_key
         ):
             raise ValueError("MFA_ENCRYPTION_KEY must be set for deployed environments")
         if self.is_production and not self.staff_mfa_required:

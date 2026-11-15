@@ -16,7 +16,7 @@ from typing import Literal
 import jwt
 import pyotp
 import segno
-from cryptography.fernet import Fernet, InvalidToken
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from fastapi import Request, status
 from pyotp.totp import TOTP
 from sqlalchemy import delete, select
@@ -40,8 +40,28 @@ _RECOVERY_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"  # no 0/o, 1/l/i look-ali
 # --- secrets at rest -------------------------------------------------------------------------
 
 
-def _box() -> Fernet:
-    return Fernet(get_settings().mfa_encryption_key)
+def _box() -> MultiFernet:
+    """MFA_ENCRYPTION_KEY may list several comma-separated keys: the first encrypts, any of them
+    decrypts. To rotate, put a new key first, run `python -m app.cli rotate-mfa-key`, then drop
+    the old key."""
+    keys = [k.strip() for k in get_settings().mfa_encryption_key.split(",") if k.strip()]
+    return MultiFernet([Fernet(k) for k in keys])
+
+
+def reencrypt_all(db: Session) -> int:
+    """Re-encrypt every stored secret with the first key. Returns how many accounts changed."""
+    box = _box()
+    count = 0
+    for user in db.scalars(
+        select(User).where((User.mfa_secret.is_not(None)) | (User.mfa_pending_secret.is_not(None)))
+    ):
+        if user.mfa_secret:
+            user.mfa_secret = box.rotate(user.mfa_secret.encode()).decode()
+        if user.mfa_pending_secret:
+            user.mfa_pending_secret = box.rotate(user.mfa_pending_secret.encode()).decode()
+        count += 1
+    db.commit()
+    return count
 
 
 def _encrypt(secret: str) -> str:

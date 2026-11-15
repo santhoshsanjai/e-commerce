@@ -1,6 +1,9 @@
 import logging
+import os
+import time
 import uuid
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +31,24 @@ from app.modules.reports.router import router as reports_router
 from app.modules.users.router import router as users_router
 
 logger = logging.getLogger("app")
+access_logger = logging.getLogger("app.access")
+
+# Set at image build time (the git commit), so logs and /health/live show what is running.
+APP_VERSION = os.environ.get("APP_VERSION", "dev")
+
+
+def _expected_db_revision() -> str | None:
+    """The newest migration shipped with this code."""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    root = Path(__file__).resolve().parent.parent
+    config = Config(str(root / "alembic.ini"))
+    config.set_main_option("script_location", str(root / "migrations"))
+    return ScriptDirectory.from_config(config).get_current_head()
+
+
+EXPECTED_DB_REVISION = _expected_db_revision()
 
 
 def create_app() -> FastAPI:
@@ -58,9 +79,27 @@ def create_app() -> FastAPI:
         incoming = request.headers.get("x-request-id", "")
         rid = incoming if 0 < len(incoming) <= 64 else uuid.uuid4().hex
         token = request_id_var.set(rid)
+        started = time.perf_counter()
+        status_code = 500
         try:
             response = await call_next(request)
+            status_code = response.status_code
         finally:
+            if not request.url.path.startswith("/health/"):
+                # One structured line per request: what the 5xx and latency alarms count.
+                access_logger.info(
+                    "request",
+                    extra={
+                        "fields": {
+                            "request_id": rid,
+                            "method": request.method,
+                            "path": request.url.path,
+                            "status": status_code,
+                            "duration_ms": round((time.perf_counter() - started) * 1000, 1),
+                            "client_ip": request.client.host if request.client else None,
+                        }
+                    },
+                )
             request_id_var.reset(token)
         response.headers["X-Request-ID"] = rid
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -77,16 +116,27 @@ def create_app() -> FastAPI:
 
     @app.get("/health/live", tags=["health"])
     def live() -> dict[str, str]:
-        return {"status": "ok"}
+        """The process is up. Container health checks use this; it never touches the database."""
+        return {"status": "ok", "version": APP_VERSION}
 
     @app.get("/health/ready", tags=["health"], response_model=None)
     def ready() -> dict[str, str] | JSONResponse:
+        """Ready for traffic: the database answers and its schema matches this code. The load
+        balancer sends requests only to ready instances, so a deploy whose migration didn't run
+        never takes traffic."""
         try:
             with SessionLocal() as session:
-                session.execute(text("SELECT 1"))
+                db_revision = session.scalar(text("SELECT version_num FROM alembic_version"))
         except Exception:
             logger.exception("Readiness check failed")
             return JSONResponse({"status": "unavailable"}, status_code=503)
+        if db_revision != EXPECTED_DB_REVISION:
+            logger.error(
+                "Database schema is at %s, this code needs %s", db_revision, EXPECTED_DB_REVISION
+            )
+            return JSONResponse(
+                {"status": "unavailable", "reason": "schema_mismatch"}, status_code=503
+            )
         return {"status": "ok"}
 
     api = APIRouter(prefix="/api/v1")
