@@ -71,6 +71,12 @@ export const routes: Routes = [
         title: 'Categories · Admin',
       },
       {
+        path: 'reports/sales',
+        canActivate: [permissionGuard('reports.view')],
+        loadComponent: () => import('./features/reports/sales-report').then((m) => m.SalesReport),
+        title: 'Sales report · Admin',
+      },
+      {
         path: 'staff',
         canActivate: [permissionGuard('users.view')],
         loadComponent: () => import('./features/staff/staff-list').then((m) => m.StaffList),

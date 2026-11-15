@@ -45,6 +45,8 @@ ADMIN_ENDPOINTS = [
     ("GET", "/api/v1/admin/dashboard", "dashboard.view"),
     ("GET", "/api/v1/admin/audit-logs", "audit_logs.view"),
     ("GET", "/api/v1/admin/audit-logs/actions", "audit_logs.view"),
+    ("GET", "/api/v1/admin/reports/sales", "reports.view"),
+    ("GET", "/api/v1/admin/reports/sales/export", "reports.view"),
 ]
 
 
