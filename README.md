@@ -127,4 +127,8 @@ Migrations are a controlled release step; the API never creates tables on start-
     month. Shows sales, orders, average order, items sold, delivered value, cash on delivery
     collected, cancellations and returns, sales by state and top products. "Download Excel" gives
     the same figures plus every product and every order in the range; each download is audited.
-  - Next: buyer account pages.
+  - Buyer account page: change name and mobile number, manage saved delivery addresses (add, edit,
+    make default, remove), and change password. Changing the password signs out every other device
+    and keeps this one signed in; wrong-password attempts share the login rate limit.
+  - Phase 2 complete. Next: Phase 3 (security review, backups, monitoring, staging, then
+    production).

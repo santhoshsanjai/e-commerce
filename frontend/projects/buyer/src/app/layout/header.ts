@@ -14,6 +14,7 @@ import { CartStore } from '../features/cart/cart.store';
         @if (auth.user(); as user) {
           <span class="greeting">Hi, {{ user.full_name }}</span>
           <a routerLink="/orders">Orders</a>
+          <a routerLink="/account">Account</a>
           <a routerLink="/cart" class="cart" [attr.aria-label]="'Cart, ' + cart.count() + ' items'">
             Cart
             @if (cart.count()) {
@@ -40,6 +41,14 @@ import { CartStore } from '../features/cart/cart.store';
       max-width: 1200px;
       margin: 0 auto;
       padding: var(--space-3) var(--space-4);
+    }
+    nav .btn {
+      white-space: nowrap;
+    }
+    @media (max-width: 420px) {
+      nav {
+        gap: var(--space-3);
+      }
     }
     .brand {
       font-weight: 700;

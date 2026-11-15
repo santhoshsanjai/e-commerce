@@ -5,16 +5,13 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { Address, apiErrorMessage, MoneyPipe } from '@shop/shared';
 import { firstValueFrom } from 'rxjs';
+import { AddressForm } from '../account/address-form';
 import { CartStore } from '../cart/cart.store';
 import { OrdersApi } from '../orders/orders.api';
 
-/** Same rules as the API (ADR 0006): Indian 6-digit PIN code and a phone number. */
-const PIN_CODE = /^[1-9][0-9]{5}$/;
-const PHONE = /^\+?[0-9][0-9 -]{8,18}[0-9]$/;
-
 @Component({
   selector: 'buy-checkout-page',
-  imports: [ReactiveFormsModule, RouterLink, MoneyPipe],
+  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, AddressForm],
   templateUrl: './checkout-page.html',
   styleUrl: './checkout-page.scss',
 })
@@ -31,10 +28,8 @@ export class CheckoutPage {
   protected readonly showForm = linkedSignal(() => this.addresses.value()?.length === 0);
 
   protected readonly placing = signal(false);
-  protected readonly savingAddress = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly cartChanged = signal(false);
-  protected readonly addressError = signal<string | null>(null);
   protected readonly canPlace = computed(
     () => !!this.selectedId() && !!this.cartStore.cart()?.can_checkout && !this.placing(),
   );
@@ -44,48 +39,16 @@ export class CheckoutPage {
 
   private readonly fb = inject(NonNullableFormBuilder);
   protected readonly instructions = this.fb.control('', Validators.maxLength(500));
-  protected readonly addressForm = this.fb.group({
-    recipient_name: ['', [Validators.required, Validators.maxLength(200)]],
-    phone: ['', [Validators.required, Validators.pattern(PHONE)]],
-    line1: ['', [Validators.required, Validators.maxLength(200)]],
-    line2: ['', Validators.maxLength(200)],
-    landmark: ['', Validators.maxLength(200)],
-    city: ['', [Validators.required, Validators.maxLength(100)]],
-    region: ['', [Validators.required, Validators.maxLength(100)]],
-    postal_code: ['', [Validators.required, Validators.pattern(PIN_CODE)]],
-    is_default: [true],
-  });
-
-  protected invalid(name: keyof typeof this.addressForm.controls): boolean {
-    const c = this.addressForm.controls[name];
-    return c.invalid && c.touched;
-  }
-
   protected oneLine(a: Address): string {
     return [a.line1, a.line2, a.landmark, a.city, `${a.region} ${a.postal_code}`]
       .filter(Boolean)
       .join(', ');
   }
 
-  async saveAddress(): Promise<void> {
-    if (this.addressForm.invalid) {
-      this.addressForm.markAllAsTouched();
-      this.addressError.set('Check the highlighted fields.');
-      return;
-    }
-    this.savingAddress.set(true);
-    this.addressError.set(null);
-    try {
-      const created = await firstValueFrom(this.api.createAddress(this.addressForm.getRawValue()));
-      this.addresses.reload();
-      this.selectedId.set(created.id);
-      this.showForm.set(false);
-      this.addressForm.reset();
-    } catch (err) {
-      this.addressError.set(apiErrorMessage(err));
-    } finally {
-      this.savingAddress.set(false);
-    }
+  protected addressSaved(created: Address): void {
+    this.addresses.reload();
+    this.selectedId.set(created.id);
+    this.showForm.set(false);
   }
 
   async placeOrder(): Promise<void> {

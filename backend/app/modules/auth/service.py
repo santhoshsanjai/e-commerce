@@ -17,7 +17,7 @@ from app.core.security import (
 )
 from app.modules.audit import service as audit
 from app.modules.auth.models import RefreshToken
-from app.modules.auth.schemas import RegisterRequest
+from app.modules.auth.schemas import PasswordChange, ProfileUpdate, RegisterRequest
 from app.modules.users.models import AUDIENCE_FOR, User, UserType
 
 
@@ -132,3 +132,59 @@ def _revoke_family(db: Session, family_id: uuid.UUID, now: datetime) -> None:
         .where(RefreshToken.family_id == family_id, RefreshToken.revoked_at.is_(None))
         .values(revoked_at=now)
     )
+
+
+STAFF_MIN_PASSWORD = 12
+
+
+def update_profile(db: Session, user: User, data: ProfileUpdate) -> User:
+    changes = data.model_dump(exclude_unset=True)
+    if data.full_name is not None:
+        user.full_name = data.full_name
+    if "phone" in changes:
+        user.phone = (data.phone or "").strip() or None
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def change_password(
+    db: Session, user: User, data: PasswordChange, request: Request
+) -> IssuedTokens:
+    """Check the current password, set the new one, and sign out every other session.
+
+    Returns fresh tokens so the device that made the change stays signed in.
+    """
+    if not verify_password(data.current_password, user.password_hash):
+        raise AppError(
+            "wrong_password", "Your current password is incorrect", status.HTTP_400_BAD_REQUEST
+        )
+    if user.user_type is UserType.STAFF and len(data.new_password) < STAFF_MIN_PASSWORD:
+        raise AppError(
+            "password_too_short",
+            f"Staff passwords need at least {STAFF_MIN_PASSWORD} characters",
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
+    if verify_password(data.new_password, user.password_hash):
+        raise AppError(
+            "password_unchanged",
+            "Choose a password you haven't just been using",
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
+    user.password_hash = hash_password(data.new_password)
+    db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+    tokens = issue_tokens(db, user)
+    audit.record(
+        db,
+        "auth.password_changed",
+        actor_id=user.id,
+        request=request,
+        entity_type="user",
+        entity_id=str(user.id),
+    )
+    db.commit()
+    return tokens
