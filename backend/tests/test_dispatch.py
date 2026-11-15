@@ -8,7 +8,7 @@ from sqlalchemy import select
 from app.infrastructure.database import SessionLocal
 from app.modules.audit.models import AuditLog
 from app.modules.dispatch.excel import COLUMNS, safe_text
-from tests.helpers import ADDRESS, admin_id, auth, place_order
+from tests.helpers import ADDRESS, auth, published_product
 
 BATCHES = "/api/v1/admin/dispatch-batches"
 
@@ -16,6 +16,25 @@ BATCHES = "/api/v1/admin/dispatch-batches"
 @pytest.fixture
 def admin(staff_token):
     return auth(staff_token("Admin"))
+
+
+def place_order(client, buyer_token, admin, *, name="Asha", address=None, qty=1, price=49950):
+    h = auth(buyer_token(name))
+    addr = client.post("/api/v1/me/addresses", json=address or ADDRESS, headers=h).json()
+    product = published_product(client, admin, name=f"Bottle {uuid.uuid4().hex[:6]}", price=price)
+    client.post("/api/v1/cart/items", json={"sku_id": product["sku"]["id"], "qty": qty}, headers=h)
+    resp = client.post(
+        "/api/v1/checkout",
+        json={"address_id": addr["id"], "delivery_instructions": "Call first"},
+        headers={**h, "Idempotency-Key": uuid.uuid4().hex},
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json(), h
+
+
+def admin_id(client, admin, order_number):
+    items = client.get("/api/v1/admin/orders", params={"q": order_number}, headers=admin).json()
+    return items["items"][0]["id"]
 
 
 def read_sheet(data: bytes) -> list[list[object]]:

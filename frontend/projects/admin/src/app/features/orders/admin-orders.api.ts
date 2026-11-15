@@ -6,9 +6,8 @@ import {
   API_BASE_URL,
   OrderStatus,
   Page,
-  StatusChangeInput,
 } from '@shop/shared';
-import { firstValueFrom, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 
 export interface OrderQuery {
   q: string;
@@ -34,9 +33,5 @@ export class AdminOrdersApi {
 
   order(id: string): Observable<AdminOrderDetail> {
     return this.http.get<AdminOrderDetail>(`${this.base}/${id}`);
-  }
-
-  changeStatus(id: string, data: StatusChangeInput): Promise<AdminOrderDetail> {
-    return firstValueFrom(this.http.post<AdminOrderDetail>(`${this.base}/${id}/status`, data));
   }
 }

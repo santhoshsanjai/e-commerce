@@ -13,6 +13,5 @@ ADR says what that would cost.
 | [0005](0005-payments-cod-first.md) | Cash on delivery first, behind a payment interface | Provisional (handoff Q4) |
 | [0006](0006-country-and-currency.md) | One country and currency (India, INR) | Provisional (handoff Q9) |
 | [0007](0007-auth-and-rbac.md) | Authentication and role-based access | Accepted |
-| [0008](0008-courier-file-format.md) | Our own round-trip courier Excel format | Provisional (owner, 2026-11-14) |
 
 Template: Context, Decision, Consequences, and (for provisional ADRs) What changes if revisited.
