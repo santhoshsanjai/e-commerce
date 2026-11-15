@@ -85,6 +85,7 @@ def create_batch(
     for order in orders:
         order.dispatch_batch_id = batch.id
         apply_transition(
+            db,
             order,
             OrderStatus.EXPORTED_TO_COURIER,
             source=EventSource.SYSTEM,

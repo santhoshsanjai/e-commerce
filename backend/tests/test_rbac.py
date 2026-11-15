@@ -31,6 +31,11 @@ ADMIN_ENDPOINTS = [
     ("GET", "/api/v1/admin/dispatch-batches/eligible-orders", "orders.export"),
     ("GET", "/api/v1/admin/dispatch-batches/{batch_id}", "orders.export"),
     ("GET", "/api/v1/admin/dispatch-batches/{batch_id}/file", "orders.export"),
+    ("POST", "/api/v1/admin/orders/{order_id}/status", "orders.status.update"),
+    ("GET", "/api/v1/admin/courier-imports", "orders.import_courier"),
+    ("POST", "/api/v1/admin/courier-imports", "orders.import_courier"),
+    ("GET", "/api/v1/admin/courier-imports/{import_id}", "orders.import_courier"),
+    ("POST", "/api/v1/admin/courier-imports/{import_id}/confirm", "orders.import_courier"),
 ]
 
 

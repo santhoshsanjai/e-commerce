@@ -135,6 +135,42 @@ export interface AdminOrderDetail extends OrderDetail {
   id: string;
   customer_name: string;
   customer_email: string;
+  awb_number: string | null;
+  /** Statuses the lifecycle allows next; others need the override permission. */
+  allowed_next: OrderStatus[];
+}
+
+export interface StatusChangeInput {
+  status: OrderStatus;
+  reason: string;
+  override: boolean;
+}
+
+export type ImportOutcome = 'will_update' | 'updated' | 'no_change' | 'error';
+
+export interface CourierImportRow {
+  row: number;
+  order_number: string;
+  awb: string;
+  courier_status: string;
+  current_status: OrderStatus | null;
+  new_status: OrderStatus | null;
+  outcome: ImportOutcome;
+  message: string;
+}
+
+export interface CourierImport {
+  id: string;
+  file_name: string;
+  status: 'PREVIEW' | 'CONFIRMED';
+  summary: Record<'total' | ImportOutcome, number>;
+  uploaded_by_name: string | null;
+  created_at: string;
+  confirmed_at: string | null;
+}
+
+export interface CourierImportDetail extends CourierImport {
+  rows: CourierImportRow[];
 }
 
 export interface DispatchBatch {

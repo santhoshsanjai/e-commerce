@@ -39,6 +39,13 @@ export const routes: Routes = [
         title: 'Dispatch · Admin',
       },
       {
+        path: 'courier-import',
+        canActivate: [permissionGuard('orders.import_courier')],
+        loadComponent: () =>
+          import('./features/courier-import/courier-import-page').then((m) => m.CourierImportPage),
+        title: 'Courier import · Admin',
+      },
+      {
         path: 'products',
         canActivate: [permissionGuard('products.view')],
         loadComponent: () => import('./features/products/product-list').then((m) => m.ProductList),
