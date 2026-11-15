@@ -47,6 +47,15 @@ def get_current_staff(user: CurrentUser) -> User:
 CurrentStaff = Annotated[User, Depends(get_current_staff)]
 
 
+def get_current_buyer(user: CurrentUser) -> User:
+    if user.user_type is not UserType.BUYER:
+        raise PermissionDenied("This action is for customer accounts")
+    return user
+
+
+CurrentBuyer = Annotated[User, Depends(get_current_buyer)]
+
+
 def require_permission(*keys: str) -> Callable[[User], User]:
     """Route dependency: the staff user must hold every listed permission.
 

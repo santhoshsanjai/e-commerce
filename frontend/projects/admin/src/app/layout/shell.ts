@@ -41,11 +41,11 @@ import { NAV_ITEMS } from '../navigation';
   styles: `
     .shell {
       display: grid;
-      grid-template-columns: 240px 1fr;
+      grid-template-columns: 240px minmax(0, 1fr);
       min-height: 100vh;
     }
     .shell.collapsed {
-      grid-template-columns: 64px 1fr;
+      grid-template-columns: 64px minmax(0, 1fr);
     }
     .collapsed nav {
       display: none;
@@ -92,13 +92,16 @@ import { NAV_ITEMS } from '../navigation';
       color: var(--color-muted);
       font-size: var(--font-size-sm);
     }
+    .main {
+      min-width: 0;
+    }
     main {
       padding: var(--space-6);
     }
     @media (max-width: 768px) {
       .shell,
       .shell.collapsed {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }
       .collapsed aside {
         display: none;

@@ -1,0 +1,138 @@
+.back {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+}
+.muted {
+  color: var(--color-muted);
+  font-size: var(--font-size-sm);
+}
+.thanks {
+  border-color: var(--color-success);
+  margin-bottom: var(--space-6);
+  h1 {
+    color: var(--color-success);
+    font-size: var(--font-size-xl);
+    margin-top: 0;
+  }
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  h1,
+  h2 {
+    margin: 0;
+  }
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  gap: var(--space-6);
+  align-items: start;
+  margin-top: var(--space-4);
+}
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+h3 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-md);
+}
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--color-border);
+    > span {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+.totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  dd {
+    margin: 0;
+    text-align: right;
+  }
+  .grand {
+    font-weight: 700;
+    font-size: var(--font-size-lg);
+  }
+}
+address {
+  font-style: normal;
+  line-height: 1.6;
+}
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 var(--space-4);
+  border-left: 2px solid var(--color-border);
+  li {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: var(--space-3);
+  }
+}
+.order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.order-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-4);
+  align-items: center;
+  color: var(--color-text);
+  text-decoration: none;
+  &:hover {
+    border-color: var(--color-primary);
+  }
+}
+.main {
+  display: flex;
+  flex-direction: column;
+}
+.amount {
+  min-width: 90px;
+  text-align: right;
+}
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+.btn {
+  text-decoration: none;
+}
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .order-row {
+    grid-template-columns: 1fr auto;
+  }
+  .amount {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+}

@@ -27,6 +27,23 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     cors_origins: list[str] = ["http://localhost:4200", "http://localhost:4300"]
 
+    # S3-compatible object storage. Empty s3_endpoint_url = AWS S3 (credentials from the IAM role);
+    # locally it points at the SeaweedFS S3 gateway from docker-compose.
+    s3_endpoint_url: str | None = "http://localhost:8333"
+    s3_region: str = "us-east-1"
+    s3_access_key: str | None = "local"
+    s3_secret_key: str | None = "local"  # noqa: S105 - local-only default
+    media_bucket: str = "product-media"
+    # Private bucket for courier exports and uploaded courier files. Never public.
+    private_bucket: str = "private-files"
+    # Public base URL that serves the media bucket (CDN in production).
+    media_public_base_url: str = "http://localhost:8333/product-media"
+    max_image_bytes: int = 10 * 1024 * 1024
+
+    default_currency: str = "INR"
+    # Flat delivery charge in minor units (decision 8 default: free delivery).
+    shipping_fee_minor: int = 0
+
     login_rate_limit_attempts: int = 5
     login_rate_limit_window_seconds: int = 300
 

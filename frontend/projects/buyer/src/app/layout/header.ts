@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@shop/shared';
+import { CartStore } from '../features/cart/cart.store';
 
 @Component({
   selector: 'buy-header',
@@ -12,6 +13,13 @@ import { AuthService } from '@shop/shared';
         <span class="spacer"></span>
         @if (auth.user(); as user) {
           <span class="greeting">Hi, {{ user.full_name }}</span>
+          <a routerLink="/orders">Orders</a>
+          <a routerLink="/cart" class="cart" [attr.aria-label]="'Cart, ' + cart.count() + ' items'">
+            Cart
+            @if (cart.count()) {
+              <span class="count" aria-hidden="true">{{ cart.count() }}</span>
+            }
+          </a>
           <button type="button" class="btn btn-secondary" (click)="logout()">Sign out</button>
         } @else {
           <a routerLink="/login">Sign in</a>
@@ -39,6 +47,21 @@ import { AuthService } from '@shop/shared';
       text-decoration: none;
       color: var(--color-primary);
     }
+    .cart {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
+    .count {
+      min-width: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: var(--color-secondary);
+      color: var(--color-secondary-contrast);
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      text-align: center;
+    }
     .spacer {
       flex: 1;
     }
@@ -54,6 +77,7 @@ import { AuthService } from '@shop/shared';
 })
 export class Header {
   protected readonly auth = inject(AuthService);
+  protected readonly cart = inject(CartStore);
   private readonly router = inject(Router);
 
   async logout(): Promise<void> {
