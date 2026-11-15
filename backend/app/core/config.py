@@ -49,12 +49,28 @@ class Settings(BaseSettings):
     # Failed sign-ins allowed from one address (across all accounts) in the same window.
     login_ip_rate_limit_attempts: int = 30
 
+    # Outgoing email (see app.infrastructure.email).
+    email_backend: Literal["console", "smtp", "ses"] = "console"
+    email_from: str = "Shop <no-reply@example.com>"
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_starttls: bool = False
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    ses_region: str | None = None
+    # Where links in emails point (password reset).
+    buyer_site_url: str = "http://localhost:4200"
+    admin_site_url: str = "http://localhost:4300"
+    password_reset_ttl_minutes: int = 30
+
     @model_validator(mode="after")
     def _require_real_secret_when_deployed(self) -> "Settings":
         if self.environment not in ("local", "test") and self.jwt_secret == LOCAL_DEV_JWT_SECRET:
             raise ValueError("JWT_SECRET must be set for deployed environments")
         if self.is_production and not self.cookie_secure:
             raise ValueError("COOKIE_SECURE must be true in production")
+        if self.is_production and self.email_backend == "console":
+            raise ValueError("EMAIL_BACKEND must be smtp or ses in production")
         return self
 
     @property

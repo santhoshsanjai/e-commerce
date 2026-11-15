@@ -7,6 +7,7 @@ export * from './lib/auth/auth.interceptor';
 export * from './lib/auth/auth.service';
 export * from './lib/auth/guards';
 export * from './lib/auth/has-permission.directive';
+export * from './lib/auth/password-reset';
 export * from './lib/models/auth.models';
 export * from './lib/format/money.pipe';
 export * from './lib/models/catalog.models';

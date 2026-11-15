@@ -76,6 +76,27 @@ export class AuthService {
     this.token.set(res.access_token);
   }
 
+  /**
+   * Ask for a reset link by email. The API answers the same whether or not the account exists,
+   * so this resolves with the message to show either way.
+   */
+  async requestPasswordReset(email: string): Promise<string> {
+    const res = await firstValueFrom(
+      this.http.post<{ message: string }>(`${this.baseUrl}/auth/password-reset`, { email }),
+    );
+    return res.message;
+  }
+
+  /** Set a new password from an emailed link. Every session ends; the person signs in again. */
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.baseUrl}/auth/password-reset/confirm`, {
+        token,
+        new_password: newPassword,
+      }),
+    );
+  }
+
   /** Exchange the refresh cookie for a new access token. Concurrent callers share one request. */
   refresh(): Promise<string | null> {
     this.refreshInFlight ??= firstValueFrom(

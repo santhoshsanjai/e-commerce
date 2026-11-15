@@ -1,11 +1,11 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { apiErrorMessage, AuthService, safeReturnUrl } from '@shop/shared';
 
 @Component({
   selector: 'adm-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   template: `
     <main class="wrap">
       <div class="card">
@@ -31,6 +31,7 @@ import { apiErrorMessage, AuthService, safeReturnUrl } from '@shop/shared';
             {{ busy() ? 'Signing in…' : 'Sign in' }}
           </button>
         </form>
+        <p class="forgot"><a routerLink="/forgot-password">Forgot your password?</a></p>
       </div>
     </main>
   `,
@@ -46,6 +47,10 @@ import { apiErrorMessage, AuthService, safeReturnUrl } from '@shop/shared';
     }
     .btn {
       width: 100%;
+    }
+    .forgot {
+      text-align: center;
+      margin: var(--space-4) 0 0;
     }
   `,
 })

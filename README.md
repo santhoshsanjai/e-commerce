@@ -96,7 +96,8 @@ log. They also cover staff access by role, the buyer account page and phone layo
 docker compose up --build -d
 docker compose run --rm api python -m app.cli create-superadmin
 
-# 2. Run the tests (they create their own data with unique names, so they can run repeatedly)
+# 2. Run the tests (they create their own data with unique names, so they can run repeatedly).
+#    The password reset test reads email from Mailpit (http://localhost:8025, in docker-compose).
 cd e2e
 npm ci
 npx playwright install chromium
