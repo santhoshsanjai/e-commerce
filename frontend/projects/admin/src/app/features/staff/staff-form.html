@@ -1,0 +1,208 @@
+<a class="back" routerLink="/staff">← All staff</a>
+
+@if (member.error()) {
+  <div class="alert-error" role="alert">Couldn't load this staff member.</div>
+} @else if (!isNew() && !member.value()) {
+  <p>Loading…</p>
+} @else {
+  <div class="page-head">
+    <h1>{{ isNew() ? 'Add staff member' : member.value()?.full_name }}</h1>
+    @if (member.value(); as m) {
+      <span class="state" [class.off]="!m.is_active">{{
+        m.is_active ? 'Active' : 'Deactivated'
+      }}</span>
+    }
+  </div>
+
+  <div aria-live="polite">
+    @if (notice()) {
+      <div class="notice" role="status">{{ notice() }}</div>
+    }
+    @if (error()) {
+      <div class="alert-error" role="alert">{{ error() }}</div>
+    }
+  </div>
+
+  @if (lockedSuperAdmin()) {
+    <p class="hint">Only a Super Admin can change a Super Admin's account.</p>
+  } @else if (!canManage()) {
+    <p class="hint">You can view staff but not change them.</p>
+  }
+
+  <form class="card" (ngSubmit)="save()">
+    <div class="grid">
+      <div class="field">
+        <label for="name">Full name</label>
+        <input
+          id="name"
+          name="name"
+          autocomplete="off"
+          [ngModel]="fullName()"
+          (ngModelChange)="fullName.set($event)"
+          [disabled]="!editable()"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        @if (isNew()) {
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="off"
+            [(ngModel)]="email"
+            required
+          />
+        } @else {
+          <input id="email" name="email" [value]="member.value()?.email" disabled />
+        }
+      </div>
+      <div class="field">
+        <label for="phone">Phone <span class="optional">(optional)</span></label>
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          autocomplete="off"
+          [ngModel]="phone()"
+          (ngModelChange)="phone.set($event)"
+          [disabled]="!editable()"
+        />
+      </div>
+      @if (isNew()) {
+        <div class="field">
+          <label for="password">Temporary password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            aria-describedby="password-hint"
+            [(ngModel)]="password"
+            required
+          />
+          <small id="password-hint" class="hint">At least {{ minPassword }} characters.</small>
+        </div>
+      }
+    </div>
+
+    <fieldset>
+      <legend>Roles</legend>
+      @if (isSelf()) {
+        <p class="hint">You can't change your own roles. Ask another administrator.</p>
+      }
+      <div class="roles">
+        @for (r of roles.value() ?? []; track r.id) {
+          <label class="role" [class.disabled]="roleDisabled(r)">
+            <input
+              type="checkbox"
+              [checked]="roleIds().includes(r.id)"
+              [disabled]="roleDisabled(r)"
+              (change)="toggleRole(r, $any($event.target).checked)"
+            />
+            <span>
+              <strong>{{ r.name }}</strong>
+              @if (r.description) {
+                <small>{{ r.description }}</small>
+              }
+            </span>
+          </label>
+        }
+      </div>
+    </fieldset>
+
+    @if (editable()) {
+      <div class="actions">
+        <button class="btn" type="submit" [disabled]="!canSubmit()">
+          {{ isNew() ? 'Add staff member' : 'Save changes' }}
+        </button>
+      </div>
+    }
+  </form>
+
+  @if (member.value(); as m) {
+    <section class="card meta">
+      <p>
+        Added {{ m.created_at | date: 'dd MMM yyyy' }} · Last sign-in
+        {{ m.last_login_at ? (m.last_login_at | date: 'dd MMM yyyy, HH:mm') : 'never' }}
+      </p>
+    </section>
+
+    @if (editable() && !isSelf()) {
+      <section class="card">
+        <h2>Reset password</h2>
+        <p class="hint">
+          Sets a new password and signs {{ m.full_name }} out of every device. Tell them the new
+          password privately.
+        </p>
+        <form class="inline" (ngSubmit)="resetPassword()">
+          <label class="visually-hidden" for="new-password">New password</label>
+          <input
+            id="new-password"
+            name="newPassword"
+            type="password"
+            autocomplete="new-password"
+            placeholder="New password ({{ minPassword }}+ characters)"
+            [(ngModel)]="newPassword"
+          />
+          <button
+            class="btn btn-secondary"
+            type="submit"
+            [disabled]="busy() || newPassword.length < minPassword"
+          >
+            Set new password
+          </button>
+        </form>
+      </section>
+
+      <section class="card">
+        @if (m.is_active) {
+          <h2>Deactivate account</h2>
+          <p class="hint">
+            {{ m.full_name }} will be signed out straight away and won't be able to sign in. Their
+            history stays in the audit log. You can reactivate them later.
+          </p>
+          @if (confirmingDeactivate()) {
+            <div class="inline">
+              <button
+                class="btn danger"
+                type="button"
+                [disabled]="busy()"
+                (click)="setActive(false)"
+              >
+                Yes, deactivate {{ m.full_name }}
+              </button>
+              <button
+                class="btn btn-secondary"
+                type="button"
+                (click)="confirmingDeactivate.set(false)"
+              >
+                Cancel
+              </button>
+            </div>
+          } @else {
+            <button
+              class="btn btn-secondary"
+              type="button"
+              (click)="confirmingDeactivate.set(true)"
+            >
+              Deactivate…
+            </button>
+          }
+        } @else {
+          <h2>Reactivate account</h2>
+          <p class="hint">{{ m.full_name }} will be able to sign in again with their password.</p>
+          <button
+            class="btn btn-secondary"
+            type="button"
+            [disabled]="busy()"
+            (click)="setActive(true)"
+          >
+            Reactivate
+          </button>
+        }
+      </section>
+    }
+  }
+}
