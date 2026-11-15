@@ -123,4 +123,8 @@ Migrations are a controlled release step; the API never creates tables on start-
     deactivate themselves; there is always at least one active Super Admin; the Super Admin role
     always keeps every permission; built-in roles can't be renamed or deleted; and nobody can grant
     a permission they don't hold. Every change is in the audit log.
-  - Next: sales reports with Excel download, buyer account pages.
+  - Sales report: pick a date range (or a quick range such as last month) and show by day, week or
+    month. Shows sales, orders, average order, items sold, delivered value, cash on delivery
+    collected, cancellations and returns, sales by state and top products. "Download Excel" gives
+    the same figures plus every product and every order in the range; each download is audited.
+  - Next: buyer account pages.

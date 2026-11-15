@@ -1,0 +1,213 @@
+<div class="page-head">
+  <h1>Sales report</h1>
+  <button
+    class="btn"
+    type="button"
+    [disabled]="downloading() || !!rangeError() || !report.hasValue()"
+    (click)="download()"
+  >
+    {{ downloading() ? 'Preparing…' : 'Download Excel' }}
+  </button>
+</div>
+<p class="muted intro">
+  Days are India time. Sales leave out cancelled and returned orders, which are shown separately.
+</p>
+
+<div class="presets" role="group" aria-label="Quick ranges">
+  @for (p of presets; track p.label) {
+    <button
+      type="button"
+      class="chip"
+      [attr.aria-pressed]="activePreset() === p.label"
+      (click)="applyPreset(p)"
+    >
+      {{ p.label }}
+    </button>
+  }
+</div>
+
+<form class="filters" (submit)="$event.preventDefault()">
+  <label for="from">From</label>
+  <input
+    id="from"
+    name="from"
+    type="date"
+    [max]="maxDate"
+    [ngModel]="query().date_from"
+    (ngModelChange)="set({ date_from: $event })"
+  />
+  <label for="to">To</label>
+  <input
+    id="to"
+    name="to"
+    type="date"
+    [max]="maxDate"
+    [ngModel]="query().date_to"
+    (ngModelChange)="set({ date_to: $event })"
+  />
+  <label for="group">Show by</label>
+  <select
+    id="group"
+    name="group"
+    [ngModel]="query().group_by"
+    (ngModelChange)="set({ group_by: $event })"
+  >
+    <option value="day">Day</option>
+    <option value="week">Week</option>
+    <option value="month">Month</option>
+  </select>
+</form>
+
+<div aria-live="polite">
+  @if (rangeError()) {
+    <div class="alert-error" role="alert">{{ rangeError() }}</div>
+  } @else if (report.error()) {
+    <div class="alert-error" role="alert">
+      {{ errorText(report.error()) }}
+      <button class="btn btn-secondary" type="button" (click)="report.reload()">Retry</button>
+    </div>
+  }
+  @if (downloadError()) {
+    <div class="alert-error" role="alert">{{ downloadError() }}</div>
+  }
+</div>
+
+@if (!rangeError() && report.hasValue()) {
+  @let r = report.value();
+  <section class="tiles" aria-label="Totals">
+    <div class="card tile">
+      <span class="tile-label">Sales</span>
+      <span class="tile-value">{{ r.summary.sales_minor | money: r.currency }}</span>
+    </div>
+    <div class="card tile">
+      <span class="tile-label">Orders</span>
+      <span class="tile-value">{{ r.summary.orders }}</span>
+    </div>
+    <div class="card tile">
+      <span class="tile-label">Average order</span>
+      <span class="tile-value">{{ r.summary.avg_order_minor | money: r.currency }}</span>
+    </div>
+    <div class="card tile">
+      <span class="tile-label">Items sold</span>
+      <span class="tile-value">{{ r.summary.items_sold }}</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <adm-period-chart
+      [periods]="r.periods"
+      [currency]="r.currency"
+      [caption]="'Sales by ' + r.group_by"
+    />
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Money and outcomes</h2>
+      <dl class="facts">
+        <dt>Delivered</dt>
+        <dd>
+          {{ r.summary.delivered_minor | money: r.currency }}
+          <small>{{ orders(r.summary.delivered_orders) }}</small>
+        </dd>
+        <dt>Cash on delivery collected</dt>
+        <dd>{{ r.summary.cod_collected_minor | money: r.currency }}</dd>
+        <dt>Cancelled</dt>
+        <dd>
+          {{ r.summary.cancelled_minor | money: r.currency }}
+          <small>{{ orders(r.summary.cancelled_orders) }}</small>
+        </dd>
+        <dt>Returned or returning</dt>
+        <dd>
+          {{ r.summary.returned_minor | money: r.currency }}
+          <small>{{ orders(r.summary.returned_orders) }}</small>
+        </dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Sales by state</h2>
+      @if (r.regions.length) {
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">State</th>
+              <th scope="col" class="num">Orders</th>
+              <th scope="col" class="num">Sales</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (g of r.regions; track g.region) {
+              <tr>
+                <td>{{ g.region }}</td>
+                <td class="num">{{ g.orders }}</td>
+                <td class="num">{{ g.sales_minor | money: r.currency }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="muted">No sales in this range.</p>
+      }
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Top products</h2>
+    @if (r.top_products.length) {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Product</th>
+              <th scope="col" class="num">Qty sold</th>
+              <th scope="col" class="num">Sales</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of r.top_products; track p.product_number) {
+              <tr>
+                <td>
+                  {{ p.product_name }} <small class="muted">{{ p.product_number }}</small>
+                </td>
+                <td class="num">{{ p.qty }}</td>
+                <td class="num">{{ p.sales_minor | money: r.currency }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="muted small">The Excel download lists every product and every order.</p>
+    } @else {
+      <p class="muted">No sales in this range.</p>
+    }
+  </section>
+
+  <details class="card">
+    <summary>Show sales by {{ r.group_by }} as a table</summary>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Period</th>
+            <th scope="col" class="num">Orders</th>
+            <th scope="col" class="num">Items</th>
+            <th scope="col" class="num">Sales</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of r.periods; track p.start) {
+            <tr>
+              <td>{{ p.label }}</td>
+              <td class="num">{{ p.orders }}</td>
+              <td class="num">{{ p.items_sold }}</td>
+              <td class="num">{{ p.sales_minor | money: r.currency }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </details>
+} @else if (report.isLoading()) {
+  <p class="muted">Loading…</p>
+}
