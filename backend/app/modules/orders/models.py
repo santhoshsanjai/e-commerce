@@ -72,6 +72,8 @@ class Order(TimestampMixin, Base):
     delivery_instructions: Mapped[str] = mapped_column(String(500), nullable=False, default="")
 
     idempotency_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    # Courier tracking number, filled from the courier's status file.
+    awb_number: Mapped[str | None] = mapped_column(String(64), index=True)
     # Set when the order is put in a courier dispatch batch; an order joins at most one batch.
     dispatch_batch_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("dispatch_batches.id", ondelete="RESTRICT"), index=True

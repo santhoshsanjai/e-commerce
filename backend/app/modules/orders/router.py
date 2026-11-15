@@ -2,9 +2,10 @@ import uuid
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.core.dependencies import CurrentBuyer, DbSession, require_permission
+from app.modules.access_control.service import permissions_for
 from app.modules.orders import service
 from app.modules.orders.lifecycle import OrderStatus
 from app.modules.orders.schemas import (
@@ -12,6 +13,7 @@ from app.modules.orders.schemas import (
     AdminOrderListItem,
     OrderDetail,
     OrderSummary,
+    StatusChangeIn,
 )
 from app.modules.users.models import User
 from app.shared.pagination import Page, PageParams, page_params
@@ -21,6 +23,7 @@ admin_router = APIRouter(prefix="/admin/orders", tags=["admin: orders"])
 
 Paging = Annotated[PageParams, Depends(page_params)]
 CanViewOrders = Annotated[User, Depends(require_permission("orders.view"))]
+CanUpdateStatus = Annotated[User, Depends(require_permission("orders.status.update"))]
 
 
 @buyer_router.get("")
@@ -49,3 +52,18 @@ def admin_orders(
 @admin_router.get("/{order_id}")
 def admin_order(order_id: uuid.UUID, db: DbSession, _: CanViewOrders) -> AdminOrderDetail:
     return service.to_admin_detail(service.get_order(db, order_id))
+
+
+@admin_router.post("/{order_id}/status")
+def change_status(
+    order_id: uuid.UUID,
+    data: StatusChangeIn,
+    request: Request,
+    db: DbSession,
+    actor: CanUpdateStatus,
+) -> AdminOrderDetail:
+    """Move an order to another status. Steps outside the lifecycle need `override: true`, the
+    `orders.status.override` permission and a reason. Cancelling before handover restocks."""
+    can_override = "orders.status.override" in permissions_for(actor)
+    order = service.change_status(db, order_id, data, actor, can_override, request)
+    return service.to_admin_detail(order)
