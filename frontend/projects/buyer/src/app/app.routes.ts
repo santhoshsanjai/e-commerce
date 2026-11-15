@@ -23,6 +23,16 @@ export const routes: Routes = [
     title: 'Create account',
   },
   {
+    path: 'forgot-password',
+    loadComponent: () => import('@shop/shared').then((m) => m.ForgotPassword),
+    title: 'Reset your password',
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('@shop/shared').then((m) => m.ResetPassword),
+    title: 'Choose a new password',
+  },
+  {
     path: 'cart',
     canActivate: [authGuard],
     loadComponent: () => import('./features/cart/cart-page').then((m) => m.CartPage),

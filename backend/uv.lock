@@ -202,6 +202,9 @@ wheels = [
 s3 = [
     { name = "mypy-boto3-s3" },
 ]
+sesv2 = [
+    { name = "mypy-boto3-sesv2" },
+]
 
 [[package]]
 name = "botocore"
@@ -367,7 +370,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "boto3-stubs", extra = ["s3"] },
+    { name = "boto3-stubs", extra = ["s3", "sesv2"] },
     { name = "httpx" },
     { name = "httpx2" },
     { name = "mypy" },
@@ -396,7 +399,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "boto3-stubs", extras = ["s3"], specifier = ">=1.44.3" },
+    { name = "boto3-stubs", extras = ["s3", "sesv2"], specifier = ">=1.44.3" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "httpx2", specifier = ">=2.16.0" },
     { name = "mypy", specifier = ">=2.4.1" },
@@ -871,6 +874,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/37/29/2276d9f646696587202b27324aa006a3cdcb54391d7adef34438e4a23b7f/mypy_boto3_s3-1.44.0.tar.gz", hash = "sha256:ed98f0c6abeadbb36a96da2619c8f68f212f6671658defdd3eb80c018c7179da", size = 79411, upload-time = "2026-11-10T21:57:31.682Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0e/ae/6546865a7e96d3920d4e6cec3e8ff88229a38737efe9dfa558981c57c609/mypy_boto3_s3-1.44.0-py3-none-any.whl", hash = "sha256:802febb823c2d9a30da52342f8e886c52f6954f74947162d2ce593bff46a42d4", size = 86787, upload-time = "2026-11-10T21:57:29.213Z" },
+]
+
+[[package]]
+name = "mypy-boto3-sesv2"
+version = "1.44.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/51/57/863e40960e738fa2af02698984a80db70a6886fbe7ff39b25164a0b55540/mypy_boto3_sesv2-1.44.0.tar.gz", hash = "sha256:60c2056909702c5761a74893cdb365e6d8781b7624d0caf86064a49e691888fd", size = 49843, upload-time = "2026-11-10T21:58:20.651Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/8b/406cb57256f7b005004a69fc7d20baa9f42654608ccae1be721ef8cea6c3/mypy_boto3_sesv2-1.44.0-py3-none-any.whl", hash = "sha256:12d245656d546abdaca3051997a36777b59800383b3edf8c113340495c11e165", size = 55726, upload-time = "2026-11-10T21:58:18.142Z" },
 ]
 
 [[package]]

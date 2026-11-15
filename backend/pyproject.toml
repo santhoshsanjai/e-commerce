@@ -22,7 +22,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "boto3-stubs[s3]>=1.44.3",
+    "boto3-stubs[s3,sesv2]>=1.44.3",
     "httpx>=0.28.1",
     "httpx2>=2.16.0",
     "mypy>=2.4.1",

@@ -50,8 +50,9 @@ def _clean_tables() -> Iterator[None]:
     with engine.begin() as conn:
         conn.execute(
             text(
-                "TRUNCATE users, refresh_tokens, user_roles, audit_logs, categories, brands, "
-                "products, product_skus, product_attributes, product_media, addresses, carts, "
+                "TRUNCATE users, refresh_tokens, password_reset_tokens, user_roles, audit_logs, "
+                "categories, brands, products, product_skus, product_attributes, product_media, "
+                "addresses, carts, "
                 "cart_items, orders, order_items, order_status_events CASCADE"
             )
         )
@@ -99,13 +100,30 @@ def files() -> FakeStorage:
     return FakeStorage()
 
 
+class Outbox:
+    """Collects emails instead of sending them."""
+
+    def __init__(self) -> None:
+        self.sent: list = []
+
+    def send(self, email) -> None:
+        self.sent.append(email)
+
+
 @pytest.fixture
-def client(storage: FakeStorage, files: FakeStorage) -> Iterator[TestClient]:
+def outbox() -> Outbox:
+    return Outbox()
+
+
+@pytest.fixture
+def client(storage: FakeStorage, files: FakeStorage, outbox: Outbox) -> Iterator[TestClient]:
+    from app.infrastructure.email import get_email_sender
     from app.infrastructure.storage import get_file_store, get_storage
     from app.main import app
 
     app.dependency_overrides[get_storage] = lambda: storage
     app.dependency_overrides[get_file_store] = lambda: files
+    app.dependency_overrides[get_email_sender] = lambda: outbox
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()

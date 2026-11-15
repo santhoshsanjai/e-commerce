@@ -8,6 +8,18 @@ export const routes: Routes = [
     title: 'Sign in · Admin',
   },
   {
+    path: 'forgot-password',
+    loadComponent: () => import('@shop/shared').then((m) => m.ForgotPassword),
+    title: 'Reset your password · Admin',
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('@shop/shared').then((m) => m.ResetPassword),
+    // Staff passwords need 12 characters (the API enforces it too).
+    data: { minPassword: 12 },
+    title: 'Choose a new password · Admin',
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/shell').then((m) => m.Shell),

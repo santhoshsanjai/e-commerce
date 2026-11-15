@@ -1,17 +1,20 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Request, Response, status
 
 from app.core.config import get_settings
 from app.core.dependencies import CurrentUser, DbSession
 from app.core.exceptions import AppError
 from app.core.rate_limit import Attempt, login_limiter
+from app.infrastructure.email import EmailSender, get_email_sender, send_safely
 from app.modules.access_control.service import permissions_for
 from app.modules.auth import service
 from app.modules.auth.schemas import (
     LoginRequest,
     MeResponse,
     PasswordChange,
+    PasswordResetConfirm,
+    PasswordResetRequest,
     ProfileUpdate,
     RegisterRequest,
     TokenResponse,
@@ -19,6 +22,12 @@ from app.modules.auth.schemas import (
 from app.modules.users.models import User, UserType
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+Mailer = Annotated[EmailSender, Depends(get_email_sender)]
+
+# Reset emails allowed per account, and per address across accounts, each hour.
+RESET_EMAILS_PER_ACCOUNT = 3
+RESET_EMAILS_PER_ADDRESS = 20
 
 REFRESH_COOKIE = "refresh_token"
 REFRESH_COOKIE_PATH = "/api/v1/auth"
@@ -162,6 +171,8 @@ def change_password(
     data: PasswordChange,
     request: Request,
     response: Response,
+    background: BackgroundTasks,
+    mailer: Mailer,
     user: CurrentUser,
     db: DbSession,
 ) -> TokenResponse:
@@ -170,4 +181,41 @@ def change_password(
     attempt = _check_rate_limit(request, user.email)
     tokens = service.change_password(db, user, data, request)
     _succeeded(attempt, user.email)
+    background.add_task(send_safely, mailer, service.password_changed_notice(user))
     return _token_response(response, tokens)
+
+
+@router.post("/password-reset", status_code=status.HTTP_202_ACCEPTED)
+def request_password_reset(
+    data: PasswordResetRequest,
+    request: Request,
+    background: BackgroundTasks,
+    mailer: Mailer,
+    db: DbSession,
+) -> dict[str, str]:
+    """Email a reset link if the account exists. Always answers the same way, and sends after
+    responding, so neither the answer nor its timing shows whether an account exists."""
+    unused = Attempt()
+    allowed = login_limiter.hit(
+        f"reset:{service.normalise_email(data.email)}", RESET_EMAILS_PER_ACCOUNT, 3600, unused
+    ) and login_limiter.hit(
+        f"reset-ip:{_client_ip(request)}", RESET_EMAILS_PER_ADDRESS, 3600, unused
+    )
+    if allowed:
+        email = service.request_password_reset(db, data.email)
+        if email is not None:
+            background.add_task(send_safely, mailer, email)
+    return {"message": "If an account uses that email, we've sent a link to reset the password."}
+
+
+@router.post("/password-reset/confirm", status_code=status.HTTP_204_NO_CONTENT)
+def confirm_password_reset(
+    data: PasswordResetConfirm,
+    request: Request,
+    background: BackgroundTasks,
+    mailer: Mailer,
+    db: DbSession,
+) -> None:
+    """Set a new password from the emailed link. Every device is signed out; sign in again."""
+    notice = service.reset_password(db, data, request)
+    background.add_task(send_safely, mailer, notice)
