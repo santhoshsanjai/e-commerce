@@ -8,7 +8,14 @@ from app.core.exceptions import AppError
 from app.core.rate_limit import login_limiter
 from app.modules.access_control.service import permissions_for
 from app.modules.auth import service
-from app.modules.auth.schemas import LoginRequest, MeResponse, RegisterRequest, TokenResponse
+from app.modules.auth.schemas import (
+    LoginRequest,
+    MeResponse,
+    PasswordChange,
+    ProfileUpdate,
+    RegisterRequest,
+    TokenResponse,
+)
 from app.modules.users.models import User, UserType
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -109,3 +116,23 @@ def logout(
 @router.get("/me")
 def me(user: CurrentUser) -> MeResponse:
     return _me(user)
+
+
+@router.patch("/me")
+def update_me(data: ProfileUpdate, user: CurrentUser, db: DbSession) -> MeResponse:
+    """Change your own name or phone. Email changes need verification and come later."""
+    return _me(service.update_profile(db, user, data))
+
+
+@router.post("/change-password")
+def change_password(
+    data: PasswordChange,
+    request: Request,
+    response: Response,
+    user: CurrentUser,
+    db: DbSession,
+) -> TokenResponse:
+    """Signs out every other device and returns fresh tokens for this one."""
+    # Shares the login limit, so a stolen access token can't be used to guess the password.
+    _check_rate_limit(request, user.email)
+    return _token_response(response, service.change_password(db, user, data, request))

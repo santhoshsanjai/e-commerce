@@ -1,0 +1,194 @@
+<h1>Your account</h1>
+
+<section class="card" aria-labelledby="details-h">
+  <h2 id="details-h">Your details</h2>
+  <div aria-live="polite">
+    @if (profileNotice()) {
+      <div class="notice" role="status">{{ profileNotice() }}</div>
+    }
+    @if (profileError()) {
+      <div class="alert-error" role="alert">{{ profileError() }}</div>
+    }
+  </div>
+  <form (ngSubmit)="saveProfile()" novalidate>
+    <div class="row">
+      <div class="field">
+        <label for="profile_name">Full name</label>
+        <input
+          id="profile_name"
+          name="full_name"
+          autocomplete="name"
+          [ngModel]="fullName()"
+          (ngModelChange)="fullName.set($event)"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="profile_phone">Mobile number <span class="muted">(optional)</span></label>
+        <input
+          id="profile_phone"
+          name="phone"
+          type="tel"
+          autocomplete="tel"
+          [ngModel]="phone()"
+          (ngModelChange)="phone.set($event)"
+        />
+      </div>
+    </div>
+    <div class="field">
+      <label for="profile_email">Email</label>
+      <input
+        id="profile_email"
+        name="email"
+        [value]="user()?.email"
+        disabled
+        aria-describedby="email-hint"
+      />
+      <small id="email-hint" class="muted"
+        >You sign in with this email. It can't be changed here.</small
+      >
+    </div>
+    <button class="btn" type="submit" [disabled]="profileBusy() || !profileChanged()">
+      {{ profileBusy() ? 'Saving…' : 'Save details' }}
+    </button>
+  </form>
+</section>
+
+<section class="card" aria-labelledby="addr-h">
+  <h2 id="addr-h">Delivery addresses</h2>
+  <div aria-live="polite">
+    @if (addressNotice()) {
+      <div class="notice" role="status">{{ addressNotice() }}</div>
+    }
+    @if (addressError()) {
+      <div class="alert-error" role="alert">{{ addressError() }}</div>
+    }
+  </div>
+
+  @if (addresses.isLoading() && !addresses.hasValue()) {
+    <p aria-busy="true">Loading addresses…</p>
+  } @else if (addresses.error()) {
+    <div class="alert-error" role="alert">
+      Couldn't load your addresses.
+      <button class="btn btn-secondary" type="button" (click)="addresses.reload()">Retry</button>
+    </div>
+  } @else {
+    <ul class="addresses">
+      @for (a of addresses.value(); track a.id) {
+        <li class="address">
+          @if (editing() === a.id) {
+            <buy-address-form
+              [address]="a"
+              heading="Edit address"
+              submitLabel="Save address"
+              (saved)="addressSaved()"
+              (cancelled)="editing.set(null)"
+            />
+          } @else {
+            <div class="address-text">
+              <strong>{{ a.recipient_name }}</strong>
+              @if (a.is_default) {
+                <span class="tag">Default</span>
+              }
+              <span>{{ oneLine(a) }}</span>
+              <span class="muted">{{ a.phone }}</span>
+            </div>
+            <div class="address-actions">
+              @if (confirmingDelete() === a.id) {
+                <span class="confirm-text">Remove this address?</span>
+                <button class="btn danger" type="button" (click)="remove(a)">Yes, remove</button>
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  (click)="confirmingDelete.set(null)"
+                >
+                  Keep
+                </button>
+              } @else {
+                <button class="link" type="button" (click)="startEdit(a.id)">
+                  Edit<span class="visually-hidden"> address for {{ a.recipient_name }}</span>
+                </button>
+                @if (!a.is_default) {
+                  <button class="link" type="button" (click)="makeDefault(a)">
+                    Make default<span class="visually-hidden"> ({{ a.city }})</span>
+                  </button>
+                }
+                <button class="link" type="button" (click)="confirmingDelete.set(a.id)">
+                  Remove<span class="visually-hidden"> address for {{ a.recipient_name }}</span>
+                </button>
+              }
+            </div>
+          }
+        </li>
+      } @empty {
+        <li class="muted">You haven't saved any addresses yet.</li>
+      }
+    </ul>
+
+    @if (editing() === 'new') {
+      <buy-address-form
+        submitLabel="Add address"
+        [defaultChecked]="!addresses.value()?.length"
+        (saved)="addressSaved()"
+        (cancelled)="editing.set(null)"
+      />
+    } @else if (editing() === null) {
+      <button class="link" type="button" (click)="startEdit('new')">+ Add a new address</button>
+    }
+  }
+</section>
+
+<section class="card" aria-labelledby="pw-h">
+  <h2 id="pw-h">Change password</h2>
+  <div aria-live="polite">
+    @if (passwordNotice()) {
+      <div class="notice" role="status">{{ passwordNotice() }}</div>
+    }
+    @if (passwordError()) {
+      <div class="alert-error" role="alert">{{ passwordError() }}</div>
+    }
+  </div>
+  <form (ngSubmit)="changePassword()" novalidate>
+    <div class="field narrow">
+      <label for="current_password">Current password</label>
+      <input
+        id="current_password"
+        name="current_password"
+        type="password"
+        autocomplete="current-password"
+        [(ngModel)]="currentPassword"
+      />
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="new_password">New password</label>
+        <input
+          id="new_password"
+          name="new_password"
+          type="password"
+          autocomplete="new-password"
+          aria-describedby="pw-hint"
+          [(ngModel)]="newPassword"
+        />
+        <small id="pw-hint" class="muted">At least {{ minPassword }} characters.</small>
+      </div>
+      <div class="field">
+        <label for="confirm_password">New password again</label>
+        <input
+          id="confirm_password"
+          name="confirm_password"
+          type="password"
+          autocomplete="new-password"
+          [(ngModel)]="confirmPassword"
+        />
+      </div>
+    </div>
+    @if (passwordProblem(); as problem) {
+      <p class="error-text" role="alert">{{ problem }}</p>
+    }
+    <button class="btn" type="submit" [disabled]="!canChangePassword()">
+      {{ passwordBusy() ? 'Changing…' : 'Change password' }}
+    </button>
+    <p class="muted small">Changing your password signs you out on your other devices.</p>
+  </form>
+</section>

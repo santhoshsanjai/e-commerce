@@ -100,4 +100,29 @@ describe('AuthService', () => {
     expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush({});
   });
+
+  it('updates the signed-in user after a profile change', async () => {
+    await login();
+    const done = auth.updateProfile({ full_name: 'New Name' });
+    const req = http.expectOne('/api/v1/auth/me');
+    expect(req.request.method).toBe('PATCH');
+    req.flush({ ...ME, full_name: 'New Name' });
+    await done;
+    expect(auth.user()?.full_name).toBe('New Name');
+  });
+
+  it('switches to the fresh token after a password change', async () => {
+    await login();
+    const done = auth.changePassword('old-pass', 'new-password-1');
+    const req = http.expectOne('/api/v1/auth/change-password');
+    expect(req.request.withCredentials).toBe(true);
+    expect(req.request.body).toEqual({
+      current_password: 'old-pass',
+      new_password: 'new-password-1',
+    });
+    req.flush({ access_token: 'tok-2', token_type: 'bearer', expires_in: 900 });
+    await done;
+    expect(auth.accessToken()).toBe('tok-2');
+    expect(auth.isAuthenticated()).toBe(true);
+  });
 });

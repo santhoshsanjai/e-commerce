@@ -2,7 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../api/api-config';
-import { Audience, LoginRequest, Me, RegisterRequest, TokenResponse } from '../models/auth.models';
+import {
+  Audience,
+  LoginRequest,
+  Me,
+  ProfileUpdate,
+  RegisterRequest,
+  TokenResponse,
+} from '../models/auth.models';
 
 /**
  * Holds the session for one app.
@@ -45,6 +52,28 @@ export class AuthService {
 
   async register(data: RegisterRequest): Promise<Me> {
     return firstValueFrom(this.http.post<Me>(`${this.baseUrl}/auth/register`, data));
+  }
+
+  /** Change your own name or phone; the signed-in user updates everywhere straight away. */
+  async updateProfile(data: ProfileUpdate): Promise<Me> {
+    const me = await firstValueFrom(this.http.patch<Me>(`${this.baseUrl}/auth/me`, data));
+    this.currentUser.set(me);
+    return me;
+  }
+
+  /**
+   * Change your own password. The API signs out every other device and sends fresh tokens (and a
+   * new refresh cookie) for this one, so the person stays signed in here.
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const res = await firstValueFrom(
+      this.http.post<TokenResponse>(
+        `${this.baseUrl}/auth/change-password`,
+        { current_password: currentPassword, new_password: newPassword },
+        { withCredentials: true },
+      ),
+    );
+    this.token.set(res.access_token);
   }
 
   /** Exchange the refresh cookie for a new access token. Concurrent callers share one request. */

@@ -41,3 +41,29 @@ class MeResponse(BaseModel):
     user_type: UserType
     roles: list[str]
     permissions: list[str]
+
+
+# Same phone rule as delivery addresses; an empty value clears the number.
+PHONE = r"^(\+?[0-9][0-9 \-]{8,18}[0-9])?$"
+
+
+class ProfileUpdate(BaseModel):
+    """Fields left out are not changed."""
+
+    full_name: str | None = Field(default=None, min_length=1, max_length=200)
+    phone: str | None = Field(default=None, pattern=PHONE, max_length=32)
+
+    @field_validator("full_name")
+    @classmethod
+    def strip_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        if not value:
+            raise ValueError("Full name is required")
+        return value
+
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=10, max_length=128)
