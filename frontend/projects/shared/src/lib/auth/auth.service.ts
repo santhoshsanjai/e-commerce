@@ -174,10 +174,21 @@ export class AuthService {
     return this.refreshInFlight;
   }
 
-  /** Try to resume a session from the refresh cookie (called once at app start). */
-  async restoreSession(): Promise<void> {
+  /**
+   * Try to resume a session from the refresh cookie (called once at app start).
+   *
+   * Pass the app's audience so a session that belongs to the other app is ignored. Browsers share
+   * cookies across ports, so locally (shop on :4200, admin on :4300) the one refresh cookie can
+   * hold a buyer session in the admin portal or a staff session in the shop. The session is only
+   * dropped here, not signed out, so the other app keeps it.
+   */
+  async restoreSession(audience?: Audience): Promise<void> {
     if (await this.refresh()) {
-      await this.loadMe().catch(() => this.clear());
+      const me = await this.loadMe().catch(() => null);
+      const expected = audience === 'staff' ? 'STAFF' : 'BUYER';
+      if (!me || (audience && me.user_type !== expected)) {
+        this.clear();
+      }
     }
   }
 

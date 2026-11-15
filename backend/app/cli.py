@@ -20,6 +20,7 @@ import os
 import secrets
 import sys
 
+from pydantic import EmailStr, TypeAdapter, ValidationError
 from sqlalchemy import select
 
 import app.models  # noqa: F401
@@ -31,6 +32,13 @@ from app.modules.users.models import User, UserType
 
 
 def create_superadmin(email: str, name: str, random_password: bool = False) -> int:
+    # Same check as the sign-in endpoint, so we never create an account that cannot sign in
+    # (for example an address at a reserved domain such as .local or .test).
+    try:
+        TypeAdapter(EmailStr).validate_python(email.strip())
+    except ValidationError as exc:
+        print(f"Invalid email: {exc.errors()[0]['msg']}", file=sys.stderr)
+        return 1
     if random_password:
         password = secrets.token_urlsafe(32)
     else:

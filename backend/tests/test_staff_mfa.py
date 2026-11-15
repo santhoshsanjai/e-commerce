@@ -219,3 +219,15 @@ def test_cli_can_create_a_super_admin_with_a_password_nobody_knows(client, outbo
     assert resp.status_code == 202
     [email] = outbox.sent
     assert "http://localhost:4300/reset-password?token=" in email.text
+
+
+def test_cli_refuses_an_email_the_sign_in_page_would_reject(client, capsys):
+    from app.cli import create_superadmin
+
+    # .local is a reserved domain: the account could never sign in, so don't create it.
+    assert create_superadmin("admin@shop.local", "Admin", random_password=True) == 1
+    assert "Invalid email" in capsys.readouterr().err
+    resp = client.post(
+        "/api/v1/auth/staff/login", json={"email": "admin@shop.local", "password": "x" * 12}
+    )
+    assert resp.status_code == 422

@@ -94,6 +94,30 @@ describe('AuthService', () => {
     expect(auth.accessToken()).toBeNull();
   });
 
+  it('restores a session that belongs to this app', async () => {
+    const done = auth.restoreSession('staff');
+    http
+      .expectOne('/api/v1/auth/refresh')
+      .flush({ access_token: 'tok-1', token_type: 'bearer', expires_in: 900 });
+    await tick();
+    http.expectOne('/api/v1/auth/me').flush(ME);
+    await done;
+    expect(auth.user()).toEqual(ME);
+  });
+
+  it("ignores another app's session without signing it out", async () => {
+    const done = auth.restoreSession('buyer');
+    http
+      .expectOne('/api/v1/auth/refresh')
+      .flush({ access_token: 'tok-1', token_type: 'bearer', expires_in: 900 });
+    await tick();
+    http.expectOne('/api/v1/auth/me').flush(ME);
+    await done;
+    expect(auth.isAuthenticated()).toBe(false);
+    expect(auth.accessToken()).toBeNull();
+    http.expectNone('/api/v1/auth/logout');
+  });
+
   it('does not attach tokens to non-API URLs', async () => {
     await login();
     TestBed.inject(HttpClient).get('https://cdn.example.com/x.json').subscribe();

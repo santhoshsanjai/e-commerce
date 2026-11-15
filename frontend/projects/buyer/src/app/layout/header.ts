@@ -15,7 +15,11 @@ import { CartStore } from '../features/cart/cart.store';
           <span class="greeting">Hi, {{ user.full_name }}</span>
           <a routerLink="/orders">Orders</a>
           <a routerLink="/account">Account</a>
-          <a routerLink="/cart" class="cart" [attr.aria-label]="'Cart, ' + cart.count() + ' items'">
+          <a
+            routerLink="/cart"
+            class="cart"
+            [attr.aria-label]="'Cart, ' + cart.count() + (cart.count() === 1 ? ' item' : ' items')"
+          >
             Cart
             @if (cart.count()) {
               <span class="count" aria-hidden="true">{{ cart.count() }}</span>

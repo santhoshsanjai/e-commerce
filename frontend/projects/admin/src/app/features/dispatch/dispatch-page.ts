@@ -222,7 +222,7 @@ export class DispatchPage {
     try {
       const batch = await this.api.create([...this.selected()]);
       this.message.set(
-        `Batch ${batch.batch_number} created with ${batch.order_count} orders. ` +
+        `Batch ${batch.batch_number} created with ${batch.order_count} ${batch.order_count === 1 ? 'order' : 'orders'}. ` +
           'They are now marked as handed to the courier.',
       );
       this.eligible.reload();
