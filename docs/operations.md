@@ -1,8 +1,8 @@
 # Operations runbook
 
 How to tell the shop is healthy, where to look when it isn't, and how to get data back. The AWS
-resources named here (alarms, backup bucket, scheduled tasks) are created by the infrastructure code
-in Phase 3d; this page is the contract that code implements.
+resources named here (alarms, backup bucket, scheduled tasks) are created by the Terraform code in
+`infra/` (see [infra/README.md](../infra/README.md)).
 
 ## Health checks
 
@@ -11,8 +11,8 @@ in Phase 3d; this page is the contract that code implements.
 | `GET /health/live` | The API process is up. Never touches the database. Returns the running `version` (git commit). | Container health check (restarts a stuck container) |
 | `GET /health/ready` | The database answers **and** its schema is at the migration this code expects. 503 otherwise, with `reason: schema_mismatch` when a migration is missing. | Load balancer target health (no traffic to an instance that isn't ready) |
 
-A deploy that forgot `alembic upgrade head` never takes traffic: its instances stay "not ready" and
-the old ones keep serving.
+On AWS each API task runs `alembic upgrade head` before the API starts. If a migration still
+hasn't been applied, the API's instances stay "not ready" and the old ones keep serving.
 
 ## Logs
 

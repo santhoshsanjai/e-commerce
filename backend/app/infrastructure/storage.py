@@ -23,8 +23,8 @@ class S3Storage:
             "s3",
             endpoint_url=settings.s3_endpoint_url or None,
             region_name=settings.s3_region,
-            aws_access_key_id=settings.s3_access_key,
-            aws_secret_access_key=settings.s3_secret_key,
+            aws_access_key_id=settings.s3_access_key or None,
+            aws_secret_access_key=settings.s3_secret_key or None,
         )
 
     def put(self, key: str, data: bytes, content_type: str) -> None:
@@ -65,8 +65,8 @@ class S3FileStore:
             "s3",
             endpoint_url=settings.s3_endpoint_url or None,
             region_name=settings.s3_region,
-            aws_access_key_id=settings.s3_access_key,
-            aws_secret_access_key=settings.s3_secret_key,
+            aws_access_key_id=settings.s3_access_key or None,
+            aws_secret_access_key=settings.s3_secret_key or None,
         )
 
     def put(self, key: str, data: bytes, content_type: str) -> None:

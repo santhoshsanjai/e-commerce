@@ -1,0 +1,8 @@
+# Copy to staging.auto.tfvars for local runs; the deploy workflow builds the same values from
+# the GitHub "staging" environment's variables. Nothing here is secret.
+buyer_domain    = "staging.shop.example.in"
+admin_domain    = "admin.staging.shop.example.in"
+email_domain    = "shop.example.in"
+email_from      = "Shop <no-reply@shop.example.in>"
+route53_zone_id = "" # or "Z0123456789ABCDEFGHIJ" when the domain's DNS is in Route 53 (recommended)
+alert_emails    = ["ops@example.in"]

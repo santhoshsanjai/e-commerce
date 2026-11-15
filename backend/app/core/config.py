@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import URL
 
 # Only for local development and tests; refused in every deployed environment.
 LOCAL_DEV_JWT_SECRET = "local-dev-only-jwt-secret-do-not-deploy"  # noqa: S105
@@ -19,6 +20,14 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/ecommerce"
+    # On AWS the connection comes in parts instead (the password from the RDS-managed secret, so it
+    # can rotate). When DB_HOST is set, these build database_url.
+    db_host: str | None = None
+    db_port: int = 5432
+    db_name: str = "ecommerce"
+    db_user: str | None = None
+    db_password: str | None = None
+    db_sslmode: str = "require"
 
     jwt_secret: str = Field(default=LOCAL_DEV_JWT_SECRET, min_length=32)
     jwt_issuer: str = "ecommerce-api"
@@ -72,6 +81,20 @@ class Settings(BaseSettings):
     mfa_issuer: str = "Shop Admin"
 
     @model_validator(mode="after")
+    def _build_database_url(self) -> "Settings":
+        if self.db_host:
+            self.database_url = URL.create(
+                "postgresql+psycopg",
+                username=self.db_user,
+                password=self.db_password,
+                host=self.db_host,
+                port=self.db_port,
+                database=self.db_name,
+                query={"sslmode": self.db_sslmode},
+            ).render_as_string(hide_password=False)
+        return self
+
+    @model_validator(mode="after")
     def _require_real_secret_when_deployed(self) -> "Settings":
         if self.environment not in ("local", "test") and self.jwt_secret == LOCAL_DEV_JWT_SECRET:
             raise ValueError("JWT_SECRET must be set for deployed environments")
@@ -80,6 +103,8 @@ class Settings(BaseSettings):
             and LOCAL_DEV_MFA_KEY in self.mfa_encryption_key
         ):
             raise ValueError("MFA_ENCRYPTION_KEY must be set for deployed environments")
+        if self.environment not in ("local", "test") and self.s3_access_key == "local":
+            raise ValueError("S3_ACCESS_KEY must be empty (use the IAM role) when deployed")
         if self.is_production and not self.staff_mfa_required:
             raise ValueError("STAFF_MFA_REQUIRED must be true in production")
         if self.is_production and not self.cookie_secure:

@@ -136,6 +136,11 @@ Migrations are a controlled release step; the API never creates tables on start-
 backwards compatible for one release (add columns and tables; drop or rename them in a later
 release), so a deploy can be rolled back to the previous image.
 
+## Deployment
+
+AWS infrastructure (Terraform) and the staging deploy pipeline are described in
+[infra/README.md](infra/README.md).
+
 ## Operations
 
 Health checks, logs, alerts, backups, restoring and secret rotation are in

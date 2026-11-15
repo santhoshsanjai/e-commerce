@@ -1,0 +1,108 @@
+name: Deploy to staging
+
+# Builds the images for a commit on main, applies the staging Terraform with that image tag (ECS
+# rolls out: each new API task migrates the database first), waits for the rollout and smoke-tests
+# the sites. Does nothing until the "staging" GitHub environment has its AWS variables
+# (infra/README.md). Production has its own workflow and needs a person's approval.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # sign in to AWS with OpenID Connect; no stored AWS keys
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    environment: staging
+    if: vars.AWS_DEPLOY_ROLE_ARN != ''
+    timeout-minutes: 60
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
+      IMAGE_TAG: ${{ github.sha }}
+      TF_IN_AUTOMATION: "1"
+      TF_VAR_image_tag: ${{ github.sha }}
+      TF_VAR_region: ${{ vars.AWS_REGION || 'ap-south-1' }}
+      TF_VAR_buyer_domain: ${{ vars.BUYER_DOMAIN }}
+      TF_VAR_admin_domain: ${{ vars.ADMIN_DOMAIN }}
+      TF_VAR_email_domain: ${{ vars.EMAIL_DOMAIN }}
+      TF_VAR_email_from: ${{ vars.EMAIL_FROM }}
+      TF_VAR_alert_emails: ${{ vars.ALERT_EMAILS }} # JSON list, e.g. ["ops@example.in"]
+      TF_VAR_route53_zone_id: ${{ vars.ROUTE53_ZONE_ID }}
+    defaults:
+      run:
+        working-directory: infra/terraform/envs/staging
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.4
+          terraform_wrapper: false
+
+      - name: Terraform init
+        run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" -backend-config="region=${AWS_REGION}"
+
+      - name: Make sure the image repositories exist
+        run: terraform apply -input=false -auto-approve -target=module.shop.aws_ecr_repository.this
+
+      - name: Build and push images
+        working-directory: .
+        run: |
+          set -euo pipefail
+          repos="$(terraform -chdir=infra/terraform/envs/staging output -json deploy | jq -c .ecr_repositories)"
+          registry="$(jq -r .api <<<"$repos" | cut -d/ -f1)"
+          aws ecr get-login-password | docker login --username AWS --password-stdin "$registry"
+          push() { # name, build args...
+            local repo; repo="$(jq -r --arg n "$1" '.[$n]' <<<"$repos")"; shift
+            if aws ecr describe-images --repository-name "${repo#*/}" --image-ids imageTag="$IMAGE_TAG" >/dev/null 2>&1; then
+              echo "$repo:$IMAGE_TAG already pushed"; return
+            fi
+            docker build -t "$repo:$IMAGE_TAG" "$@"
+            docker push "$repo:$IMAGE_TAG"
+          }
+          push api --build-arg APP_VERSION="$IMAGE_TAG" backend
+          push buyer --build-arg APP=buyer frontend
+          push admin --build-arg APP=admin frontend
+          push backup -f ops/Dockerfile.backup ops
+
+      - name: Terraform plan
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Terraform apply
+        run: terraform apply -input=false tfplan
+
+      - name: Wait for the rollout
+        run: |
+          set -euo pipefail
+          cluster="$(terraform output -json deploy | jq -r .cluster_name)"
+          aws ecs wait services-stable --cluster "$cluster" --services api buyer admin
+
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          shop="$(terraform output -json shop)"
+          buyer="$(jq -r .buyer_url <<<"$shop")"; admin="$(jq -r .admin_url <<<"$shop")"
+          for url in "$buyer/" "$admin/login" "$buyer/api/v1/catalog/categories"; do
+            code="$(curl -s -o /dev/null -w '%{http_code}' --retry 5 --retry-all-errors "$url")"
+            echo "$url -> $code"; [ "$code" = 200 ]
+          done
+          curl -sI "$buyer/" | grep -qi '^content-security-policy:' || { echo "CSP header missing"; exit 1; }
+          echo "Deployed $IMAGE_TAG to staging"
+
+      - name: DNS records to add (when DNS isn't in Route 53)
+        if: always()
+        run: terraform output -json dns_records_to_add || true
