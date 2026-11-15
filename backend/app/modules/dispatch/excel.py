@@ -1,23 +1,27 @@
-"""Courier dispatch sheet.
+"""Courier dispatch sheet (our own format, see docs/courier-file-format.md and ADR 0008).
 
 The column list below is the single place to change when the courier's own template arrives:
 reorder, rename or drop entries and the export follows. Column headers are what the courier sees.
+The last three columns are filled by the courier and the same sheet comes back through the courier
+import, so keep their headers in step with HEADER_ALIASES in courier_import/parser.py.
 """
 
 import io
 import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import timedelta, timezone
 
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.worksheet.worksheet import Worksheet
 
+from app.modules.courier_import.parser import CANONICAL_STATUS_WORDS
 from app.modules.orders.models import Order
+from app.shared.timezones import IST
 
-# ADR 0006: India only for v1. IST has no daylight saving, so a fixed offset is exact.
-IST = timezone(timedelta(hours=5, minutes=30), "IST")
+__all__ = ["COLUMNS", "IST", "XLSX_CONTENT_TYPE", "build_workbook", "safe_text"]
 
 XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -59,10 +63,13 @@ COLUMNS: Sequence[Column] = (
     Column("COD Amount", 12, _cod_amount, "0.00"),
     Column("Declared Value", 14, lambda o: o.total_minor / 100, "0.00"),
     Column("Delivery Instructions", 30, lambda o: o.delivery_instructions),
-    # Left blank for the courier to fill in; the import reads them back.
+    # Left blank for the courier to fill in; the courier import reads them back.
     Column("AWB No", 18, lambda o: ""),
-    Column("Courier Status", 16, lambda o: ""),
+    Column("Courier Status", 18, lambda o: ""),
+    Column("Status Date", 18, lambda o: ""),
 )
+
+COURIER_FILLED = ("AWB No", "Courier Status", "Status Date")
 
 _FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
 _PHONE_OR_NUMBER = re.compile(r"^[+-]?[0-9][0-9 .\-]*$")
@@ -106,6 +113,56 @@ def build_workbook(orders: Sequence[Order]) -> bytes:
 
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = ws.dimensions
+    _courier_columns(ws, len(orders))
+    _how_to_fill(wb)
     buffer = io.BytesIO()
     wb.save(buffer)
     return buffer.getvalue()
+
+
+def _courier_columns(ws: Worksheet, order_count: int) -> None:
+    """Highlight the columns the courier fills and offer the status words as a dropdown."""
+    headers = [c.header for c in COLUMNS]
+    fill = PatternFill("solid", fgColor="FFF4D6")
+    for header in COURIER_FILLED:
+        if header not in headers:
+            continue
+        idx = headers.index(header) + 1
+        ws.cell(row=1, column=idx).fill = PatternFill("solid", fgColor="F2A541")
+        ws.cell(row=1, column=idx).font = Font(bold=True, color="1B1B1B")
+        for row in range(2, order_count + 2):
+            ws.cell(row=row, column=idx).fill = fill
+    if "Courier Status" in headers and order_count:
+        letter = get_column_letter(headers.index("Courier Status") + 1)
+        dropdown = DataValidation(
+            type="list",
+            formula1='"' + ",".join(CANONICAL_STATUS_WORDS) + '"',
+            allow_blank=True,
+            showErrorMessage=False,  # other words are accepted too; the import reports unknown ones
+        )
+        dropdown.add(f"{letter}2:{letter}{order_count + 1}")
+        ws.add_data_validation(dropdown)
+
+
+def _how_to_fill(wb: Workbook) -> None:
+    ws = wb.create_sheet("How to fill")
+    ws.column_dimensions["A"].width = 22
+    ws.column_dimensions["B"].width = 70
+    rows = [
+        ("For the courier", "Fill the orange columns on the Orders sheet and send this file back."),
+        ("AWB No", "Your tracking number for the shipment."),
+        ("Courier Status", "One of the words below (dropdown). Leave blank to send only the AWB."),
+        ("Status Date", "When it happened, Indian time, as DD-MM-YYYY HH:MM."),
+        ("", ""),
+        ("Courier Status", "Meaning"),
+        *CANONICAL_STATUS_WORDS.items(),
+        ("", ""),
+        ("Do not change", "Order No, or the column headers. Extra columns are ignored."),
+    ]
+    for row in rows:
+        ws.append(list(row))
+    for cell in (ws["A1"], ws["A6"], ws["B6"]):
+        cell.font = Font(bold=True)
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
