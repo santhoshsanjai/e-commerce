@@ -125,7 +125,8 @@
     <section class="card meta">
       <p>
         Added {{ m.created_at | date: 'dd MMM yyyy' }} · Last sign-in
-        {{ m.last_login_at ? (m.last_login_at | date: 'dd MMM yyyy, HH:mm') : 'never' }}
+        {{ m.last_login_at ? (m.last_login_at | date: 'dd MMM yyyy, HH:mm') : 'never' }} · Two-step
+        sign-in {{ m.mfa_enabled ? 'on' : 'not set up yet' }}
       </p>
     </section>
 
@@ -155,6 +156,34 @@
           </button>
         </form>
       </section>
+
+      @if (m.mfa_enabled) {
+        <section class="card">
+          <h2>Reset two-step sign-in</h2>
+          <p class="hint">
+            For a lost or replaced phone. Removes {{ m.full_name }}'s authenticator app and recovery
+            codes and signs them out. They set up the app again at their next sign-in.
+          </p>
+          @if (confirmingMfaReset()) {
+            <div class="inline">
+              <button class="btn danger" type="button" [disabled]="busy()" (click)="resetMfa()">
+                Yes, reset two-step sign-in
+              </button>
+              <button
+                class="btn btn-secondary"
+                type="button"
+                (click)="confirmingMfaReset.set(false)"
+              >
+                Cancel
+              </button>
+            </div>
+          } @else {
+            <button class="btn btn-secondary" type="button" (click)="confirmingMfaReset.set(true)">
+              Reset two-step sign-in…
+            </button>
+          }
+        </section>
+      }
 
       <section class="card">
         @if (m.is_active) {

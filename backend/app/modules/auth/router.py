@@ -8,15 +8,20 @@ from app.core.exceptions import AppError
 from app.core.rate_limit import Attempt, login_limiter
 from app.infrastructure.email import EmailSender, get_email_sender, send_safely
 from app.modules.access_control.service import permissions_for
-from app.modules.auth import service
+from app.modules.auth import mfa, service
 from app.modules.auth.schemas import (
     LoginRequest,
     MeResponse,
+    MfaActivated,
+    MfaChallenge,
+    MfaCode,
+    MfaSetup,
     PasswordChange,
     PasswordResetConfirm,
     PasswordResetRequest,
     ProfileUpdate,
     RegisterRequest,
+    StaffLoginResponse,
     TokenResponse,
 )
 from app.modules.users.models import User, UserType
@@ -106,6 +111,7 @@ def _me(user: User) -> MeResponse:
         user_type=user.user_type,
         roles=sorted(role.name for role in user.roles),
         permissions=sorted(permissions_for(user)),
+        mfa_enabled=user.mfa_enabled,
     )
 
 
@@ -128,10 +134,70 @@ def buyer_login(
 @router.post("/staff/login")
 def staff_login(
     data: LoginRequest, request: Request, response: Response, db: DbSession
-) -> TokenResponse:
+) -> StaffLoginResponse:
+    """Check the password. Staff with two-step sign-in (required by default) get a challenge to
+    complete at /staff/mfa/verify, or /staff/mfa/setup the first time; no session yet."""
     attempt = _check_rate_limit(request, data.email)
-    tokens = service.login(db, data.email, data.password, UserType.STAFF, request)
+    user = service.authenticate(db, data.email, data.password, UserType.STAFF)
     _succeeded(attempt, data.email)
+    stage = mfa.stage_for(user)
+    if stage is not None:
+        return StaffLoginResponse(mfa=stage, challenge_token=mfa.issue_challenge(user, stage))
+    tokens = service.complete_login(db, user, request)
+    _set_refresh_cookie(response, tokens.refresh_token)
+    return StaffLoginResponse(access_token=tokens.access_token, expires_in=tokens.expires_in)
+
+
+def _check_code_limit(user: User) -> Attempt:
+    """Five wrong codes per account in five minutes, then a pause."""
+    settings = get_settings()
+    attempt = Attempt()
+    if not login_limiter.hit(
+        f"mfa:{user.id}",
+        settings.login_rate_limit_attempts,
+        settings.login_rate_limit_window_seconds,
+        attempt,
+    ):
+        raise AppError(
+            "rate_limited",
+            "Too many wrong codes. Try again later.",
+            status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+    return attempt
+
+
+@router.post("/staff/mfa/setup")
+def mfa_setup(data: MfaChallenge, db: DbSession) -> MfaSetup:
+    """First sign-in: a new authenticator secret, as a QR code and as text to type in."""
+    user = mfa.user_for_challenge(db, data.challenge_token, "enrol")
+    return MfaSetup(**mfa.start_setup(db, user))
+
+
+@router.post("/staff/mfa/activate")
+def mfa_activate(
+    data: MfaCode, request: Request, response: Response, db: DbSession
+) -> MfaActivated:
+    """Confirm the app with its first code. Returns recovery codes (shown once) and a session."""
+    user = mfa.user_for_challenge(db, data.challenge_token, "enrol")
+    attempt = _check_code_limit(user)
+    codes = mfa.activate(db, user, data.code, request)
+    tokens = service.complete_login(db, user, request)
+    login_limiter.forget(attempt)
+    _set_refresh_cookie(response, tokens.refresh_token)
+    return MfaActivated(
+        access_token=tokens.access_token, expires_in=tokens.expires_in, recovery_codes=codes
+    )
+
+
+@router.post("/staff/mfa/verify")
+def mfa_verify(data: MfaCode, request: Request, response: Response, db: DbSession) -> TokenResponse:
+    """Second step: a code from the app, or one of the recovery codes."""
+    user = mfa.user_for_challenge(db, data.challenge_token, "verify")
+    attempt = _check_code_limit(user)
+    mfa.verify(db, user, data.code, request)
+    tokens = service.complete_login(db, user, request)
+    login_limiter.forget(attempt)
+    login_limiter.reset(f"mfa:{user.id}")
     return _token_response(response, tokens)
 
 

@@ -57,6 +57,7 @@ import { STAFF_PAGE_SIZE, StaffApi, StaffQuery } from './staff.api';
               <th scope="col">Name</th>
               <th scope="col">Roles</th>
               <th scope="col">Status</th>
+              <th scope="col">Two-step</th>
               <th scope="col">Last sign-in</th>
             </tr>
           </thead>
@@ -73,13 +74,14 @@ import { STAFF_PAGE_SIZE, StaffApi, StaffQuery } from './staff.api';
                     s.is_active ? 'Active' : 'Deactivated'
                   }}</span>
                 </td>
+                <td>{{ s.mfa_enabled ? 'On' : 'Not set up' }}</td>
                 <td class="nowrap">
                   {{ s.last_login_at ? (s.last_login_at | date: 'dd MMM yyyy, HH:mm') : 'Never' }}
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="empty">
+                <td colspan="5" class="empty">
                   {{ staff.isLoading() ? 'Loading…' : 'No staff match.' }}
                 </td>
               </tr>

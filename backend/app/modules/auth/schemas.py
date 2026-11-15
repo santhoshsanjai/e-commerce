@@ -1,4 +1,5 @@
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -41,6 +42,7 @@ class MeResponse(BaseModel):
     user_type: UserType
     roles: list[str]
     permissions: list[str]
+    mfa_enabled: bool = False
 
 
 # Same phone rule as delivery addresses; an empty value clears the number.
@@ -76,3 +78,31 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetConfirm(BaseModel):
     token: str = Field(min_length=20, max_length=200)
     new_password: str = Field(min_length=10, max_length=128)
+
+
+class StaffLoginResponse(BaseModel):
+    """Either a session (access_token) or the next sign-in step (mfa + challenge_token)."""
+
+    access_token: str | None = None
+    token_type: str = "bearer"  # noqa: S105 - OAuth2 token type, not a secret
+    expires_in: int | None = None
+    mfa: Literal["verify", "enrol"] | None = None
+    challenge_token: str | None = None
+
+
+class MfaChallenge(BaseModel):
+    challenge_token: str = Field(min_length=1, max_length=2000)
+
+
+class MfaCode(MfaChallenge):
+    code: str = Field(min_length=6, max_length=20)
+
+
+class MfaSetup(BaseModel):
+    secret: str
+    otpauth_uri: str
+    qr_png: str
+
+
+class MfaActivated(TokenResponse):
+    recovery_codes: list[str]

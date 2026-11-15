@@ -14,6 +14,7 @@ const ME: Me = {
   user_type: 'STAFF',
   roles: ['Manager'],
   permissions: ['orders.view', 'orders.export'],
+  mfa_enabled: false,
 };
 
 /** Let pending promise callbacks run. */

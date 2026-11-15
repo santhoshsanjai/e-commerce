@@ -6,8 +6,12 @@ import {
   Audience,
   LoginRequest,
   Me,
+  MfaActivated,
+  MfaSetup,
   ProfileUpdate,
   RegisterRequest,
+  StaffLoginResponse,
+  StaffSignInStep,
   TokenResponse,
 } from '../models/auth.models';
 
@@ -45,6 +49,58 @@ export class AuthService {
       this.http.post<TokenResponse>(`${this.baseUrl}${path}`, credentials, {
         withCredentials: true,
       }),
+    );
+    this.token.set(res.access_token);
+    return this.loadMe();
+  }
+
+  /**
+   * Staff password step. Staff with two-step sign-in get a challenge to finish with a code
+   * (`mfaVerify`), or to set up their authenticator app first (`mfaSetup`, `mfaActivate`).
+   */
+  async staffLogin(credentials: LoginRequest): Promise<StaffSignInStep> {
+    const res = await firstValueFrom(
+      this.http.post<StaffLoginResponse>(`${this.baseUrl}/auth/staff/login`, credentials, {
+        withCredentials: true,
+      }),
+    );
+    if (res.mfa && res.challenge_token) {
+      return { kind: res.mfa, challenge: res.challenge_token };
+    }
+    this.token.set(res.access_token);
+    return { kind: 'signed-in', me: await this.loadMe() };
+  }
+
+  mfaSetup(challenge: string): Promise<MfaSetup> {
+    return firstValueFrom(
+      this.http.post<MfaSetup>(`${this.baseUrl}/auth/staff/mfa/setup`, {
+        challenge_token: challenge,
+      }),
+    );
+  }
+
+  /** Confirm the new app with a code. Signs in and returns the one-time recovery codes. */
+  async mfaActivate(challenge: string, code: string): Promise<string[]> {
+    const res = await firstValueFrom(
+      this.http.post<MfaActivated>(
+        `${this.baseUrl}/auth/staff/mfa/activate`,
+        { challenge_token: challenge, code },
+        { withCredentials: true },
+      ),
+    );
+    this.token.set(res.access_token);
+    await this.loadMe();
+    return res.recovery_codes;
+  }
+
+  /** Finish signing in with a code from the app, or a recovery code. */
+  async mfaVerify(challenge: string, code: string): Promise<Me> {
+    const res = await firstValueFrom(
+      this.http.post<TokenResponse>(
+        `${this.baseUrl}/auth/staff/mfa/verify`,
+        { challenge_token: challenge, code },
+        { withCredentials: true },
+      ),
     );
     this.token.set(res.access_token);
     return this.loadMe();

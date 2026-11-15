@@ -3,7 +3,12 @@
 from app.modules.access_control.models import Permission, Role
 from app.modules.addresses.models import Address
 from app.modules.audit.models import AuditLog
-from app.modules.auth.models import PasswordResetToken, RateLimitHit, RefreshToken
+from app.modules.auth.models import (
+    MfaRecoveryCode,
+    PasswordResetToken,
+    RateLimitHit,
+    RefreshToken,
+)
 from app.modules.cart.models import Cart, CartItem
 from app.modules.catalog.models import (
     Brand,
@@ -27,6 +32,7 @@ __all__ = [
     "Category",
     "CourierImport",
     "DispatchBatch",
+    "MfaRecoveryCode",
     "Order",
     "OrderItem",
     "OrderStatusEvent",

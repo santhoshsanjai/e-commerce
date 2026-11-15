@@ -12,6 +12,7 @@ from app.core.security import hash_password
 from app.modules.access_control.models import Role, user_roles
 from app.modules.access_control.permissions import SUPER_ADMIN
 from app.modules.audit import service as audit
+from app.modules.auth import mfa
 from app.modules.auth.models import RefreshToken
 from app.modules.users.models import User, UserType
 from app.modules.users.schemas import StaffCreate, StaffOut, StaffStatus, StaffUpdate
@@ -30,6 +31,7 @@ def to_staff_out(user: User) -> StaffOut:
         role_ids=[r.id for r in roles],
         last_login_at=user.last_login_at,
         created_at=user.created_at,
+        mfa_enabled=user.mfa_enabled,
     )
 
 
@@ -241,6 +243,30 @@ def reset_password(
     audit.record(
         db,
         "users.password_reset",
+        actor_id=actor.id,
+        request=request,
+        entity_type="user",
+        entity_id=str(target.id),
+    )
+    db.commit()
+
+
+def reset_mfa(db: Session, staff_id: uuid.UUID, actor: User, request: Request) -> None:
+    """For a lost phone: remove the person's authenticator app and recovery codes and sign them
+    out. They set up a new app at their next sign-in."""
+    target = get_staff(db, staff_id, lock=True)
+    _guard_target(actor, target)
+    if target.id == actor.id:
+        raise AppError(
+            "cannot_reset_own_mfa",
+            "Ask another Super Admin to reset your two-step sign-in.",
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
+    mfa.turn_off(db, target)
+    _revoke_sessions(db, target.id)
+    audit.record(
+        db,
+        "users.mfa_reset",
         actor_id=actor.id,
         request=request,
         entity_type="user",

@@ -25,6 +25,7 @@ const member = (over: Partial<StaffMember> = {}): StaffMember => ({
   roles: ['Manager'],
   role_ids: ['r-man'],
   last_login_at: null,
+  mfa_enabled: false,
   created_at: '2026-11-01T00:00:00Z',
   ...over,
 });
@@ -35,6 +36,7 @@ async function setup(me: { id: string; roles: string[] }, target: StaffMember) {
     roles: vi.fn(() => of(roles)),
     update: vi.fn(async (_id: string, body: object) => ({ ...target, ...body })),
     resetPassword: vi.fn(async () => undefined),
+    resetMfa: vi.fn(async () => undefined),
   };
   const auth = {
     user: signal({ ...me, email: 'me@example.com' }),
@@ -112,5 +114,21 @@ describe('StaffForm', () => {
     expect(api.update).toHaveBeenCalledWith('u-2', { is_active: false });
     expect(el.querySelector('[role=status]')?.textContent).toContain('signed out everywhere');
     expect(button('Reactivate')).toBeDefined();
+  });
+
+  it('resets two-step sign-in for a lost phone, after asking', async () => {
+    const { api, fixture, el, button } = await setup(
+      { id: 'u-1', roles: ['Super Admin'] },
+      member({ mfa_enabled: true }),
+    );
+    expect(el.textContent).toContain('Two-step sign-in on');
+    button('Reset two-step sign-in…')!.click();
+    await fixture.whenStable();
+    expect(api.resetMfa).not.toHaveBeenCalled();
+    button('Yes, reset two-step sign-in')!.click();
+    await fixture.whenStable();
+    expect(api.resetMfa).toHaveBeenCalledWith('u-2');
+    expect(el.textContent).toContain('Two-step sign-in not set up yet');
+    expect(button('Reset two-step sign-in…')).toBeUndefined();
   });
 });

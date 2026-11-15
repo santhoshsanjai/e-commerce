@@ -56,3 +56,10 @@ def reset_password(
 ) -> Response:
     service.reset_password(db, staff_id, data.password, actor, request)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{staff_id}/mfa/reset", status_code=status.HTTP_204_NO_CONTENT)
+def reset_mfa(staff_id: uuid.UUID, request: Request, db: DbSession, actor: CanManage) -> Response:
+    """Remove a staff member's authenticator app (lost phone); they set up a new one at sign-in."""
+    service.reset_mfa(db, staff_id, actor, request)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
