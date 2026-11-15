@@ -91,6 +91,11 @@ import { OrdersApi } from './orders.api';
             @if (o.delivery_instructions) {
               <p class="muted">Note: {{ o.delivery_instructions }}</p>
             }
+            @if (o.awb_number) {
+              <p class="tracking">
+                Courier tracking number <strong>{{ o.awb_number }}</strong>
+              </p>
+            }
           </section>
           <section class="card">
             <h3>Progress</h3>

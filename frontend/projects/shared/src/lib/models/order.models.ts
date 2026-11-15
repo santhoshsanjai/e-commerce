@@ -121,6 +121,8 @@ export interface OrderDetail extends OrderSummary {
     country_code: string;
   };
   delivery_instructions: string;
+  /** The courier's tracking number, once known. */
+  awb_number: string | null;
   timeline: StatusEvent[];
 }
 
@@ -135,7 +137,6 @@ export interface AdminOrderDetail extends OrderDetail {
   id: string;
   customer_name: string;
   customer_email: string;
-  awb_number: string | null;
   /** Statuses the lifecycle allows next; others need the override permission. */
   allowed_next: OrderStatus[];
 }

@@ -66,6 +66,7 @@ def _detail_fields(order: Order) -> dict[str, object]:
             country_code=order.ship_country_code,
         ),
         "delivery_instructions": order.delivery_instructions,
+        "awb_number": order.awb_number,
         "timeline": [StatusEventOut.model_validate(e) for e in order.events],
     }
 
@@ -81,7 +82,6 @@ def to_admin_detail(order: Order) -> AdminOrderDetail:
             "id": order.id,
             "customer_name": order.customer_name,
             "customer_email": order.customer_email,
-            "awb_number": order.awb_number,
             "allowed_next": sorted(TRANSITIONS[order.status]),
         }
     )

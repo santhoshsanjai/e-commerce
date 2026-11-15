@@ -58,6 +58,8 @@ class OrderDetail(OrderSummary):
     items: list[OrderItemOut]
     shipping_address: ShippingAddressOut
     delivery_instructions: str
+    # The courier's tracking number, once the courier file has supplied it.
+    awb_number: str | None
     timeline: list[StatusEventOut]
 
 
@@ -72,7 +74,6 @@ class AdminOrderDetail(OrderDetail):
     id: uuid.UUID
     customer_name: str
     customer_email: str
-    awb_number: str | None
     # Statuses the lifecycle allows next; anything else needs the override permission.
     allowed_next: list[OrderStatus]
 

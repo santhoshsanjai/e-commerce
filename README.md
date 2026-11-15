@@ -78,8 +78,29 @@ cd frontend
 npm run format:check && npm run lint && npm test && npm run build
 ```
 
-CI (`.github/workflows/ci.yml`) runs all of these on every pull request, plus Docker image builds and a
-dependency audit.
+CI (`.github/workflows/ci.yml`) runs all of these on every pull request, plus Docker image builds, a
+dependency audit and the end-to-end tests against the full Docker stack.
+
+## End-to-end tests
+
+Playwright tests in `e2e/` drive both apps in a real browser through the full journey: staff add a
+product, a buyer orders it, staff dispatch it, import the courier file, and check the reports and audit
+log. They also cover staff access by role, the buyer account page and phone layouts.
+
+```bash
+# 1. Start the stack (or run the dev servers on ports 4200, 4300 and 8000)
+docker compose up --build -d
+docker compose run --rm api python -m app.cli create-superadmin
+
+# 2. Run the tests (they create their own data with unique names, so they can run repeatedly)
+cd e2e
+npm ci
+npx playwright install chromium
+E2E_ADMIN_EMAIL=you@example.com E2E_ADMIN_PASSWORD=... npx playwright test
+npx playwright show-report   # after a failure
+```
+
+Never point these tests at production: they create real orders and staff accounts.
 
 ## Database migrations
 
