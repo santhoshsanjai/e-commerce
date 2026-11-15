@@ -39,7 +39,10 @@ services:
 
   api:
     build: ./backend
-    environment: *api-env
+    environment:
+      <<: *api-env
+      # Local only: the web containers' addresses change, so trust any proxy.
+      FORWARDED_ALLOW_IPS: "*"
     ports:
       - "8000:8000"
     depends_on:

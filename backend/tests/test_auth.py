@@ -131,3 +131,42 @@ def test_tampered_token_rejected(client):
     token = register_and_login(client).json()["access_token"]
     resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}x"})
     assert resp.status_code == 401
+
+
+def test_one_address_trying_many_accounts_is_rate_limited(client):
+    """Spreading guesses over many accounts doesn't get round the limit."""
+    codes = [
+        client.post(
+            "/api/v1/auth/login", json={"email": f"user{i}@example.com", "password": "guess-123"}
+        ).status_code
+        for i in range(31)
+    ]
+    assert codes[:30] == [401] * 30
+    assert codes[30] == 429
+
+
+def test_rate_limit_is_shared_between_api_instances(client):
+    """Counts live in the database, so a second API instance sees the same failures."""
+    from sqlalchemy import text
+
+    from app.infrastructure.database import engine
+
+    client.post("/api/v1/auth/register", json=BUYER)
+    bad = {"email": BUYER["email"], "password": "wrong-password"}
+    for _ in range(5):
+        client.post("/api/v1/auth/login", json=bad)
+    with engine.connect() as conn:
+        assert (
+            conn.scalar(
+                text("SELECT count(*) FROM rate_limit_hits WHERE key = 'account:buyer@example.com'")
+            )
+            == 5
+        )
+
+
+def test_api_responses_are_not_cached_or_framed(client):
+    resp = client.post("/api/v1/auth/register", json=BUYER)
+    assert resp.headers["cache-control"] == "no-store"
+    assert resp.headers["content-security-policy"] == "default-src 'none'; frame-ancestors 'none'"
+    assert resp.headers["x-frame-options"] == "DENY"
+    assert resp.headers["x-content-type-options"] == "nosniff"

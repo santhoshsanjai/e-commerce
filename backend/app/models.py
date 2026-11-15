@@ -3,7 +3,7 @@
 from app.modules.access_control.models import Permission, Role
 from app.modules.addresses.models import Address
 from app.modules.audit.models import AuditLog
-from app.modules.auth.models import RefreshToken
+from app.modules.auth.models import RateLimitHit, RefreshToken
 from app.modules.cart.models import Cart, CartItem
 from app.modules.catalog.models import (
     Brand,
@@ -35,6 +35,7 @@ __all__ = [
     "ProductAttribute",
     "ProductMedia",
     "ProductSku",
+    "RateLimitHit",
     "RefreshToken",
     "Role",
     "User",

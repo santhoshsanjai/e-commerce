@@ -63,6 +63,10 @@ See `backend/.env.example`. The important ones:
 | `JWT_SECRET` | Required outside local/test; at least 32 random characters |
 | `COOKIE_SECURE` | `true` wherever the site is served over HTTPS (required in production) |
 | `CORS_ORIGINS` | JSON list of allowed browser origins |
+| `FORWARDED_ALLOW_IPS` | Proxies whose `X-Forwarded-For` is trusted (load balancer and web subnets, e.g. the VPC CIDR). Never `*` when deployed |
+
+The web containers (`frontend/nginx.conf`) take `API_UPSTREAM` (where `/api` goes) and
+`MEDIA_ORIGIN` (the CDN origin for product images, allowed by the Content Security Policy).
 
 ## Checks
 

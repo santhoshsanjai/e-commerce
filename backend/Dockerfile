@@ -20,4 +20,8 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health/live').status==200 else 1)"
 # Migrations run as a separate release step (`alembic upgrade head`), never on API start.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
+# The client address comes from X-Forwarded-For, trusting only the proxies listed in
+# FORWARDED_ALLOW_IPS (set it to the load balancer and web subnets, e.g. the VPC CIDR). Never "*" in a
+# deployed environment: clients could then pick their own address and dodge the sign-in limits.
+ENV FORWARDED_ALLOW_IPS=127.0.0.1
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
