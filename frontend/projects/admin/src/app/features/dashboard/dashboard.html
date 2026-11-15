@@ -1,0 +1,136 @@
+<div class="page-head">
+  <h1>Dashboard</h1>
+  <button
+    class="btn btn-secondary"
+    type="button"
+    (click)="data.reload()"
+    [disabled]="data.isLoading()"
+  >
+    Refresh
+  </button>
+</div>
+
+@if (data.error()) {
+  <div class="alert-error" role="alert">
+    Couldn't load the dashboard.
+    <button class="btn btn-secondary" type="button" (click)="data.reload()">Retry</button>
+  </div>
+} @else if (data.value(); as d) {
+  <section class="tiles" aria-label="Today">
+    <div class="card tile">
+      <span class="tile-label">Orders today</span>
+      <strong class="tile-value">{{ d.today.orders }}</strong>
+    </div>
+    <div class="card tile">
+      <span class="tile-label">Sales today</span>
+      <strong class="tile-value">{{ d.today.sales_minor | money: d.currency }}</strong>
+    </div>
+    <div class="card tile">
+      <span class="tile-label">Sales, last 7 days</span>
+      <strong class="tile-value">{{ weekSales() | money: d.currency }}</strong>
+    </div>
+    <div class="card tile">
+      <span class="tile-label">Cash on delivery with courier</span>
+      <strong class="tile-value">{{ d.cod_with_courier_minor | money: d.currency }}</strong>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="todo-h">
+      <h2 id="todo-h">Needs attention</h2>
+      @if (nothingToDo()) {
+        <p class="muted">All clear. Nothing is waiting on you.</p>
+      }
+      <ul class="todo">
+        @if (d.attention.awaiting_dispatch) {
+          <li>
+            <span
+              ><strong>{{ d.attention.awaiting_dispatch }}</strong> confirmed
+              {{ d.attention.awaiting_dispatch === 1 ? 'order is' : 'orders are' }} waiting to go to
+              the courier</span
+            >
+            @if (can('orders.export')) {
+              <a routerLink="/dispatch">Dispatch</a>
+            }
+          </li>
+        }
+        @if (d.attention.imports_not_applied) {
+          <li>
+            <span
+              ><strong>{{ d.attention.imports_not_applied }}</strong> courier
+              {{ d.attention.imports_not_applied === 1 ? 'file was' : 'files were' }} uploaded but
+              not applied</span
+            >
+            @if (can('orders.import_courier')) {
+              <a routerLink="/courier-import">Courier import</a>
+            }
+          </li>
+        }
+        @if (d.attention.delivery_failed) {
+          <li>
+            <span
+              ><strong>{{ d.attention.delivery_failed }}</strong> failed
+              {{ d.attention.delivery_failed === 1 ? 'delivery' : 'deliveries' }}</span
+            >
+            @if (can('orders.view')) {
+              <a routerLink="/orders" [queryParams]="{ status: 'DELIVERY_FAILED' }">View</a>
+            }
+          </li>
+        }
+        @if (d.attention.on_hold) {
+          <li>
+            <span
+              ><strong>{{ d.attention.on_hold }}</strong> on hold</span
+            >
+            @if (can('orders.view')) {
+              <a routerLink="/orders" [queryParams]="{ status: 'ON_HOLD' }">View</a>
+            }
+          </li>
+        }
+        @if (d.attention.returning) {
+          <li>
+            <span
+              ><strong>{{ d.attention.returning }}</strong> coming back to you</span
+            >
+            @if (can('orders.view')) {
+              <a routerLink="/orders" [queryParams]="{ status: 'RETURN_IN_TRANSIT' }">View</a>
+            }
+          </li>
+        }
+        @for (p of d.attention.low_stock; track p.product_id) {
+          <li>
+            <span>
+              Low stock: {{ p.name }} <span class="muted">({{ p.product_number }})</span>,
+              <strong>{{ p.stock_qty }}</strong> left
+            </span>
+            @if (can('products.view')) {
+              <a [routerLink]="['/products', p.product_id]">Edit</a>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="card">
+      <adm-sales-chart [days]="d.last_7_days" [currency]="d.currency" />
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="status-h">
+    <h2 id="status-h">Open orders by status</h2>
+    <ul class="statuses">
+      @for (s of openStatuses(); track s.status) {
+        <li>
+          @if (can('orders.view')) {
+            <a routerLink="/orders" [queryParams]="{ status: s.status }">{{ labels[s.status] }}</a>
+          } @else {
+            {{ labels[s.status] }}
+          }
+          <strong>{{ s.count }}</strong>
+        </li>
+      }
+    </ul>
+  </section>
+} @else {
+  <p aria-busy="true">Loading…</p>
+}

@@ -15,4 +15,5 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Courier import', path: '/courier-import', permission: 'orders.import_courier' },
   { label: 'Products', path: '/products', permission: 'products.view' },
   { label: 'Categories', path: '/categories', permission: 'categories.view' },
+  { label: 'Audit log', path: '/audit-log', permission: 'audit_logs.view' },
 ];

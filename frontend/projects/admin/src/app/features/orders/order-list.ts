@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -27,8 +27,8 @@ import { AdminOrdersApi } from './admin-orders.api';
       <select
         id="status"
         name="status"
-        [ngModel]="status()"
-        (ngModelChange)="status.set($event); page.set(1)"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event); page.set(1)"
       >
         <option value="">All statuses</option>
         @for (s of statuses; track s) {
@@ -133,7 +133,9 @@ export class OrderList {
 
   protected search = '';
   protected readonly q = signal('');
-  protected readonly status = signal<OrderStatus | ''>('');
+  /** Optional `?status=` from links such as the dashboard. */
+  readonly status = input<OrderStatus | ''>();
+  protected readonly statusFilter = linkedSignal<OrderStatus | ''>(() => this.status() ?? '');
   protected readonly dateFrom = signal('');
   protected readonly dateTo = signal('');
   protected readonly page = signal(1);
@@ -141,7 +143,7 @@ export class OrderList {
   protected readonly orders = rxResource({
     params: () => ({
       q: this.q(),
-      status: this.status(),
+      status: this.statusFilter(),
       dateFrom: this.dateFrom(),
       dateTo: this.dateTo(),
       page: this.page(),

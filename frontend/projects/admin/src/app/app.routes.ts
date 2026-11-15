@@ -71,6 +71,12 @@ export const routes: Routes = [
         title: 'Categories · Admin',
       },
       {
+        path: 'audit-log',
+        canActivate: [permissionGuard('audit_logs.view')],
+        loadComponent: () => import('./features/audit/audit-log').then((m) => m.AuditLog),
+        title: 'Audit log · Admin',
+      },
+      {
         path: 'forbidden',
         loadComponent: () => import('./features/forbidden').then((m) => m.Forbidden),
         title: 'No access · Admin',
