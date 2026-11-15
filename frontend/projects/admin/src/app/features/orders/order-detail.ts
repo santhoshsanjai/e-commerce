@@ -3,25 +3,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import {
-  HasPermissionDirective,
-  MoneyPipe,
-  ORDER_STATUS_LABEL,
-  OrderStatusBadge,
-} from '@shop/shared';
-import { StatusChange } from './status-change';
+import { MoneyPipe, ORDER_STATUS_LABEL, OrderStatusBadge } from '@shop/shared';
 import { AdminOrdersApi } from './admin-orders.api';
 
 @Component({
   selector: 'adm-order-detail',
-  imports: [
-    RouterLink,
-    MoneyPipe,
-    DatePipe,
-    OrderStatusBadge,
-    StatusChange,
-    HasPermissionDirective,
-  ],
+  imports: [RouterLink, MoneyPipe, DatePipe, OrderStatusBadge],
   template: `
     <a routerLink="/orders" class="back">← Orders</a>
     @if (order.isLoading()) {
@@ -86,17 +73,6 @@ import { AdminOrdersApi } from './admin-orders.api';
         </section>
 
         <div class="side">
-          <adm-status-change
-            *shrHasPermission="'orders.status.update'"
-            [order]="o"
-            (changed)="order.set($event)"
-          />
-          @if (o.awb_number) {
-            <section class="card">
-              <h2>Courier</h2>
-              <p>AWB {{ o.awb_number }}</p>
-            </section>
-          }
           <section class="card">
             <h2>Customer</h2>
             <p>

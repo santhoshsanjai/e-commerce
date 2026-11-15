@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict
 
 from app.modules.orders.lifecycle import EventSource, OrderStatus, PaymentMethod, PaymentStatus
 
@@ -72,17 +72,3 @@ class AdminOrderDetail(OrderDetail):
     id: uuid.UUID
     customer_name: str
     customer_email: str
-    awb_number: str | None
-    # Statuses the lifecycle allows next; anything else needs the override permission.
-    allowed_next: list[OrderStatus]
-
-
-class StatusChangeIn(BaseModel):
-    status: OrderStatus
-    reason: str = Field(default="", max_length=500)
-    override: bool = False
-
-    @field_validator("reason")
-    @classmethod
-    def _strip(cls, value: str) -> str:
-        return value.strip()
