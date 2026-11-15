@@ -9,12 +9,15 @@ admin portal: it removes their authenticator app and signs them out, and they se
 their next sign-in.
 
 The password is read from the SUPERADMIN_PASSWORD environment variable or prompted for,
-so it never appears in shell history.
+so it never appears in shell history. On AWS, where there is no prompt, use --random-password:
+the account gets a password nobody knows, and its owner sets their own with "Forgot your
+password?" on the admin sign-in page.
 """
 
 import argparse
 import getpass
 import os
+import secrets
 import sys
 
 from sqlalchemy import select
@@ -27,8 +30,11 @@ from app.modules.access_control.permissions import SUPER_ADMIN
 from app.modules.users.models import User, UserType
 
 
-def create_superadmin(email: str, name: str) -> int:
-    password = os.environ.get("SUPERADMIN_PASSWORD") or getpass.getpass("Password: ")
+def create_superadmin(email: str, name: str, random_password: bool = False) -> int:
+    if random_password:
+        password = secrets.token_urlsafe(32)
+    else:
+        password = os.environ.get("SUPERADMIN_PASSWORD") or getpass.getpass("Password: ")
     if len(password) < 12:
         print("Password must be at least 12 characters.", file=sys.stderr)
         return 1
@@ -52,6 +58,8 @@ def create_superadmin(email: str, name: str) -> int:
         )
         db.commit()
     print(f"Created Super Admin {normalised}")
+    if random_password:
+        print('Set the password with "Forgot your password?" on the admin sign-in page.')
     return 0
 
 
@@ -102,12 +110,13 @@ def main() -> int:
     cmd = sub.add_parser("create-superadmin")
     cmd.add_argument("--email", required=True)
     cmd.add_argument("--name", required=True)
+    cmd.add_argument("--random-password", action="store_true")
     reset = sub.add_parser("reset-mfa")
     reset.add_argument("--email", required=True)
     sub.add_parser("rotate-mfa-key")
     args = parser.parse_args()
     if args.command == "create-superadmin":
-        return create_superadmin(args.email, args.name)
+        return create_superadmin(args.email, args.name, args.random_password)
     if args.command == "reset-mfa":
         return reset_mfa(args.email)
     if args.command == "rotate-mfa-key":

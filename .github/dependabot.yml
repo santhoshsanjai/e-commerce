@@ -16,5 +16,8 @@ updates:
     directory: /
     schedule: { interval: weekly }
   - package-ecosystem: docker
-    directories: ["/backend", "/frontend"]
+    directories: ["/backend", "/frontend", "/ops"]
+    schedule: { interval: weekly }
+  - package-ecosystem: terraform
+    directories: ["/infra/terraform/bootstrap", "/infra/terraform/envs/staging", "/infra/terraform/modules/shop"]
     schedule: { interval: weekly }

@@ -175,6 +175,7 @@ def test_production_refuses_to_run_without_mfa(monkeypatch):
             cookie_secure=True,
             email_backend="ses",
             staff_mfa_required=False,
+            s3_access_key="",
         )
 
 
@@ -207,3 +208,14 @@ def test_encryption_key_can_be_rotated(client, make_staff):
         assert _verify(client, challenge, _code(secret, 1)).status_code == 200
     finally:
         settings.mfa_encryption_key = old_key
+
+
+def test_cli_can_create_a_super_admin_with_a_password_nobody_knows(client, outbox):
+    from app.cli import create_superadmin
+
+    assert create_superadmin("Owner@Example.com", "Owner", random_password=True) == 0
+    # The owner sets a password through the reset email.
+    resp = client.post("/api/v1/auth/password-reset", json={"email": "owner@example.com"})
+    assert resp.status_code == 202
+    [email] = outbox.sent
+    assert "http://localhost:4300/reset-password?token=" in email.text

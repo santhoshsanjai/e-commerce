@@ -73,6 +73,22 @@ jobs:
       - name: Build
         run: npm run build
 
+  infra:
+    name: Infrastructure code (Terraform)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.4
+      - run: terraform fmt -check -recursive -diff infra/terraform
+      - name: Validate
+        run: |
+          for dir in infra/terraform/bootstrap infra/terraform/envs/staging; do
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+          done
+
   docker:
     name: Docker images build
     runs-on: ubuntu-latest

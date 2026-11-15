@@ -234,11 +234,15 @@ def test_courier_times_are_read_as_ist_and_never_in_the_future(client, buyer_tok
     client.post(f"{IMPORTS}/{preview['id']}/confirm", headers=admin)
     future = client.get(f"/api/v1/admin/orders/{oid1}", headers=admin).json()["timeline"][-1]
     assert datetime.fromisoformat(future["occurred_at"]) <= datetime.now(UTC)
-    exact = client.get(f"/api/v1/admin/orders/{oid2}", headers=admin).json()["timeline"][-1]
-    # Read as IST: the minute matches what the courier wrote.
+    timeline = client.get(f"/api/v1/admin/orders/{oid2}", headers=admin).json()["timeline"]
+    exact, before = timeline[-1], timeline[-2]
+    # Read as IST: the minute matches what the courier wrote. (An event is never placed before the
+    # one it follows, so when the hand-over happened later in that same minute, it takes that time.)
+    written = past.replace(second=0, microsecond=0)
+    expected = max(written, datetime.fromisoformat(before["occurred_at"]).astimezone(IST))
     assert datetime.fromisoformat(exact["occurred_at"]).astimezone(IST).strftime(
         "%H:%M"
-    ) == past.strftime("%H:%M")
+    ) == expected.strftime("%H:%M")
 
 
 def test_our_export_round_trips_through_the_import(client, buyer_token, admin):
