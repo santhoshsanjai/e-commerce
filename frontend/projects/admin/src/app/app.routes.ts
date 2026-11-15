@@ -20,6 +20,25 @@ export const routes: Routes = [
         title: 'Dashboard · Admin',
       },
       {
+        path: 'orders',
+        canActivate: [permissionGuard('orders.view')],
+        loadComponent: () => import('./features/orders/order-list').then((m) => m.OrderList),
+        title: 'Orders · Admin',
+      },
+      {
+        path: 'orders/:id',
+        canActivate: [permissionGuard('orders.view')],
+        loadComponent: () => import('./features/orders/order-detail').then((m) => m.OrderDetail),
+        title: 'Order · Admin',
+      },
+      {
+        path: 'dispatch',
+        canActivate: [permissionGuard('orders.export')],
+        loadComponent: () =>
+          import('./features/dispatch/dispatch-page').then((m) => m.DispatchPage),
+        title: 'Dispatch · Admin',
+      },
+      {
         path: 'products',
         canActivate: [permissionGuard('products.view')],
         loadComponent: () => import('./features/products/product-list').then((m) => m.ProductList),

@@ -1,0 +1,222 @@
+<h1>Checkout</h1>
+
+@if (error()) {
+  <div class="alert-error" role="alert">
+    {{ error() }}
+    @if (cartChanged()) {
+      <a routerLink="/cart">Review your cart</a>
+    }
+  </div>
+}
+
+@if (cartStore.cart(); as cart) {
+  @if (cart.items.length === 0) {
+    <div class="card">
+      <p>Your cart is empty.</p>
+      <a class="btn" routerLink="/">Browse products</a>
+    </div>
+  } @else {
+    <div class="layout">
+      <div class="steps">
+        <section class="card" aria-labelledby="addr-h">
+          <h2 id="addr-h">1. Delivery address</h2>
+          @if (addresses.isLoading()) {
+            <p aria-busy="true">Loading addresses…</p>
+          } @else if (addresses.error()) {
+            <div class="alert-error" role="alert">
+              Couldn't load your addresses.
+              <button class="btn btn-secondary" type="button" (click)="addresses.reload()">
+                Try again
+              </button>
+            </div>
+          } @else {
+            @if (addresses.value()?.length) {
+              <fieldset class="address-list">
+                <legend class="visually-hidden">Choose an address</legend>
+                @for (a of addresses.value(); track a.id) {
+                  <label class="address" [class.selected]="a.id === selectedId()">
+                    <input
+                      type="radio"
+                      name="address"
+                      [value]="a.id"
+                      [checked]="a.id === selectedId()"
+                      (change)="selectedId.set(a.id)"
+                    />
+                    <span>
+                      <strong>{{ a.recipient_name }}</strong> · {{ a.phone }}<br />
+                      <span class="muted">{{ oneLine(a) }}</span>
+                    </span>
+                  </label>
+                }
+              </fieldset>
+            }
+            @if (showForm()) {
+              <form
+                [formGroup]="addressForm"
+                (ngSubmit)="saveAddress()"
+                novalidate
+                class="address-form"
+              >
+                <h3>New address</h3>
+                @if (addressError()) {
+                  <div class="alert-error" role="alert">{{ addressError() }}</div>
+                }
+                <div class="row">
+                  <div class="field">
+                    <label for="recipient_name">Full name</label>
+                    <input
+                      id="recipient_name"
+                      formControlName="recipient_name"
+                      autocomplete="name"
+                      [attr.aria-invalid]="invalid('recipient_name')"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="phone">Mobile number</label>
+                    <input
+                      id="phone"
+                      type="tel"
+                      formControlName="phone"
+                      autocomplete="tel"
+                      [attr.aria-invalid]="invalid('phone')"
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="line1">House no., building, street</label>
+                  <input
+                    id="line1"
+                    formControlName="line1"
+                    autocomplete="address-line1"
+                    [attr.aria-invalid]="invalid('line1')"
+                  />
+                </div>
+                <div class="row">
+                  <div class="field">
+                    <label for="line2">Area, locality (optional)</label>
+                    <input id="line2" formControlName="line2" autocomplete="address-line2" />
+                  </div>
+                  <div class="field">
+                    <label for="landmark">Landmark (optional)</label>
+                    <input id="landmark" formControlName="landmark" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="field">
+                    <label for="city">City</label>
+                    <input
+                      id="city"
+                      formControlName="city"
+                      autocomplete="address-level2"
+                      [attr.aria-invalid]="invalid('city')"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="region">State</label>
+                    <input
+                      id="region"
+                      formControlName="region"
+                      autocomplete="address-level1"
+                      [attr.aria-invalid]="invalid('region')"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="postal_code">PIN code</label>
+                    <input
+                      id="postal_code"
+                      inputmode="numeric"
+                      maxlength="6"
+                      formControlName="postal_code"
+                      autocomplete="postal-code"
+                      [attr.aria-invalid]="invalid('postal_code')"
+                      aria-describedby="pin-hint"
+                    />
+                    @if (invalid('postal_code')) {
+                      <small id="pin-hint" class="error-text">Enter a 6-digit PIN code.</small>
+                    }
+                  </div>
+                </div>
+                <label class="check">
+                  <input type="checkbox" formControlName="is_default" /> Make this my default
+                  address
+                </label>
+                <div class="actions">
+                  <button class="btn" type="submit" [disabled]="savingAddress()">
+                    {{ savingAddress() ? 'Saving…' : 'Use this address' }}
+                  </button>
+                  @if (addresses.value()?.length) {
+                    <button class="btn btn-secondary" type="button" (click)="showForm.set(false)">
+                      Cancel
+                    </button>
+                  }
+                </div>
+              </form>
+            } @else {
+              <button class="link" type="button" (click)="showForm.set(true)">
+                + Add a new address
+              </button>
+            }
+          }
+        </section>
+
+        <section class="card" aria-labelledby="pay-h">
+          <h2 id="pay-h">2. Payment</h2>
+          <label class="address selected">
+            <input type="radio" name="payment" checked />
+            <span
+              ><strong>Cash on delivery</strong><br /><span class="muted"
+                >Pay when your order arrives.</span
+              ></span
+            >
+          </label>
+        </section>
+
+        <section class="card" aria-labelledby="note-h">
+          <h2 id="note-h">3. Delivery instructions (optional)</h2>
+          <div class="field">
+            <label class="visually-hidden" for="instructions">Delivery instructions</label>
+            <textarea
+              id="instructions"
+              rows="2"
+              maxlength="500"
+              [formControl]="instructions"
+              placeholder="E.g. call before arriving"
+            ></textarea>
+          </div>
+        </section>
+      </div>
+
+      <aside class="card summary" aria-label="Order summary">
+        <h2>Order summary</h2>
+        <ul class="items">
+          @for (line of cart.items; track line.sku_id) {
+            <li>
+              <span>{{ line.product_name }} × {{ line.qty }}</span>
+              <span>{{ line.line_total_minor | money: cart.currency }}</span>
+            </li>
+          }
+        </ul>
+        <dl>
+          <dt>Subtotal</dt>
+          <dd>{{ cart.subtotal_minor | money: cart.currency }}</dd>
+          <dt>Delivery</dt>
+          <dd>{{ cart.shipping_minor ? (cart.shipping_minor | money: cart.currency) : 'Free' }}</dd>
+          <dt class="grand">Total to pay</dt>
+          <dd class="grand">{{ cart.total_minor | money: cart.currency }}</dd>
+        </dl>
+        <button class="btn place" type="button" [disabled]="!canPlace()" (click)="placeOrder()">
+          {{ placing() ? 'Placing order…' : 'Place order' }}
+        </button>
+        @if (!selectedId()) {
+          <p class="muted small">Add a delivery address to continue.</p>
+        } @else if (!cart.can_checkout) {
+          <p class="muted small">
+            Some items need attention. <a routerLink="/cart">Review your cart</a>
+          </p>
+        }
+      </aside>
+    </div>
+  }
+} @else {
+  <p aria-busy="true">Loading…</p>
+}

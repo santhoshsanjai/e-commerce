@@ -96,6 +96,12 @@ Migrations are a controlled release step; the API never creates tables on start-
 
 - **Phase 0 (foundations):** auth for buyers and staff, RBAC with seeded Super Admin, Admin and Manager
   roles, audit log, both app shells, Docker, CI.
-- **Phase 1 (vertical slice), in progress:** catalogue done (categories, products with SKUs, images,
-  publish rules, buyer listing and product page). Next: cart and checkout, orders, courier export and
-  import, completion.
+- **Phase 1 (vertical slice), in progress:**
+  - Catalogue: categories, products with SKUs, images, publish rules, buyer listing and product page.
+  - Cart and checkout: saved addresses (Indian PIN codes), server-side cart, cash-on-delivery checkout
+    that locks stock and is safe to retry (`Idempotency-Key` header), order confirmation, My orders,
+    admin order list (search, status and date filters) and order detail with status history.
+  - Dispatch: staff pick confirmed orders into a batch; the orders move to "Handed to courier" and a
+    courier Excel file is generated, kept in the private bucket and downloadable again later. Every
+    batch and download is audited. Column layout lives in `backend/app/modules/dispatch/excel.py`.
+  - Next: courier Excel import, manual status updates, completion.

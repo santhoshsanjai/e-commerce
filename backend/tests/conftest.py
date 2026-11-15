@@ -50,7 +50,8 @@ def _clean_tables() -> Iterator[None]:
         conn.execute(
             text(
                 "TRUNCATE users, refresh_tokens, user_roles, audit_logs, categories, brands, "
-                "products, product_skus, product_attributes, product_media CASCADE"
+                "products, product_skus, product_attributes, product_media, addresses, carts, "
+                "cart_items, orders, order_items, order_status_events CASCADE"
             )
         )
 
@@ -70,6 +71,9 @@ class FakeStorage:
     def public_url(self, key: str) -> str:
         return f"https://cdn.test/{key}"
 
+    def get(self, key: str) -> bytes:
+        return self.objects[key][0]
+
 
 @pytest.fixture
 def storage() -> FakeStorage:
@@ -77,11 +81,18 @@ def storage() -> FakeStorage:
 
 
 @pytest.fixture
-def client(storage: FakeStorage) -> Iterator[TestClient]:
-    from app.infrastructure.storage import get_storage
+def files() -> FakeStorage:
+    """Stand-in for the private bucket (courier exports and imports)."""
+    return FakeStorage()
+
+
+@pytest.fixture
+def client(storage: FakeStorage, files: FakeStorage) -> Iterator[TestClient]:
+    from app.infrastructure.storage import get_file_store, get_storage
     from app.main import app
 
     app.dependency_overrides[get_storage] = lambda: storage
+    app.dependency_overrides[get_file_store] = lambda: files
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
@@ -115,6 +126,21 @@ def make_staff() -> Callable[..., dict[str, str]]:
         return {"email": email, "password": password}
 
     return factory
+
+
+@pytest.fixture
+def buyer_token(client) -> Callable[..., str]:
+    counter = {"n": 0}
+
+    def login(name: str = "Buyer") -> str:
+        counter["n"] += 1
+        creds = {"email": f"buyer{counter['n']}@example.com", "password": "buyer-password-1"}
+        client.post("/api/v1/auth/register", json={**creds, "full_name": f"{name} {counter['n']}"})
+        resp = client.post("/api/v1/auth/login", json=creds)
+        assert resp.status_code == 200, resp.text
+        return resp.json()["access_token"]
+
+    return login
 
 
 @pytest.fixture
