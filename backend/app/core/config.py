@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     s3_access_key: str | None = "local"
     s3_secret_key: str | None = "local"  # noqa: S105 - local-only default
     media_bucket: str = "product-media"
+    # Private bucket for courier exports and uploaded courier files. Never public.
+    private_bucket: str = "private-files"
     # Public base URL that serves the media bucket (CDN in production).
     media_public_base_url: str = "http://localhost:8333/product-media"
     max_image_bytes: int = 10 * 1024 * 1024

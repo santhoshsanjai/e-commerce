@@ -58,7 +58,7 @@ services:
     volumes:
       - s3data:/data
 
-  # Creates the media bucket once S3 is up.
+  # Creates the public media bucket and the private files bucket once S3 is up.
   s3-setup:
     build: ./backend
     command:
@@ -73,9 +73,11 @@ services:
                 s3.list_buckets(); break
             except Exception:
                 time.sleep(1)
-        if "product-media" not in [b["Name"] for b in s3.list_buckets()["Buckets"]]:
-            s3.create_bucket(Bucket="product-media")
-        print("bucket ready")
+        existing = [b["Name"] for b in s3.list_buckets()["Buckets"]]
+        for bucket in ("product-media", "private-files"):
+            if bucket not in existing:
+                s3.create_bucket(Bucket=bucket)
+        print("buckets ready")
     depends_on:
       - s3
 

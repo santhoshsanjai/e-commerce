@@ -32,6 +32,13 @@ export const routes: Routes = [
         title: 'Order · Admin',
       },
       {
+        path: 'dispatch',
+        canActivate: [permissionGuard('orders.export')],
+        loadComponent: () =>
+          import('./features/dispatch/dispatch-page').then((m) => m.DispatchPage),
+        title: 'Dispatch · Admin',
+      },
+      {
         path: 'products',
         canActivate: [permissionGuard('products.view')],
         loadComponent: () => import('./features/products/product-list').then((m) => m.ProductList),

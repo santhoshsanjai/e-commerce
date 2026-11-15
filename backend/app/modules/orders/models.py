@@ -72,6 +72,10 @@ class Order(TimestampMixin, Base):
     delivery_instructions: Mapped[str] = mapped_column(String(500), nullable=False, default="")
 
     idempotency_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    # Set when the order is put in a courier dispatch batch; an order joins at most one batch.
+    dispatch_batch_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("dispatch_batches.id", ondelete="RESTRICT"), index=True
+    )
     placed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
     )

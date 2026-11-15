@@ -1,13 +1,13 @@
 import uuid
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 
 from fastapi import status
 from sqlalchemy import exists, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppError
-from app.modules.orders.lifecycle import OrderStatus
-from app.modules.orders.models import Order, OrderItem
+from app.modules.orders.lifecycle import EventSource, OrderStatus, can_transition
+from app.modules.orders.models import Order, OrderItem, OrderStatusEvent
 from app.modules.orders.schemas import (
     AdminOrderDetail,
     AdminOrderListItem,
@@ -71,6 +71,53 @@ def to_admin_detail(order: Order) -> AdminOrderDetail:
             "customer_email": order.customer_email,
         }
     )
+
+
+def to_admin_list_item(order: Order) -> AdminOrderListItem:
+    return AdminOrderListItem.model_validate(
+        {
+            **_summary_fields(order),
+            "id": order.id,
+            "customer_name": order.customer_name,
+            "ship_phone": order.ship_phone,
+            "ship_city": order.ship_city,
+        }
+    )
+
+
+def apply_transition(
+    order: Order,
+    target: OrderStatus,
+    *,
+    source: EventSource,
+    actor_id: uuid.UUID | None,
+    reason: str = "",
+    event_key: str | None = None,
+    occurred_at: datetime | None = None,
+) -> None:
+    """Move an order along the lifecycle map and append the history event.
+
+    Callers lock the order row first. Overrides outside the map are a separate, permissioned path.
+    """
+    if not can_transition(order.status, target):
+        raise AppError(
+            "invalid_transition",
+            f"Order {order.order_number} cannot move from {order.status} to {target}",
+            status.HTTP_409_CONFLICT,
+            details={"order_number": order.order_number, "from": order.status, "to": target},
+        )
+    order.events.append(
+        OrderStatusEvent(
+            from_status=order.status,
+            to_status=target,
+            source=source,
+            reason=reason,
+            actor_id=actor_id,
+            event_key=event_key,
+            occurred_at=occurred_at or datetime.now(UTC),
+        )
+    )
+    order.status = target
 
 
 # ---------- Buyer ----------
@@ -141,18 +188,7 @@ def list_admin_orders(
         .offset(params.offset)
         .limit(params.page_size)
     ).all()
-    items = [
-        AdminOrderListItem.model_validate(
-            {
-                **_summary_fields(o),
-                "id": o.id,
-                "customer_name": o.customer_name,
-                "ship_phone": o.ship_phone,
-                "ship_city": o.ship_city,
-            }
-        )
-        for o in orders
-    ]
+    items = [to_admin_list_item(o) for o in orders]
     return Page(items=items, total=total, page=params.page, page_size=params.page_size)
 
 
