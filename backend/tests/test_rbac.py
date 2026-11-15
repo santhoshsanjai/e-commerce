@@ -1,3 +1,6 @@
+import re
+import uuid
+
 import pytest
 
 from app.modules.access_control.permissions import DEFAULT_ROLE_GRANTS, PERMISSIONS
@@ -9,7 +12,24 @@ ADMIN_ENDPOINTS = [
     ("POST", "/api/v1/admin/staff", "users.manage"),
     ("GET", "/api/v1/admin/roles", "roles.view"),
     ("GET", "/api/v1/admin/permissions", "roles.view"),
+    ("GET", "/api/v1/admin/categories", "categories.view"),
+    ("POST", "/api/v1/admin/categories", "categories.manage"),
+    ("PATCH", "/api/v1/admin/categories/{category_id}", "categories.manage"),
+    ("GET", "/api/v1/admin/products", "products.view"),
+    ("POST", "/api/v1/admin/products", "products.create"),
+    ("GET", "/api/v1/admin/products/{product_id}", "products.view"),
+    ("PATCH", "/api/v1/admin/products/{product_id}", "products.update"),
+    ("POST", "/api/v1/admin/products/{product_id}/publish", "products.publish"),
+    ("POST", "/api/v1/admin/products/{product_id}/unpublish", "products.publish"),
+    ("POST", "/api/v1/admin/products/{product_id}/archive", "products.archive"),
+    ("POST", "/api/v1/admin/products/{product_id}/media", "products.update"),
+    ("DELETE", "/api/v1/admin/products/{product_id}/media/{media_id}", "products.update"),
 ]
+
+
+def concrete(path: str) -> str:
+    """Fill path parameters with random IDs; authorization runs before any lookup."""
+    return re.sub(r"\{[^}]+\}", lambda _: str(uuid.uuid4()), path)
 
 
 def test_every_admin_route_is_in_the_matrix():
@@ -37,18 +57,20 @@ def test_seeded_roles_match_defaults(client, staff_token):
 @pytest.mark.parametrize(("method", "path", "permission"), ADMIN_ENDPOINTS)
 def test_permission_matrix(client, staff_token, role, method, path, permission):
     token = staff_token(role)
-    body = {} if method == "POST" else None
-    resp = client.request(method, path, json=body, headers={"Authorization": f"Bearer {token}"})
+    body = {} if method in ("POST", "PATCH") else None
+    resp = client.request(
+        method, concrete(path), json=body, headers={"Authorization": f"Bearer {token}"}
+    )
     if permission in DEFAULT_ROLE_GRANTS[role]:
-        # Allowed through authorization; an empty POST body then fails validation.
-        assert resp.status_code in (200, 422), resp.text
+        # Past authorization: then success, validation failure or not-found for the random ID.
+        assert resp.status_code in (200, 404, 422), resp.text
     else:
         assert resp.status_code == 403, resp.text
 
 
 @pytest.mark.parametrize(("method", "path", "permission"), ADMIN_ENDPOINTS)
 def test_admin_routes_require_authentication(client, method, path, permission):
-    assert client.request(method, path).status_code == 401
+    assert client.request(method, concrete(path)).status_code == 401
 
 
 def test_buyer_token_cannot_reach_admin_routes(client):
@@ -56,7 +78,7 @@ def test_buyer_token_cannot_reach_admin_routes(client):
     client.post("/api/v1/auth/register", json=buyer)
     token = client.post("/api/v1/auth/login", json=buyer).json()["access_token"]
     for method, path, _ in ADMIN_ENDPOINTS:
-        resp = client.request(method, path, headers={"Authorization": f"Bearer {token}"})
+        resp = client.request(method, concrete(path), headers={"Authorization": f"Bearer {token}"})
         assert resp.status_code == 403
 
 

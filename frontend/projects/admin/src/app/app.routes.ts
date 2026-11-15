@@ -20,6 +20,31 @@ export const routes: Routes = [
         title: 'Dashboard · Admin',
       },
       {
+        path: 'products',
+        canActivate: [permissionGuard('products.view')],
+        loadComponent: () => import('./features/products/product-list').then((m) => m.ProductList),
+        title: 'Products · Admin',
+      },
+      {
+        path: 'products/new',
+        canActivate: [permissionGuard('products.create')],
+        loadComponent: () => import('./features/products/product-form').then((m) => m.ProductForm),
+        title: 'New product · Admin',
+      },
+      {
+        path: 'products/:id',
+        canActivate: [permissionGuard('products.view')],
+        loadComponent: () => import('./features/products/product-form').then((m) => m.ProductForm),
+        title: 'Product · Admin',
+      },
+      {
+        path: 'categories',
+        canActivate: [permissionGuard('categories.view')],
+        loadComponent: () =>
+          import('./features/categories/category-list').then((m) => m.CategoryList),
+        title: 'Categories · Admin',
+      },
+      {
         path: 'forbidden',
         loadComponent: () => import('./features/forbidden').then((m) => m.Forbidden),
         title: 'No access · Admin',

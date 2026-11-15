@@ -24,13 +24,14 @@ docker compose run --rm api python -m app.cli create-superadmin --email you@exam
 - Buyer site: http://localhost:4200
 - Admin portal: http://localhost:4300
 - API docs (OpenAPI): http://localhost:8000/docs
+- Product media (local S3): http://localhost:8333/product-media
 
 Migrations run in the one-off `migrate` service before the API starts.
 
 ## Local development without Docker for the apps
 
-Prerequisites: Python 3.13 with [uv](https://docs.astral.sh/uv/), Node.js 22.22+ and npm, and a PostgreSQL 18
-database (`docker compose up -d db` is the easiest).
+Prerequisites: Python 3.13 with [uv](https://docs.astral.sh/uv/), Node.js 22.22+ and npm, a PostgreSQL 18
+database and S3-compatible storage (`docker compose up -d db s3 s3-setup` starts both).
 
 ```bash
 # Backend
@@ -93,6 +94,8 @@ Migrations are a controlled release step; the API never creates tables on start-
 
 ## Project status
 
-Phase 0 (foundations) of the delivery plan: auth for buyers and staff, RBAC with seeded Super Admin, Admin
-and Manager roles, audit log, both app shells, Docker, CI. Next: Phase 1 vertical slice (catalogue → cart →
-checkout → order → courier export → courier import → completion).
+- **Phase 0 (foundations):** auth for buyers and staff, RBAC with seeded Super Admin, Admin and Manager
+  roles, audit log, both app shells, Docker, CI.
+- **Phase 1 (vertical slice), in progress:** catalogue done (categories, products with SKUs, images,
+  publish rules, buyer listing and product page). Next: cart and checkout, orders, courier export and
+  import, completion.

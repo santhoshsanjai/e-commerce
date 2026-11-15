@@ -1,7 +1,7 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { apiErrorMessage, AuthService } from '@shop/shared';
+import { apiErrorMessage, AuthService, safeReturnUrl } from '@shop/shared';
 
 @Component({
   selector: 'buy-login',
@@ -39,7 +39,8 @@ export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  readonly returnUrl = input<string>('/');
+  /** Bound from the query string; undefined when absent (router input binding). */
+  readonly returnUrl = input<string>();
 
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -58,12 +59,7 @@ export class Login {
     this.error.set(null);
     try {
       await this.auth.login(this.form.getRawValue(), 'buyer');
-      // Only follow same-site paths to avoid open redirects.
-      const target =
-        this.returnUrl().startsWith('/') && !this.returnUrl().startsWith('//')
-          ? this.returnUrl()
-          : '/';
-      await this.router.navigateByUrl(target);
+      await this.router.navigateByUrl(safeReturnUrl(this.returnUrl()));
     } catch (err) {
       this.error.set(apiErrorMessage(err));
     } finally {

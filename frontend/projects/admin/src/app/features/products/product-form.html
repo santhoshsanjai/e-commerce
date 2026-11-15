@@ -1,0 +1,207 @@
+<div class="page-head">
+  <div>
+    <a routerLink="/products" class="back">← Products</a>
+    <h1>
+      @if (product(); as p) {
+        {{ p.name }} <adm-status-chip [status]="p.status" />
+      } @else {
+        New product
+      }
+    </h1>
+    @if (product(); as p) {
+      <p class="meta">Product no. {{ p.product_number }} · SKU {{ p.sku.sku }}</p>
+    }
+  </div>
+  @if (product(); as p) {
+    <div class="actions">
+      @if (p.status === 'DRAFT') {
+        <button
+          *shrHasPermission="'products.publish'"
+          class="btn"
+          type="button"
+          [disabled]="busy()"
+          (click)="changeStatus('publish')"
+        >
+          Publish
+        </button>
+      }
+      @if (p.status === 'PUBLISHED') {
+        <button
+          *shrHasPermission="'products.publish'"
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="busy()"
+          (click)="changeStatus('unpublish')"
+        >
+          Unpublish
+        </button>
+      }
+      @if (p.status !== 'ARCHIVED') {
+        <button
+          *shrHasPermission="'products.archive'"
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="busy()"
+          (click)="changeStatus('archive')"
+        >
+          Archive
+        </button>
+      }
+    </div>
+  }
+</div>
+
+@if (error()) {
+  <div class="alert-error" role="alert">{{ error() }}</div>
+}
+@if (notice()) {
+  <div class="alert-ok" role="status">{{ notice() }}</div>
+}
+
+<div class="columns">
+  <form class="card" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <h2>Details</h2>
+    <div class="field">
+      <label for="name">Name</label>
+      <input id="name" formControlName="name" />
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <span class="field-error">Name is required.</span>
+      }
+    </div>
+    <div class="field">
+      <label for="category">Category</label>
+      <select id="category" formControlName="category_id">
+        <option value="" disabled>Choose a category</option>
+        @for (c of categories(); track c.id) {
+          <option [value]="c.id">
+            {{ c.parent_id ? '— ' : '' }}{{ c.name }}{{ c.is_active ? '' : ' (inactive)' }}
+          </option>
+        }
+      </select>
+      @if (categories().length === 0) {
+        <span class="hint"
+          >No categories yet. <a routerLink="/categories">Create one first.</a></span
+        >
+      }
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="price">Price (₹)</label>
+        <input id="price" inputmode="decimal" formControlName="price" placeholder="499.00" />
+        @if (form.controls.price.touched && form.controls.price.invalid) {
+          <span class="field-error">Enter an amount like 499 or 499.50.</span>
+        }
+      </div>
+      <div class="field">
+        <label for="compare_at">Compare-at (₹)</label>
+        <input id="compare_at" inputmode="decimal" formControlName="compare_at" />
+      </div>
+      <div class="field">
+        <label for="stock">Stock quantity</label>
+        <input id="stock" type="number" min="0" step="1" formControlName="stock_qty" />
+      </div>
+    </div>
+    <div class="field">
+      <label for="short">Short description</label>
+      <input id="short" formControlName="short_description" maxlength="300" />
+    </div>
+    <div class="field">
+      <label for="description">Full description</label>
+      <textarea id="description" rows="6" formControlName="description"></textarea>
+    </div>
+
+    <h2>Specifications</h2>
+    <div formArrayName="attributes">
+      @for (group of attributes.controls; track $index) {
+        <div class="attr" [formGroupName]="$index">
+          <input
+            [attr.aria-label]="'Specification ' + ($index + 1) + ' name'"
+            placeholder="Name, e.g. Capacity"
+            formControlName="name"
+          />
+          <input
+            [attr.aria-label]="'Specification ' + ($index + 1) + ' value'"
+            placeholder="Value, e.g. 1 L"
+            formControlName="value"
+          />
+          @if (canEdit()) {
+            <button
+              class="btn btn-secondary"
+              type="button"
+              (click)="attributes.removeAt($index)"
+              [attr.aria-label]="'Remove specification ' + ($index + 1)"
+            >
+              ✕
+            </button>
+          }
+        </div>
+      }
+    </div>
+    @if (canEdit() && product()?.status !== 'ARCHIVED') {
+      <button class="btn btn-secondary" type="button" (click)="addAttribute()">
+        Add specification
+      </button>
+      <div class="save">
+        <button class="btn" type="submit" [disabled]="busy()">
+          {{ isNew() ? 'Create product' : 'Save changes' }}
+        </button>
+      </div>
+    }
+  </form>
+
+  @if (product(); as p) {
+    <section class="card images" aria-labelledby="images-title">
+      <h2 id="images-title">Images</h2>
+      @if (p.media.length === 0) {
+        <p class="hint">
+          Add at least one image before publishing. The first image is the main one.
+        </p>
+      }
+      <ul>
+        @for (m of p.media; track m.id) {
+          <li>
+            <img [src]="m.url" [alt]="m.alt_text" />
+            <div>
+              @if (m.is_primary) {
+                <strong>Main image</strong>
+              }
+              <p>{{ m.alt_text || 'No description' }}</p>
+              <button
+                *shrHasPermission="'products.update'"
+                class="btn btn-secondary"
+                type="button"
+                [disabled]="busy()"
+                (click)="removeImage(m.id)"
+              >
+                Remove
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+      @if (p.status !== 'ARCHIVED') {
+        <div *shrHasPermission="'products.update'" class="upload">
+          <div class="field">
+            <label for="alt">Image description (for screen readers)</label>
+            <input id="alt" [value]="altText" (input)="altText = alt.value" #alt />
+          </div>
+          <label class="btn btn-secondary" for="file">Upload image</label>
+          <input
+            id="file"
+            class="visually-hidden"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="upload(file)"
+            #file
+          />
+          <p class="hint">JPEG, PNG or WebP, up to 10 MB.</p>
+        </div>
+      }
+    </section>
+  } @else {
+    <section class="card images">
+      <h2>Images</h2>
+      <p class="hint">Create the product first, then add images.</p>
+    </section>
+  }
+</div>
