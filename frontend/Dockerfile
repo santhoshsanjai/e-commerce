@@ -12,5 +12,6 @@ FROM nginx:1.29-alpine AS runtime
 ARG APP=buyer
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /src/dist/${APP}/browser /usr/share/nginx/html
-ENV API_UPSTREAM=http://api:8000
+ENV API_UPSTREAM=http://api:8000 \
+    MEDIA_ORIGIN=http://localhost:8333
 EXPOSE 80

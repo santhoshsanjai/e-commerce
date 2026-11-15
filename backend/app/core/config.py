@@ -46,6 +46,8 @@ class Settings(BaseSettings):
 
     login_rate_limit_attempts: int = 5
     login_rate_limit_window_seconds: int = 300
+    # Failed sign-ins allowed from one address (across all accounts) in the same window.
+    login_ip_rate_limit_attempts: int = 30
 
     @model_validator(mode="after")
     def _require_real_secret_when_deployed(self) -> "Settings":

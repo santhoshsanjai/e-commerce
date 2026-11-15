@@ -66,6 +66,13 @@ def create_app() -> FastAPI:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["X-Frame-Options"] = "DENY"
+        if request.url.path.startswith("/api/"):
+            # JSON and file downloads only: nothing here should run scripts, be framed or be
+            # cached by browsers or shared proxies (responses carry personal data).
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'none'; frame-ancestors 'none'"
+            )
+            response.headers.setdefault("Cache-Control", "no-store")
         return response
 
     @app.get("/health/live", tags=["health"])

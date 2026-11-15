@@ -5,7 +5,7 @@ from fastapi import APIRouter, Cookie, Request, Response, status
 from app.core.config import get_settings
 from app.core.dependencies import CurrentUser, DbSession
 from app.core.exceptions import AppError
-from app.core.rate_limit import login_limiter
+from app.core.rate_limit import Attempt, login_limiter
 from app.modules.access_control.service import permissions_for
 from app.modules.auth import service
 from app.modules.auth.schemas import (
@@ -42,29 +42,50 @@ def _token_response(response: Response, tokens: service.IssuedTokens) -> TokenRe
     return TokenResponse(access_token=tokens.access_token, expires_in=tokens.expires_in)
 
 
-def _rate_limit_key(request: Request, email: str) -> str:
-    ip = request.client.host if request.client else "unknown"
-    return f"{ip}:{service.normalise_email(email)}"
+def _client_ip(request: Request) -> str:
+    # Behind the proxies, uvicorn sets this from X-Forwarded-For, trusting only the proxy
+    # addresses in FORWARDED_ALLOW_IPS, so a client can't pick its own address.
+    return request.client.host if request.client else "unknown"
 
 
-def _check_rate_limit(request: Request, email: str) -> None:
-    """Count an attempt. A successful one clears the count (see _clear_rate_limit), so only
-    failed attempts lock an account out."""
+def _account_key(email: str) -> str:
+    return f"account:{service.normalise_email(email)}"
+
+
+def _check_rate_limit(request: Request, email: str) -> Attempt:
+    """Count a sign-in attempt against the account and against the caller's address.
+
+    The account limit stops password guessing on one account from many addresses; the address
+    limit stops one address trying many accounts. Call `_succeeded` when the attempt succeeds, so
+    only failed attempts count.
+    """
     settings = get_settings()
-    key = _rate_limit_key(request, email)
+    attempt = Attempt()
+    window = settings.login_rate_limit_window_seconds
     allowed = login_limiter.hit(
-        key, settings.login_rate_limit_attempts, settings.login_rate_limit_window_seconds
+        _account_key(email),
+        settings.login_rate_limit_attempts,
+        window,
+        attempt,
+    ) and login_limiter.hit(
+        f"ip:{_client_ip(request)}", settings.login_ip_rate_limit_attempts, window, attempt
     )
     if not allowed:
+        login_limiter.forget(attempt)
         raise AppError(
             "rate_limited",
             "Too many login attempts. Try again later.",
             status.HTTP_429_TOO_MANY_REQUESTS,
         )
+    return attempt
 
 
-def _clear_rate_limit(request: Request, email: str) -> None:
-    login_limiter.reset(_rate_limit_key(request, email))
+def _succeeded(attempt: Attempt, email: str) -> None:
+    """The right password clears the account's failures (a typo or two never builds up to a
+    lockout). The address keeps its earlier failures, so signing in to your own account can't
+    reset a limit you hit guessing other people's."""
+    login_limiter.forget(attempt)
+    login_limiter.reset(_account_key(email))
 
 
 def _me(user: User) -> MeResponse:
@@ -89,9 +110,9 @@ def register(data: RegisterRequest, db: DbSession) -> MeResponse:
 def buyer_login(
     data: LoginRequest, request: Request, response: Response, db: DbSession
 ) -> TokenResponse:
-    _check_rate_limit(request, data.email)
+    attempt = _check_rate_limit(request, data.email)
     tokens = service.login(db, data.email, data.password, UserType.BUYER, request)
-    _clear_rate_limit(request, data.email)
+    _succeeded(attempt, data.email)
     return _token_response(response, tokens)
 
 
@@ -99,9 +120,9 @@ def buyer_login(
 def staff_login(
     data: LoginRequest, request: Request, response: Response, db: DbSession
 ) -> TokenResponse:
-    _check_rate_limit(request, data.email)
+    attempt = _check_rate_limit(request, data.email)
     tokens = service.login(db, data.email, data.password, UserType.STAFF, request)
-    _clear_rate_limit(request, data.email)
+    _succeeded(attempt, data.email)
     return _token_response(response, tokens)
 
 
@@ -146,7 +167,7 @@ def change_password(
 ) -> TokenResponse:
     """Signs out every other device and returns fresh tokens for this one."""
     # Shares the login limit, so a stolen access token can't be used to guess the password.
-    _check_rate_limit(request, user.email)
+    attempt = _check_rate_limit(request, user.email)
     tokens = service.change_password(db, user, data, request)
-    _clear_rate_limit(request, user.email)
+    _succeeded(attempt, user.email)
     return _token_response(response, tokens)
