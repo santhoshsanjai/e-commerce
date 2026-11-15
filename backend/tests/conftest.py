@@ -44,6 +44,7 @@ def _clean_tables() -> Iterator[None]:
     yield
     from app.core.rate_limit import login_limiter
     from app.infrastructure.database import engine
+    from app.modules.access_control.permissions import DEFAULT_ROLE_GRANTS
 
     login_limiter.reset()
     with engine.begin() as conn:
@@ -54,6 +55,18 @@ def _clean_tables() -> Iterator[None]:
                 "cart_items, orders, order_items, order_status_events CASCADE"
             )
         )
+        # Put roles back to the seeded defaults: drop custom roles, reset grants.
+        conn.execute(text("DELETE FROM roles WHERE NOT is_system"))
+        conn.execute(text("DELETE FROM role_permissions"))
+        for role_name, keys in DEFAULT_ROLE_GRANTS.items():
+            conn.execute(
+                text(
+                    "INSERT INTO role_permissions (role_id, permission_id) "
+                    "SELECT r.id, p.id FROM roles r JOIN permissions p ON p.key = ANY(:keys) "
+                    "WHERE r.name = :name"
+                ),
+                {"name": role_name, "keys": keys},
+            )
 
 
 class FakeStorage:

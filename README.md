@@ -116,4 +116,11 @@ Migrations are a controlled release step; the API never creates tables on start-
     delivery still with the courier, open orders by status, and a "needs attention" list (orders
     waiting for dispatch, failed deliveries, unapplied courier files, low stock).
   - Audit log viewer: search by person or record, filter by action and date, see before/after values.
-  - Next: staff and roles screens, sales reports with Excel download, buyer account pages.
+  - Staff and roles: add staff, edit their details and roles, reset a password, deactivate or
+    reactivate (deactivating signs them out everywhere at once). Create custom roles and edit which
+    permissions each role has. Safeguards, enforced by the API: only a Super Admin can grant the
+    Super Admin role or change a Super Admin's account; nobody can change their own roles or
+    deactivate themselves; there is always at least one active Super Admin; the Super Admin role
+    always keeps every permission; built-in roles can't be renamed or deleted; and nobody can grant
+    a permission they don't hold. Every change is in the audit log.
+  - Next: sales reports with Excel download, buyer account pages.

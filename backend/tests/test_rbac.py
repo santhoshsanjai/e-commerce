@@ -10,7 +10,13 @@ from app.modules.access_control.permissions import DEFAULT_ROLE_GRANTS, PERMISSI
 ADMIN_ENDPOINTS = [
     ("GET", "/api/v1/admin/staff", "users.view"),
     ("POST", "/api/v1/admin/staff", "users.manage"),
+    ("GET", "/api/v1/admin/staff/{staff_id}", "users.view"),
+    ("PATCH", "/api/v1/admin/staff/{staff_id}", "users.manage"),
+    ("POST", "/api/v1/admin/staff/{staff_id}/password", "users.manage"),
     ("GET", "/api/v1/admin/roles", "roles.view"),
+    ("POST", "/api/v1/admin/roles", "roles.manage"),
+    ("PATCH", "/api/v1/admin/roles/{role_id}", "roles.manage"),
+    ("DELETE", "/api/v1/admin/roles/{role_id}", "roles.manage"),
     ("GET", "/api/v1/admin/permissions", "roles.view"),
     ("GET", "/api/v1/admin/categories", "categories.view"),
     ("POST", "/api/v1/admin/categories", "categories.manage"),
