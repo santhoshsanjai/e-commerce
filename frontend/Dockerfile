@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Builds one of the two apps: docker build --build-arg APP=buyer|admin -f frontend/Dockerfile frontend
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 ARG APP=buyer
 WORKDIR /src
 COPY package.json package-lock.json ./
