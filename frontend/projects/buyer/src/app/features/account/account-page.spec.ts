@@ -13,6 +13,7 @@ const ME: Me = {
   user_type: 'BUYER',
   roles: [],
   permissions: [],
+  mfa_enabled: false,
 };
 
 const address = (id: string, city: string, isDefault: boolean): Address => ({

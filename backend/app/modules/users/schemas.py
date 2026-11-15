@@ -41,3 +41,4 @@ class StaffOut(BaseModel):
     role_ids: list[uuid.UUID]
     last_login_at: datetime | None
     created_at: datetime
+    mfa_enabled: bool

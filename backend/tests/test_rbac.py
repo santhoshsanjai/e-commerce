@@ -13,6 +13,7 @@ ADMIN_ENDPOINTS = [
     ("GET", "/api/v1/admin/staff/{staff_id}", "users.view"),
     ("PATCH", "/api/v1/admin/staff/{staff_id}", "users.manage"),
     ("POST", "/api/v1/admin/staff/{staff_id}/password", "users.manage"),
+    ("POST", "/api/v1/admin/staff/{staff_id}/mfa/reset", "users.manage"),
     ("GET", "/api/v1/admin/roles", "roles.view"),
     ("POST", "/api/v1/admin/roles", "roles.manage"),
     ("PATCH", "/api/v1/admin/roles/{role_id}", "roles.manage"),

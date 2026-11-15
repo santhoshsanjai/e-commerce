@@ -17,6 +17,8 @@ TEST_DB_URL = os.environ.get(
 )
 os.environ["DATABASE_URL"] = TEST_DB_URL
 os.environ["ENVIRONMENT"] = "test"
+# Most tests sign staff straight in; test_staff_mfa.py turns two-step sign-in on.
+os.environ["STAFF_MFA_REQUIRED"] = "false"
 
 
 def _recreate_database(url: str) -> None:

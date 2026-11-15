@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Only for local development and tests; refused in every deployed environment.
 LOCAL_DEV_JWT_SECRET = "local-dev-only-jwt-secret-do-not-deploy"  # noqa: S105
+LOCAL_DEV_MFA_KEY = "bG9jYWwtZGV2LW9ubHktbWZhLWtleS1ub3QtcmVhbCE="
 
 
 class Settings(BaseSettings):
@@ -63,10 +64,24 @@ class Settings(BaseSettings):
     admin_site_url: str = "http://localhost:4300"
     password_reset_ttl_minutes: int = 30
 
+    # Two-step sign-in for staff. The key (a Fernet key) encrypts authenticator secrets in the
+    # database. Make one with:
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    staff_mfa_required: bool = True
+    mfa_encryption_key: str = LOCAL_DEV_MFA_KEY
+    mfa_issuer: str = "Shop Admin"
+
     @model_validator(mode="after")
     def _require_real_secret_when_deployed(self) -> "Settings":
         if self.environment not in ("local", "test") and self.jwt_secret == LOCAL_DEV_JWT_SECRET:
             raise ValueError("JWT_SECRET must be set for deployed environments")
+        if (
+            self.environment not in ("local", "test")
+            and self.mfa_encryption_key == LOCAL_DEV_MFA_KEY
+        ):
+            raise ValueError("MFA_ENCRYPTION_KEY must be set for deployed environments")
+        if self.is_production and not self.staff_mfa_required:
+            raise ValueError("STAFF_MFA_REQUIRED must be true in production")
         if self.is_production and not self.cookie_secure:
             raise ValueError("COOKIE_SECURE must be true in production")
         if self.is_production and self.email_backend == "console":

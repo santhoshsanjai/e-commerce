@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Enum, String, Uuid
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, DateTime, Enum, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.database import Base, TimestampMixin
@@ -38,6 +38,18 @@ class User(TimestampMixin, Base):
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # Two-step sign-in (staff). Secrets are encrypted with MFA_ENCRYPTION_KEY, never stored plain.
+    mfa_secret: Mapped[str | None] = mapped_column(Text)
+    mfa_enabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Set up but not yet confirmed with a code.
+    mfa_pending_secret: Mapped[str | None] = mapped_column(Text)
+    # Last 30-second step a code was accepted for, so a code can't be used twice.
+    mfa_last_step: Mapped[int | None] = mapped_column(BigInteger)
+
+    @property
+    def mfa_enabled(self) -> bool:
+        return self.mfa_enabled_at is not None
 
     roles: Mapped[list["Role"]] = relationship(
         secondary="user_roles", lazy="selectin", back_populates="users"

@@ -63,10 +63,26 @@ See `backend/.env.example`. The important ones:
 | `JWT_SECRET` | Required outside local/test; at least 32 random characters |
 | `COOKIE_SECURE` | `true` wherever the site is served over HTTPS (required in production) |
 | `CORS_ORIGINS` | JSON list of allowed browser origins |
+| `MFA_ENCRYPTION_KEY` | Required outside local/test. Fernet key that encrypts staff authenticator secrets (see below) |
+| `STAFF_MFA_REQUIRED` | Two-step sign-in for staff; `true` by default and required in production |
+| `EMAIL_BACKEND` | `smtp` (Mailpit locally) or `ses` when deployed; see `backend/.env.example` |
 | `FORWARDED_ALLOW_IPS` | Proxies whose `X-Forwarded-For` is trusted (load balancer and web subnets, e.g. the VPC CIDR). Never `*` when deployed |
 
 The web containers (`frontend/nginx.conf`) take `API_UPSTREAM` (where `/api` goes) and
 `MEDIA_ORIGIN` (the CDN origin for product images, allowed by the Content Security Policy).
+
+## Staff two-step sign-in
+
+Staff sign in with their password and a 6-digit code from an authenticator app (Google
+Authenticator, Microsoft Authenticator, 1Password and similar). At their first sign-in they scan a
+QR code and are shown ten one-time recovery codes for a lost phone.
+
+- A Super Admin can reset a staff member's two-step sign-in on their staff page (lost or new phone).
+- If the only Super Admin loses their phone and their recovery codes, run this where the API runs:
+  `python -m app.cli reset-mfa --email them@example.com`.
+- Make the encryption key once per environment and keep it in the secrets store. Losing it means
+  every staff member sets up their app again:
+  `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
 
 ## Checks
 

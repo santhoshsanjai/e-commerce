@@ -46,6 +46,7 @@ export class StaffForm {
   );
   protected readonly busy = signal(false);
   protected readonly confirmingDeactivate = signal(false);
+  protected readonly confirmingMfaReset = signal(false);
 
   private readonly iAmSuperAdmin = computed(
     () => this.auth.user()?.roles.includes(SUPER_ADMIN) ?? false,
@@ -116,6 +117,16 @@ export class StaffForm {
       await this.api.resetPassword(member.id, this.newPassword);
       this.newPassword = '';
       return `Password changed. ${member.full_name} has been signed out and must use the new password.`;
+    });
+  }
+
+  protected async resetMfa(): Promise<void> {
+    this.confirmingMfaReset.set(false);
+    await this.run(async () => {
+      const member = this.member.value() as StaffMember;
+      await this.api.resetMfa(member.id);
+      this.member.set({ ...member, mfa_enabled: false });
+      return `Two-step sign-in reset. ${member.full_name} has been signed out and will set up their authenticator app again at their next sign-in.`;
     });
   }
 

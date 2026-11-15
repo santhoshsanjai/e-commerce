@@ -17,6 +17,7 @@ export interface Me {
   user_type: UserType;
   roles: string[];
   permissions: string[];
+  mfa_enabled: boolean;
 }
 
 export interface LoginRequest {
@@ -43,4 +44,27 @@ export interface ProfileUpdate {
   full_name?: string;
   /** An empty string clears the number. */
   phone?: string;
+}
+
+/** Staff sign-in after the password: signed in, or one more step with the authenticator app. */
+export type StaffSignInStep =
+  { kind: 'signed-in'; me: Me } | { kind: 'verify' | 'enrol'; challenge: string };
+
+export interface StaffLoginResponse {
+  access_token: string | null;
+  expires_in: number | null;
+  mfa: 'verify' | 'enrol' | null;
+  challenge_token: string | null;
+}
+
+export interface MfaSetup {
+  /** Base32 secret, for typing into the app when the QR code can't be scanned. */
+  secret: string;
+  otpauth_uri: string;
+  /** The QR code as a PNG data: URL. */
+  qr_png: string;
+}
+
+export interface MfaActivated extends TokenResponse {
+  recovery_codes: string[];
 }

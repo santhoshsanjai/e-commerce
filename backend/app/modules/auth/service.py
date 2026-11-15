@@ -87,9 +87,14 @@ def login(
     db: Session, email: str, password: str, user_type: UserType, request: Request
 ) -> IssuedTokens:
     user = authenticate(db, email, password, user_type)
+    return complete_login(db, user, request)
+
+
+def complete_login(db: Session, user: User, request: Request) -> IssuedTokens:
+    """Start a session once every sign-in step has passed. Commits."""
     user.last_login_at = datetime.now(UTC)
     tokens = issue_tokens(db, user)
-    if user_type is UserType.STAFF:
+    if user.user_type is UserType.STAFF:
         audit.record(db, "auth.staff_login", actor_id=user.id, request=request)
     db.commit()
     return tokens

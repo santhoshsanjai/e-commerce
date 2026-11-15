@@ -13,6 +13,7 @@ export interface StaffMember {
   role_ids: string[];
   last_login_at: string | null;
   created_at: string;
+  mfa_enabled: boolean;
 }
 
 export interface StaffCreate {
@@ -89,6 +90,11 @@ export class StaffApi {
     return firstValueFrom(
       this.http.post<void>(`${this.base}/admin/staff/${id}/password`, { password }),
     );
+  }
+
+  /** Remove their authenticator app (lost phone); they set up a new one at their next sign-in. */
+  resetMfa(id: string): Promise<void> {
+    return firstValueFrom(this.http.post<void>(`${this.base}/admin/staff/${id}/mfa/reset`, null));
   }
 
   roles(): Observable<Role[]> {
