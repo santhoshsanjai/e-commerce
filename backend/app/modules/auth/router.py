@@ -42,10 +42,16 @@ def _token_response(response: Response, tokens: service.IssuedTokens) -> TokenRe
     return TokenResponse(access_token=tokens.access_token, expires_in=tokens.expires_in)
 
 
-def _check_rate_limit(request: Request, email: str) -> None:
-    settings = get_settings()
+def _rate_limit_key(request: Request, email: str) -> str:
     ip = request.client.host if request.client else "unknown"
-    key = f"{ip}:{service.normalise_email(email)}"
+    return f"{ip}:{service.normalise_email(email)}"
+
+
+def _check_rate_limit(request: Request, email: str) -> None:
+    """Count an attempt. A successful one clears the count (see _clear_rate_limit), so only
+    failed attempts lock an account out."""
+    settings = get_settings()
+    key = _rate_limit_key(request, email)
     allowed = login_limiter.hit(
         key, settings.login_rate_limit_attempts, settings.login_rate_limit_window_seconds
     )
@@ -55,6 +61,10 @@ def _check_rate_limit(request: Request, email: str) -> None:
             "Too many login attempts. Try again later.",
             status.HTTP_429_TOO_MANY_REQUESTS,
         )
+
+
+def _clear_rate_limit(request: Request, email: str) -> None:
+    login_limiter.reset(_rate_limit_key(request, email))
 
 
 def _me(user: User) -> MeResponse:
@@ -81,6 +91,7 @@ def buyer_login(
 ) -> TokenResponse:
     _check_rate_limit(request, data.email)
     tokens = service.login(db, data.email, data.password, UserType.BUYER, request)
+    _clear_rate_limit(request, data.email)
     return _token_response(response, tokens)
 
 
@@ -90,6 +101,7 @@ def staff_login(
 ) -> TokenResponse:
     _check_rate_limit(request, data.email)
     tokens = service.login(db, data.email, data.password, UserType.STAFF, request)
+    _clear_rate_limit(request, data.email)
     return _token_response(response, tokens)
 
 
@@ -135,4 +147,6 @@ def change_password(
     """Signs out every other device and returns fresh tokens for this one."""
     # Shares the login limit, so a stolen access token can't be used to guess the password.
     _check_rate_limit(request, user.email)
-    return _token_response(response, service.change_password(db, user, data, request))
+    tokens = service.change_password(db, user, data, request)
+    _clear_rate_limit(request, user.email)
+    return _token_response(response, tokens)

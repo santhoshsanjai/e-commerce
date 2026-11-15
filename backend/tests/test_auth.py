@@ -113,6 +113,20 @@ def test_login_is_rate_limited(client):
     assert codes[5] == 429
 
 
+def test_successful_logins_do_not_lock_the_account(client):
+    """Only failures count: someone who signs in often (or after a typo) is never locked out."""
+    client.post("/api/v1/auth/register", json=BUYER)
+    good = {"email": BUYER["email"], "password": BUYER["password"]}
+    bad = {"email": BUYER["email"], "password": "wrong-password"}
+    for _ in range(8):
+        assert client.post("/api/v1/auth/login", json=good).status_code == 200
+    # Four typos, then the right password, then four more typos: still not locked.
+    for _ in range(2):
+        for _ in range(4):
+            assert client.post("/api/v1/auth/login", json=bad).status_code == 401
+        assert client.post("/api/v1/auth/login", json=good).status_code == 200
+
+
 def test_tampered_token_rejected(client):
     token = register_and_login(client).json()["access_token"]
     resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}x"})

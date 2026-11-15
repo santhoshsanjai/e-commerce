@@ -58,7 +58,7 @@ def handed_over(client, buyer_token, admin, name="Asha"):
 
 
 def test_preview_then_confirm_updates_orders_once(client, buyer_token, admin, files):
-    n1, oid1, _ = handed_over(client, buyer_token, admin)
+    n1, oid1, buyer1 = handed_over(client, buyer_token, admin)
     n2, oid2, _ = handed_over(client, buyer_token, admin, name="Ravi")
     data = xlsx(
         [
@@ -107,6 +107,9 @@ def test_preview_then_confirm_updates_orders_once(client, buyer_token, admin, fi
     )
     o2 = client.get(f"/api/v1/admin/orders/{oid2}", headers=admin).json()
     assert (o2["status"], o2["awb_number"]) == ("IN_TRANSIT", "AWB222")
+    # The buyer sees the tracking number on their order.
+    mine = client.get(f"/api/v1/me/orders/{n1}", headers=buyer1).json()
+    assert (mine["status"], mine["awb_number"]) == ("DELIVERED", "AWB111")
 
     # Confirming again changes nothing.
     again = client.post(f"{IMPORTS}/{body['id']}/confirm", headers=admin)
