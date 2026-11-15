@@ -12,6 +12,9 @@ COPY migrations ./migrations
 COPY alembic.ini ./
 
 FROM base AS runtime
+# The git commit, passed by the deploy pipeline; shown by /health/live and in logs.
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
 RUN useradd --create-home --uid 10001 appuser
 COPY --from=build /app /app
 ENV PATH="/app/.venv/bin:$PATH"
@@ -24,4 +27,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
 # FORWARDED_ALLOW_IPS (set it to the load balancer and web subnets, e.g. the VPC CIDR). Never "*" in a
 # deployed environment: clients could then pick their own address and dodge the sign-in limits.
 ENV FORWARDED_ALLOW_IPS=127.0.0.1
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+# The app writes its own structured access log (app.access), so uvicorn's is off.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--no-access-log"]

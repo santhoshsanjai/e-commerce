@@ -186,3 +186,24 @@ def test_cli_resets_mfa_when_no_other_super_admin_can(client, make_staff):
     assert reset_mfa(creds["email"].upper()) == 0
     assert client.post(LOGIN, json=creds).json()["mfa"] == "enrol"
     assert reset_mfa("nobody@example.com") == 1
+
+
+def test_encryption_key_can_be_rotated(client, make_staff):
+    from cryptography.fernet import Fernet
+
+    from app.cli import rotate_mfa_key
+    from app.core.config import get_settings
+
+    creds = make_staff("Manager")
+    secret, _ = _enrol(client, creds)
+    settings = get_settings()
+    old_key = settings.mfa_encryption_key
+    new_key = Fernet.generate_key().decode()
+    try:
+        settings.mfa_encryption_key = f"{new_key},{old_key}"
+        assert rotate_mfa_key() == 0
+        settings.mfa_encryption_key = new_key  # old key removed: sign-in still works
+        challenge = _challenge(client, creds)
+        assert _verify(client, challenge, _code(secret, 1)).status_code == 200
+    finally:
+        settings.mfa_encryption_key = old_key

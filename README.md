@@ -132,7 +132,14 @@ uv run alembic upgrade head
 uv run alembic downgrade -1
 ```
 
-Migrations are a controlled release step; the API never creates tables on start-up.
+Migrations are a controlled release step; the API never creates tables on start-up. Keep each one
+backwards compatible for one release (add columns and tables; drop or rename them in a later
+release), so a deploy can be rolled back to the previous image.
+
+## Operations
+
+Health checks, logs, alerts, backups, restoring and secret rotation are in
+[docs/operations.md](docs/operations.md). `ops/` has the backup, restore and restore-drill scripts.
 
 ## Project status
 

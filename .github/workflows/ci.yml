@@ -82,6 +82,9 @@ jobs:
       - run: docker build -t ecommerce-api backend
       - run: docker build --build-arg APP=buyer -t ecommerce-buyer frontend
       - run: docker build --build-arg APP=admin -t ecommerce-admin frontend
+      - run: docker build -f ops/Dockerfile.backup -t ecommerce-backup ops
+      - name: Check the operations scripts
+        run: shellcheck ops/*.sh
 
   e2e:
     name: End-to-end (full stack in Docker)
@@ -121,6 +124,8 @@ jobs:
       - name: Run end-to-end tests
         working-directory: e2e
         run: npx playwright test
+      - name: Backup and restore drill (on the data the tests just created)
+        run: ops/restore-drill.sh
       - name: Server logs
         if: failure()
         run: docker compose logs --tail=300
