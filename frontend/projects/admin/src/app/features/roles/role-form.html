@@ -1,0 +1,123 @@
+<a class="back" routerLink="/roles">← All roles</a>
+
+@if (notFound()) {
+  <div class="alert-error" role="alert">This role doesn't exist any more.</div>
+} @else if (!isNew() && !role()) {
+  <p>Loading…</p>
+} @else {
+  <div class="page-head">
+    <h1>{{ isNew() ? 'New role' : role()?.name }}</h1>
+    @if (role()?.is_system) {
+      <span class="tag">Built-in</span>
+    }
+  </div>
+
+  <div aria-live="polite">
+    @if (notice()) {
+      <div class="notice" role="status">{{ notice() }}</div>
+    }
+    @if (error()) {
+      <div class="alert-error" role="alert">{{ error() }}</div>
+    }
+  </div>
+
+  @if (isSuperAdminRole()) {
+    <p class="hint">
+      The Super Admin role always has every permission, so it can't be edited. This keeps at least
+      one person able to manage everything.
+    </p>
+  }
+
+  <form class="card" (ngSubmit)="save()">
+    <div class="grid">
+      <div class="field">
+        <label for="name">Name</label>
+        <input
+          id="name"
+          name="name"
+          autocomplete="off"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          [disabled]="!editable() || !!role()?.is_system"
+          aria-describedby="name-hint"
+          required
+        />
+        @if (role()?.is_system) {
+          <small id="name-hint" class="hint">Built-in roles keep their name.</small>
+        }
+      </div>
+      <div class="field">
+        <label for="description">Description <span class="hint">(optional)</span></label>
+        <input
+          id="description"
+          name="description"
+          autocomplete="off"
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
+          [disabled]="!editable()"
+        />
+      </div>
+    </div>
+
+    <h2>
+      Permissions <span class="hint">({{ selected().size }} selected)</span>
+    </h2>
+    <div class="groups">
+      @for (g of groups.value() ?? []; track g.label) {
+        <fieldset>
+          <legend>{{ g.label }}</legend>
+          @for (p of g.permissions; track p.key) {
+            <label class="perm" [class.disabled]="permissionDisabled(p.key)">
+              <input
+                type="checkbox"
+                [checked]="selected().has(p.key)"
+                [disabled]="permissionDisabled(p.key)"
+                (change)="toggle(p.key, $any($event.target).checked)"
+              />
+              <span>
+                {{ p.description }}
+                @if (editable() && permissionDisabled(p.key)) {
+                  <small class="hint">You don't hold this permission, so you can't grant it.</small>
+                }
+              </span>
+            </label>
+          }
+        </fieldset>
+      }
+    </div>
+
+    @if (editable()) {
+      <div class="actions">
+        <button class="btn" type="submit" [disabled]="busy() || !name().trim()">
+          {{ isNew() ? 'Create role' : 'Save changes' }}
+        </button>
+      </div>
+    }
+  </form>
+
+  @if (role(); as r) {
+    @if (editable() && !r.is_system) {
+      <section class="card">
+        <h2>Delete role</h2>
+        @if (r.user_count) {
+          <p class="hint">
+            {{ r.user_count }} staff member(s) still have this role. Give them another role first.
+          </p>
+        } @else if (confirmingDelete()) {
+          <div class="inline">
+            <button class="btn danger" type="button" [disabled]="busy()" (click)="remove()">
+              Yes, delete {{ r.name }}
+            </button>
+            <button class="btn btn-secondary" type="button" (click)="confirmingDelete.set(false)">
+              Cancel
+            </button>
+          </div>
+        } @else {
+          <button class="btn btn-secondary" type="button" (click)="confirmingDelete.set(true)">
+            Delete…
+          </button>
+        }
+      </section>
+    }
+  }
+}

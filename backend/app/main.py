@@ -13,15 +13,18 @@ from app.core.logging import configure_logging, request_id_var
 from app.infrastructure.database import SessionLocal
 from app.modules.access_control.router import router as access_control_router
 from app.modules.addresses.router import router as addresses_router
+from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.cart.router import router as cart_router
 from app.modules.catalog.router import admin_router as catalog_admin_router
 from app.modules.catalog.router import public_router as catalog_public_router
 from app.modules.checkout.router import router as checkout_router
 from app.modules.courier_import.router import router as courier_import_router
+from app.modules.dashboard.router import router as dashboard_router
 from app.modules.dispatch.router import router as dispatch_router
 from app.modules.orders.router import admin_router as orders_admin_router
 from app.modules.orders.router import buyer_router as orders_buyer_router
+from app.modules.reports.router import router as reports_router
 from app.modules.users.router import router as users_router
 
 logger = logging.getLogger("app")
@@ -91,6 +94,9 @@ def create_app() -> FastAPI:
     api.include_router(orders_buyer_router)
     api.include_router(dispatch_router)
     api.include_router(courier_import_router)
+    api.include_router(dashboard_router)
+    api.include_router(audit_router)
+    api.include_router(reports_router)
     api.include_router(orders_admin_router)
     app.include_router(api)
     return app

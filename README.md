@@ -96,7 +96,7 @@ Migrations are a controlled release step; the API never creates tables on start-
 
 - **Phase 0 (foundations):** auth for buyers and staff, RBAC with seeded Super Admin, Admin and Manager
   roles, audit log, both app shells, Docker, CI.
-- **Phase 1 (vertical slice), in progress:**
+- **Phase 1 (vertical slice), complete:**
   - Catalogue: categories, products with SKUs, images, publish rules, buyer listing and product page.
   - Cart and checkout: saved addresses (Indian PIN codes), server-side cart, cash-on-delivery checkout
     that locks stock and is safe to retry (`Idempotency-Key` header), order confirmation, My orders,
@@ -111,4 +111,24 @@ Migrations are a controlled release step; the API never creates tables on start-
   - Manual status updates on the order page, following the lifecycle map; stepping outside it needs
     `orders.status.override` and a reason. Cancelling before handover restocks; cash on delivery is
     marked paid when delivered; delivered orders are completed by hand.
-  - Phase 1 vertical slice complete. Next: Phase 2 (see the plan).
+- **Phase 2 (admin operations), in progress:**
+  - Dashboard: today's orders and sales, sales for the last 7 days (Indian calendar days), cash on
+    delivery still with the courier, open orders by status, and a "needs attention" list (orders
+    waiting for dispatch, failed deliveries, unapplied courier files, low stock).
+  - Audit log viewer: search by person or record, filter by action and date, see before/after values.
+  - Staff and roles: add staff, edit their details and roles, reset a password, deactivate or
+    reactivate (deactivating signs them out everywhere at once). Create custom roles and edit which
+    permissions each role has. Safeguards, enforced by the API: only a Super Admin can grant the
+    Super Admin role or change a Super Admin's account; nobody can change their own roles or
+    deactivate themselves; there is always at least one active Super Admin; the Super Admin role
+    always keeps every permission; built-in roles can't be renamed or deleted; and nobody can grant
+    a permission they don't hold. Every change is in the audit log.
+  - Sales report: pick a date range (or a quick range such as last month) and show by day, week or
+    month. Shows sales, orders, average order, items sold, delivered value, cash on delivery
+    collected, cancellations and returns, sales by state and top products. "Download Excel" gives
+    the same figures plus every product and every order in the range; each download is audited.
+  - Buyer account page: change name and mobile number, manage saved delivery addresses (add, edit,
+    make default, remove), and change password. Changing the password signs out every other device
+    and keeps this one signed in; wrong-password attempts share the login rate limit.
+  - Phase 2 complete. Next: Phase 3 (security review, backups, monitoring, staging, then
+    production).

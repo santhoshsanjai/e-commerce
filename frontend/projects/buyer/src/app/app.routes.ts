@@ -48,6 +48,12 @@ export const routes: Routes = [
     title: 'Order',
   },
   {
+    path: 'account',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),
+    title: 'Your account',
+  },
+  {
     path: '**',
     loadComponent: () => import('./features/not-found').then((m) => m.NotFound),
     title: 'Page not found',

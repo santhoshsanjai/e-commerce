@@ -1,0 +1,92 @@
+<form [formGroup]="form" (ngSubmit)="save()" novalidate class="address-form">
+  <h3>{{ heading() }}</h3>
+  @if (error()) {
+    <div class="alert-error" role="alert">{{ error() }}</div>
+  }
+  <div class="row">
+    <div class="field">
+      <label for="recipient_name">Full name</label>
+      <input
+        id="recipient_name"
+        formControlName="recipient_name"
+        autocomplete="name"
+        [attr.aria-invalid]="invalid('recipient_name')"
+      />
+    </div>
+    <div class="field">
+      <label for="phone">Mobile number</label>
+      <input
+        id="phone"
+        type="tel"
+        formControlName="phone"
+        autocomplete="tel"
+        [attr.aria-invalid]="invalid('phone')"
+      />
+    </div>
+  </div>
+  <div class="field">
+    <label for="line1">House no., building, street</label>
+    <input
+      id="line1"
+      formControlName="line1"
+      autocomplete="address-line1"
+      [attr.aria-invalid]="invalid('line1')"
+    />
+  </div>
+  <div class="row">
+    <div class="field">
+      <label for="line2">Area, locality (optional)</label>
+      <input id="line2" formControlName="line2" autocomplete="address-line2" />
+    </div>
+    <div class="field">
+      <label for="landmark">Landmark (optional)</label>
+      <input id="landmark" formControlName="landmark" />
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label for="city">City</label>
+      <input
+        id="city"
+        formControlName="city"
+        autocomplete="address-level2"
+        [attr.aria-invalid]="invalid('city')"
+      />
+    </div>
+    <div class="field">
+      <label for="region">State</label>
+      <input
+        id="region"
+        formControlName="region"
+        autocomplete="address-level1"
+        [attr.aria-invalid]="invalid('region')"
+      />
+    </div>
+    <div class="field">
+      <label for="postal_code">PIN code</label>
+      <input
+        id="postal_code"
+        inputmode="numeric"
+        maxlength="6"
+        formControlName="postal_code"
+        autocomplete="postal-code"
+        [attr.aria-invalid]="invalid('postal_code')"
+        aria-describedby="pin-hint"
+      />
+      @if (invalid('postal_code')) {
+        <small id="pin-hint" class="error-text">Enter a 6-digit PIN code.</small>
+      }
+    </div>
+  </div>
+  <label class="check">
+    <input type="checkbox" formControlName="is_default" /> Make this my default address
+  </label>
+  <div class="actions">
+    <button class="btn" type="submit" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : submitLabel() }}
+    </button>
+    @if (cancellable()) {
+      <button class="btn btn-secondary" type="button" (click)="cancelled.emit()">Cancel</button>
+    }
+  </div>
+</form>

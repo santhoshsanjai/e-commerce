@@ -38,3 +38,9 @@ export interface ApiErrorBody {
     request_id: string | null;
   };
 }
+
+export interface ProfileUpdate {
+  full_name?: string;
+  /** An empty string clears the number. */
+  phone?: string;
+}

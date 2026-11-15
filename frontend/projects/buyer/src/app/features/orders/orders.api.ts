@@ -22,6 +22,14 @@ export class OrdersApi {
     return this.http.post<Address>(`${this.base}/me/addresses`, data);
   }
 
+  updateAddress(id: string, data: AddressInput): Observable<Address> {
+    return this.http.put<Address>(`${this.base}/me/addresses/${id}`, data);
+  }
+
+  deleteAddress(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/me/addresses/${id}`);
+  }
+
   /** The key stays the same across retries of one attempt, so a retry can never order twice. */
   checkout(data: CheckoutInput, idempotencyKey: string): Observable<OrderDetail> {
     return this.http.post<OrderDetail>(`${this.base}/checkout`, data, {
