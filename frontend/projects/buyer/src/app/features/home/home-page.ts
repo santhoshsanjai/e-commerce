@@ -2,14 +2,14 @@ import { Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { Icon, StorefrontService } from '@shop/shared';
+import { Icon, ParallaxDirective, RevealDirective, StorefrontService } from '@shop/shared';
 import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { CatalogApi } from '../catalog/catalog.api';
 import { ProductCard } from '../catalog/product-card';
 
 @Component({
   selector: 'buy-home-page',
-  imports: [RouterLink, Icon, ProductCard],
+  imports: [RouterLink, Icon, ParallaxDirective, RevealDirective, ProductCard],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
 })

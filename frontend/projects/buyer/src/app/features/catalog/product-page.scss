@@ -37,6 +37,8 @@
 .main-image {
   position: relative;
   aspect-ratio: 1;
+  // Matches the clicked product card's picture, so it grows into place (see ProductCard).
+  view-transition-name: product-image;
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--color-surface-alt);
@@ -179,9 +181,17 @@
 
 .buy {
   flex: 1 1 240px;
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
   &.done {
     background: var(--color-success);
     border-color: var(--color-success);
+    shr-icon {
+      animation: pop 420ms var(--ease-out);
+    }
   }
 }
 

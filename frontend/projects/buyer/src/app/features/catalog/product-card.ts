@@ -7,7 +7,7 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
   imports: [RouterLink, MoneyPipe, Icon],
   template: `
     @let p = product();
-    <a class="card-link" [routerLink]="['/products', p.slug]">
+    <a class="card-link" [routerLink]="['/products', p.slug]" (click)="morph($event)">
       <div class="image">
         @if (p.image_url) {
           <img [src]="p.image_url" [alt]="p.image_alt" loading="lazy" />
@@ -34,7 +34,7 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
               <s class="was">{{ p.compare_at_minor | money: p.currency }}</s>
             }
           </p>
-          <span class="details" aria-hidden="true">View details</span>
+          <span class="details" aria-hidden="true">View details <shr-icon name="arrow" /></span>
         </div>
       </div>
     </a>
@@ -55,12 +55,18 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
       text-decoration: none;
       transition:
         border-color var(--duration-fast) ease,
-        box-shadow var(--duration-base) var(--ease-out);
+        box-shadow var(--duration-base) var(--ease-out),
+        translate var(--duration-base) var(--ease-out);
     }
     .card-link:hover,
     .card-link:focus-visible {
+      translate: 0 -4px;
       border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--shadow-lg);
+    }
+    .card-link:active {
+      translate: 0 -1px;
+      transition-duration: var(--duration-fast);
     }
     .image {
       position: relative;
@@ -156,9 +162,28 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
       border-radius: var(--radius-md);
       background: var(--color-primary);
       color: var(--color-primary-contrast);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       font-size: var(--font-size-xs);
       font-weight: 600;
       white-space: nowrap;
+      transition: background-color var(--duration-fast) ease;
+      shr-icon {
+        --icon-size: 12px;
+        width: 0;
+        opacity: 0;
+        transition:
+          width var(--duration-base) var(--ease-out),
+          opacity var(--duration-base) var(--ease-out);
+      }
+    }
+    .card-link:hover .details {
+      background: var(--color-primary-hover);
+      shr-icon {
+        width: 12px;
+        opacity: 1;
+      }
     }
     .now {
       color: var(--color-sale);
@@ -181,6 +206,16 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
 })
 export class ProductCard {
   readonly product = input.required<Card>();
+
+  /**
+   * Names this card's picture for the page transition, so it grows into the product page's
+   * main picture (which carries the same name). Only the clicked card gets the name.
+   */
+  protected morph(event: MouseEvent): void {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return;
+    const img = (event.currentTarget as HTMLElement).querySelector<HTMLElement>('.image img');
+    if (img) img.style.viewTransitionName = 'product-image';
+  }
   protected readonly discount = computed(() => {
     const p = this.product();
     if (!p.compare_at_minor || p.compare_at_minor <= p.price_minor) return 0;

@@ -3,11 +3,45 @@
 }
 
 // ---------- Hero ----------
+// Motion: the copy and pictures come in one after another, the pictures float gently and
+// follow the pointer (shrParallax), and the band drifts away as the page scrolls (where the
+// browser supports scroll-driven animations). All of it stops for reduced motion (_base.scss).
 
 .hero {
+  --px: 0;
+  --py: 0;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   color: var(--color-hero-text);
   background: linear-gradient(110deg, var(--color-hero-start), var(--color-hero-end));
   border-bottom: 1px solid var(--color-border);
+}
+
+// Two soft colour clouds drifting slowly behind the content.
+.hero-glow {
+  position: absolute;
+  inset: -30%;
+  z-index: -1;
+  background:
+    radial-gradient(
+      circle at 25% 35%,
+      color-mix(in srgb, var(--color-accent) 16%, transparent),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 75% 70%,
+      color-mix(in srgb, var(--color-surface) 70%, transparent),
+      transparent 30%
+    );
+  animation: glow-drift 18s var(--ease-in-out) infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes glow-drift {
+  to {
+    transform: translate3d(6%, -5%, 0) rotate(6deg);
+  }
 }
 
 .hero-inner {
@@ -20,7 +54,15 @@
 }
 
 .hero-copy {
-  animation: fade-up var(--duration-slow) var(--ease-out) both;
+  > * {
+    animation: fade-up var(--duration-slow) var(--ease-out) both;
+  }
+  > :nth-child(2) {
+    animation-delay: 120ms;
+  }
+  > :nth-child(3) {
+    animation-delay: 240ms;
+  }
   h1 {
     max-width: 18ch;
     margin: 0 0 var(--space-4);
@@ -43,6 +85,16 @@
   gap: var(--space-3);
 }
 
+// The arrow nudges forward on hover.
+.btn-arrow shr-icon {
+  --icon-size: 18px;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.btn-arrow:hover shr-icon {
+  transform: translateX(4px);
+}
+
 // Outline button in the hero's text colour.
 .btn-outline {
   background: transparent;
@@ -54,6 +106,7 @@
   &:hover:not(:disabled) {
     background: color-mix(in srgb, currentColor 8%, transparent);
     box-shadow: none;
+    transform: translateY(-1px);
   }
 }
 
@@ -62,22 +115,45 @@
   height: 340px;
 }
 
+// .frame places the picture and follows the pointer; .frame-body enters, floats and zooms.
 .frame {
+  --depth: 14px;
   position: absolute;
+  translate: calc(var(--px) * var(--depth)) calc(var(--py) * var(--depth));
+  transition: translate 600ms var(--ease-out);
+}
+
+.frame-body {
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-lg);
-  animation: frame-in 700ms var(--ease-out) both;
+  animation:
+    frame-in 800ms var(--ease-out) both,
+    float 7s var(--ease-in-out) 800ms infinite alternate;
+  transition:
+    scale var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: scale 900ms var(--ease-out);
+  }
+  &:hover {
+    scale: 1.03;
+    box-shadow: 0 30px 60px -20px color-mix(in srgb, var(--color-primary) 45%, transparent);
+    img {
+      scale: 1.06;
+    }
   }
 }
 
 .frame-0 {
+  --depth: 18px;
   top: 0;
   left: 22%;
   width: 44%;
@@ -86,26 +162,65 @@
 }
 
 .frame-1 {
+  --depth: 10px;
   top: 14%;
   right: 0;
   width: 32%;
   height: 72%;
-  animation-delay: 120ms;
+  .frame-body {
+    animation-delay: 140ms, 1.6s;
+  }
 }
 
 .frame-2 {
+  --depth: 26px;
   top: 26%;
   left: 0;
   width: 30%;
   height: 62%;
   z-index: 3;
-  animation-delay: 240ms;
+  .frame-body {
+    animation-delay: 280ms, 2.4s;
+  }
 }
 
 @keyframes frame-in {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(32px) scale(0.96);
+  }
+}
+
+@keyframes float {
+  to {
+    translate: 0 -10px;
+  }
+}
+
+// Scroll effect: as the hero leaves the screen the copy fades and the pictures rise faster.
+@supports (animation-timeline: scroll()) {
+  .hero-inner {
+    animation: hero-away linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 480px;
+  }
+  .hero-art {
+    animation: art-away linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 480px;
+  }
+}
+
+@keyframes hero-away {
+  to {
+    opacity: 0.35;
+    transform: translateY(40px);
+  }
+}
+
+@keyframes art-away {
+  to {
+    transform: translateY(-50px);
   }
 }
 
@@ -137,8 +252,14 @@
   font-weight: var(--font-weight-semibold);
   text-decoration: none;
   --icon-size: 16px;
+  shr-icon {
+    transition: transform var(--duration-base) var(--ease-out);
+  }
   &:hover {
     text-decoration: underline;
+    shr-icon {
+      transform: translateX(3px);
+    }
   }
 }
 
@@ -163,10 +284,19 @@
   text-decoration: none;
   transition:
     border-color var(--duration-fast) ease,
-    box-shadow var(--duration-base) var(--ease-out);
+    box-shadow var(--duration-base) var(--ease-out),
+    translate var(--duration-base) var(--ease-out);
   &:hover {
+    translate: 0 -3px;
     border-color: var(--color-primary);
     box-shadow: var(--shadow-md);
+    .cat-img {
+      scale: 1.08;
+      rotate: -3deg;
+    }
+  }
+  &:active {
+    translate: 0 -1px;
   }
 }
 
@@ -184,6 +314,9 @@
   height: 80px;
   border-radius: var(--radius-md);
   object-fit: cover;
+  transition:
+    scale var(--duration-base) var(--ease-out),
+    rotate var(--duration-base) var(--ease-out);
 }
 
 // ---------- Small screens ----------
@@ -223,5 +356,14 @@
   }
   .section {
     padding-top: var(--space-10);
+  }
+}
+
+// Scroll-driven effects aren't time-based, so switch them off explicitly for reduced motion.
+@media (prefers-reduced-motion: reduce) {
+  .hero-inner,
+  .hero-art,
+  .hero-glow {
+    animation: none;
   }
 }

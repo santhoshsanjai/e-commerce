@@ -154,6 +154,7 @@ a {
   &:hover:not(:disabled) {
     background: var(--color-primary-hover);
     box-shadow: var(--shadow-md);
+    translate: 0 -1px;
     &::after {
       transform: translateX(120%);
     }
@@ -445,6 +446,12 @@ input[type='radio'] {
 
 ::view-transition-new(root) {
   animation: 360ms var(--ease-out) both vt-in;
+}
+
+// A product card's picture growing into the product page.
+::view-transition-group(product-image) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-out);
 }
 
 @keyframes vt-out {

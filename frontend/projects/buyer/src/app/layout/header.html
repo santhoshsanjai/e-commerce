@@ -1,4 +1,4 @@
-<header class="site-header" [class.scrolled]="scrolled()">
+<header class="site-header" [class.scrolled]="scrolled()" [class.tucked]="tucked()">
   <div class="bar container">
     <button
       type="button"
@@ -125,3 +125,15 @@
     }
   </aside>
 }
+
+<button
+  type="button"
+  class="to-top"
+  [class.show]="showTop()"
+  [attr.tabindex]="showTop() ? 0 : -1"
+  [attr.aria-hidden]="!showTop()"
+  aria-label="Back to top"
+  (click)="toTop()"
+>
+  <shr-icon name="chevron-up" />
+</button>
