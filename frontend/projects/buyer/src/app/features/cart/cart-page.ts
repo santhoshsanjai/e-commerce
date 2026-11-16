@@ -32,11 +32,15 @@ const PROBLEM: Record<string, string> = {
           <ul class="lines">
             @for (line of cart.items; track line.sku_id) {
               <li [class.busy]="busy()">
-                <a class="thumb" [routerLink]="['/products', line.slug]" tabindex="-1">
+                <a
+                  class="thumb"
+                  [routerLink]="['/p', line.slug, line.product_number]"
+                  tabindex="-1"
+                >
                   <img [src]="line.image_url" alt="" width="96" height="120" />
                 </a>
                 <div class="info">
-                  <a class="name" [routerLink]="['/products', line.slug]">{{
+                  <a class="name" [routerLink]="['/p', line.slug, line.product_number]">{{
                     line.product_name
                   }}</a>
                   <span class="muted"

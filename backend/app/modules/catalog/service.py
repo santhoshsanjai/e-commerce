@@ -474,9 +474,24 @@ def _descendant_ids(db: Session, root_id: uuid.UUID) -> list[uuid.UUID]:
 
 
 def get_published_by_slug(db: Session, storage: ObjectStorage, slug: str) -> ProductDetail:
+    """Kept for old /products/{slug} links; the shop now looks products up by number."""
     product = db.scalar(_published().where(Product.slug == slug))
     if product is None:
         raise _not_found("product")
+    return _detail(product, storage)
+
+
+def get_published_by_number(
+    db: Session, storage: ObjectStorage, product_number: str
+) -> ProductDetail:
+    """The product number never changes, unlike the name and slug, so links use it."""
+    product = db.scalar(_published().where(Product.product_number == product_number.upper()))
+    if product is None:
+        raise _not_found("product")
+    return _detail(product, storage)
+
+
+def _detail(product: Product, storage: ObjectStorage) -> ProductDetail:
     card = _card(product, storage)
     return ProductDetail(
         **card.model_dump(),

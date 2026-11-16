@@ -36,7 +36,7 @@ describe('ProductCard', () => {
     expect(el.querySelector('.price')?.textContent).toContain('₹499.50');
     expect(el.querySelector('s')?.textContent).toContain('₹599.00');
     expect(el.querySelector('.badge')?.textContent?.trim()).toBe('Sold out');
-    expect(el.querySelector('a')?.getAttribute('href')).toBe('/products/steel-bottle');
+    expect(el.querySelector('a')?.getAttribute('href')).toBe('/p/steel-bottle/P-000001');
   });
 
   it('shows the discount on a sale item that is in stock', async () => {

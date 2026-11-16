@@ -247,6 +247,24 @@ def test_publish_makes_product_public_and_unpublish_hides_it(client, admin, cate
     assert client.get(f"/api/v1/products/{product['slug']}").status_code == 404
 
 
+def test_published_product_is_found_by_its_number(client, admin, category):
+    product = create_product(client, admin, category)
+    number = product["product_number"]
+    assert client.get(f"/api/v1/products/by-number/{number}").status_code == 404
+    upload(client, admin, product["id"])
+    publish(client, admin, product["id"])
+
+    body = client.get(f"/api/v1/products/by-number/{number}").json()
+    assert body["product_number"] == number
+    assert body["slug"] == product["slug"]
+    # Lower case works too, and a renamed product keeps its number.
+    client.patch(f"/api/v1/admin/products/{product['id']}", json={"name": "Renamed"}, headers=admin)
+    again = client.get(f"/api/v1/products/by-number/{number.lower()}")
+    assert again.status_code == 200
+    assert again.json()["name"] == "Renamed"
+    assert client.get("/api/v1/products/by-number/P-999999").status_code == 404
+
+
 def test_archived_product_cannot_be_republished_or_edited(client, admin, category):
     product = create_product(client, admin, category)
     upload(client, admin, product["id"])

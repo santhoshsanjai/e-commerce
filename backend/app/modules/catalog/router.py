@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Path, Query, Request, UploadFile, status
 
 from app.core.config import get_settings
 from app.core.dependencies import DbSession, require_permission
@@ -58,6 +58,14 @@ def public_products(
     sort: ProductSort = ProductSort.NEWEST,
 ) -> Page[ProductCard]:
     return service.search_products(db, storage, params, q, category, sort)
+
+
+@public_router.get("/products/by-number/{product_number}")
+def public_product_by_number(
+    product_number: Annotated[str, Path(max_length=20)], db: DbSession, storage: Storage
+) -> ProductDetail:
+    """Canonical lookup: shop URLs are /p/{slug}/{product_number} and only the number counts."""
+    return service.get_published_by_number(db, storage, product_number)
 
 
 @public_router.get("/products/{slug}")

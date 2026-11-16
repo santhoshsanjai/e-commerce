@@ -2,13 +2,14 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { apiErrorMessage, AuthService, Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
 import { CartStore } from '../cart/cart.store';
+import { productLink } from './product-link';
 
 @Component({
   selector: 'buy-product-card',
   imports: [RouterLink, MoneyPipe, Icon],
   template: `
     @let p = product();
-    <a class="card-link" [routerLink]="['/products', p.slug]" (click)="morph($event)">
+    <a class="card-link" [routerLink]="link()" (click)="morph($event)">
       <div class="image">
         @if (p.image_url) {
           <img [src]="p.image_url" [alt]="p.image_alt" loading="lazy" />
@@ -251,6 +252,7 @@ import { CartStore } from '../cart/cart.store';
 })
 export class ProductCard {
   readonly product = input.required<Card>();
+  protected readonly link = computed(() => productLink(this.product()));
   private readonly auth = inject(AuthService);
   private readonly cart = inject(CartStore);
   private readonly router = inject(Router);

@@ -1,4 +1,14 @@
-import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  DOCUMENT,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Title } from '@angular/platform-browser';
@@ -7,6 +17,7 @@ import { apiErrorMessage, AuthService, AVAILABILITY_LABEL, Icon, MoneyPipe } fro
 import { tap } from 'rxjs';
 import { CartStore } from '../cart/cart.store';
 import { CatalogApi } from './catalog.api';
+import { productLink } from './product-link';
 
 @Component({
   selector: 'buy-product-page',
@@ -26,17 +37,66 @@ export class ProductPage {
   protected readonly buying = signal(false);
   protected readonly busy = computed(() => this.adding() || this.buying());
   /** How many to add; resets to 1 for each product. Capped like a cart line (MAX_LINE_QTY). */
-  protected readonly qty = linkedSignal({ source: () => this.slug(), computation: () => 1 });
+  protected readonly qty = linkedSignal({
+    source: () => this.productNumber() ?? this.slug(),
+    computation: () => 1,
+  });
   protected readonly maxQty = 20;
   protected readonly cartError = signal<string | null>(null);
 
+  /** From /p/:slug/:productNumber. The slug is only for readability; see product-link.ts. */
   readonly slug = input.required<string>();
+  /** Missing on old /products/:slug links, which are then looked up by slug. */
+  readonly productNumber = input<string>();
   protected readonly labels = AVAILABILITY_LABEL;
 
   protected readonly product = rxResource({
-    params: () => this.slug(),
-    stream: ({ params }) => this.api.product(params).pipe(tap((p) => this.title.setTitle(p.name))),
+    // A plain string, so correcting the slug in the address doesn't load the product again.
+    params: () => {
+      const number = this.productNumber();
+      return number ? `number:${number}` : `slug:${this.slug()}`;
+    },
+    stream: ({ params }) => {
+      const [kind, value] = params.split(/:(.*)/s);
+      const request = kind === 'number' ? this.api.productByNumber(value) : this.api.product(value);
+      return request.pipe(tap((p) => this.title.setTitle(p.name)));
+    },
   });
+
+  constructor() {
+    this.keepAddressCanonical();
+  }
+
+  /**
+   * Once the product is loaded, make sure the address is its canonical one: an old
+   * /products/{slug} link or an out-of-date slug is replaced (no extra history entry), and a
+   * rel="canonical" tag tells search engines which address to index.
+   */
+  private keepAddressCanonical(): void {
+    const doc = inject(DOCUMENT);
+    const link = doc.createElement('link');
+    link.rel = 'canonical';
+    inject(DestroyRef).onDestroy(() => link.remove());
+    effect(() => {
+      // value() throws while the resource is in its error state (e.g. not found).
+      if (!this.product.hasValue()) return;
+      const p = this.product.value();
+      const path = productLink(p);
+      const url = this.router.createUrlTree(path).toString();
+      link.href = doc.location.origin + url;
+      if (!link.isConnected) doc.head.appendChild(link);
+      const current = this.router.parseUrl(this.router.url);
+      current.queryParams = {};
+      current.fragment = null;
+      if (current.toString() !== url) {
+        void this.router.navigate(path, {
+          replaceUrl: true,
+          queryParamsHandling: 'preserve',
+          preserveFragment: true,
+        });
+      }
+    });
+  }
   protected readonly notFound = computed(() => {
     const err = this.product.error();
     return err instanceof HttpErrorResponse && err.status === 404;
