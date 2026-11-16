@@ -1,0 +1,114 @@
+<div class="announcement" role="note">
+  <p>{{ announcement() }}</p>
+</div>
+
+<header class="site-header" [class.scrolled]="scrolled()">
+  <div class="bar container">
+    <button
+      type="button"
+      class="icon-btn menu-btn"
+      aria-label="Open menu"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="menuOpen.set(true)"
+    >
+      <shr-icon name="menu" />
+    </button>
+
+    <a routerLink="/" class="brand">{{ storefront.settings().store_name }}</a>
+
+    <form class="search" role="search" (submit)="$event.preventDefault(); search(box.value)">
+      <label class="visually-hidden" for="site-search">Search products</label>
+      <shr-icon name="search" class="search-icon" />
+      <input
+        #box
+        id="site-search"
+        type="search"
+        placeholder="Search for products"
+        autocomplete="off"
+        enterkeyhint="search"
+      />
+      <button type="button" class="search-go" (click)="search(box.value)">Search</button>
+    </form>
+
+    <nav class="actions" aria-label="Account">
+      @if (auth.user(); as user) {
+        <a routerLink="/account" class="action account" routerLinkActive="on">
+          <shr-icon name="user" />
+          <span class="label">
+            <span class="greeting">Hi, {{ user.full_name }}</span>
+            <span class="label-main">Account</span>
+          </span>
+        </a>
+        <a routerLink="/orders" class="action orders" routerLinkActive="on">
+          <shr-icon name="package" />
+          <span class="label"><span class="label-main">Orders</span></span>
+        </a>
+        <a
+          routerLink="/cart"
+          class="action cart"
+          routerLinkActive="on"
+          [attr.aria-label]="'Cart, ' + cart.count() + ' items'"
+        >
+          <span class="bag" [class.bump]="bump()">
+            <shr-icon name="bag" />
+            @if (cart.count()) {
+              <span class="count" aria-hidden="true">{{ cart.count() }}</span>
+            }
+          </span>
+          <span class="label"><span class="label-main">Cart</span></span>
+        </a>
+        <button type="button" class="action signout" (click)="logout()">
+          <shr-icon name="logout" />
+          <span class="label"><span class="label-main">Sign out</span></span>
+        </button>
+      } @else {
+        <a routerLink="/login" class="action" routerLinkActive="on">
+          <shr-icon name="user" />
+          <span class="label"><span class="label-main">Sign in</span></span>
+        </a>
+        <a routerLink="/cart" class="action cart" aria-label="Cart">
+          <span class="bag"><shr-icon name="bag" /></span>
+          <span class="label"><span class="label-main">Cart</span></span>
+        </a>
+      }
+    </nav>
+  </div>
+
+  <nav class="categories" aria-label="Categories">
+    <div class="container">
+      <a routerLink="/shop" [queryParams]="{ sort: 'newest' }" class="highlight">New in</a>
+      <a routerLink="/shop">All products</a>
+      @for (c of topCategories(); track c.id) {
+        <a routerLink="/shop" [queryParams]="{ category: c.slug }">{{ c.name }}</a>
+      }
+    </div>
+  </nav>
+</header>
+
+@if (menuOpen()) {
+  <div class="scrim" (click)="menuOpen.set(false)" aria-hidden="true"></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="drawer-head">
+      <span class="brand">{{ storefront.settings().store_name }}</span>
+      <button type="button" class="icon-btn" aria-label="Close menu" (click)="menuOpen.set(false)">
+        <shr-icon name="close" />
+      </button>
+    </div>
+    <p class="drawer-title">Shop</p>
+    <a routerLink="/shop" [queryParams]="{ sort: 'newest' }">New in</a>
+    <a routerLink="/shop">All products</a>
+    @for (c of topCategories(); track c.id) {
+      <a routerLink="/shop" [queryParams]="{ category: c.slug }">{{ c.name }}</a>
+    }
+    <p class="drawer-title">Your account</p>
+    @if (auth.user()) {
+      <a routerLink="/account">Account details</a>
+      <a routerLink="/orders">My orders</a>
+      <a routerLink="/cart">Cart</a>
+      <button type="button" class="link" (click)="logout()">Sign out</button>
+    } @else {
+      <a routerLink="/login">Sign in</a>
+      <a routerLink="/register">Register</a>
+    }
+  </aside>
+}

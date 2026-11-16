@@ -14,3 +14,7 @@ export * from './lib/models/catalog.models';
 export * from './lib/ui/availability-label';
 export * from './lib/models/order.models';
 export * from './lib/ui/order-status-badge';
+export * from './lib/storefront/storefront.service';
+export * from './lib/storefront/theme-colors';
+export * from './lib/ui/icon';
+export * from './lib/ui/reveal.directive';

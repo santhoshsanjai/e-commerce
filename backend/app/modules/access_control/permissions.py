@@ -24,6 +24,7 @@ PERMISSIONS: dict[str, str] = {
     "roles.manage": "Create and edit roles and their permissions",
     "reports.view": "View reports",
     "audit_logs.view": "View the audit log",
+    "settings.manage": "Change the shop's name, announcement and colours",
 }
 
 SUPER_ADMIN = "Super Admin"
@@ -49,6 +50,7 @@ DEFAULT_ROLE_GRANTS: dict[str, list[str]] = {
         "roles.view",
         "reports.view",
         "audit_logs.view",
+        "settings.manage",
     ],
     MANAGER: [
         "dashboard.view",

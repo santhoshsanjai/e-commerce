@@ -2,13 +2,16 @@ import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { apiErrorMessage, AuthService } from '@shop/shared';
+import { AuthPanel } from './auth-panel';
 
 @Component({
   selector: 'buy-register',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, AuthPanel],
   template: `
+    <buy-auth-panel heading="Join us for a better way to shop." />
     <div class="card">
       <h1>Create account</h1>
+      <p class="sub">It only takes a minute.</p>
       @if (error()) {
         <div class="alert-error" role="alert">{{ error() }}</div>
       }
@@ -34,7 +37,7 @@ import { apiErrorMessage, AuthService } from '@shop/shared';
             autocomplete="new-password"
             aria-describedby="pw-hint"
           />
-          <small id="pw-hint">At least 10 characters.</small>
+          <small id="pw-hint" class="muted">At least 10 characters.</small>
         </div>
         <button class="btn" type="submit" [disabled]="busy()">
           {{ busy() ? 'Creating account…' : 'Create account' }}

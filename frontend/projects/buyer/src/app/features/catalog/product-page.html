@@ -1,0 +1,142 @@
+@if (product.isLoading()) {
+  <div class="layout" aria-busy="true">
+    <div class="skeleton sk-main"></div>
+    <div>
+      <div class="skeleton skeleton-text sk-w40"></div>
+      <div class="skeleton sk-title"></div>
+      <div class="skeleton skeleton-text sk-w40"></div>
+      <div class="skeleton skeleton-text"></div>
+      <div class="skeleton skeleton-text sk-w70"></div>
+      <div class="skeleton sk-btn"></div>
+    </div>
+  </div>
+} @else if (notFound()) {
+  <div class="missing">
+    <h1>Product not found</h1>
+    <p>It may have been removed. <a routerLink="/shop">Browse the catalogue</a></p>
+  </div>
+} @else if (product.error()) {
+  <div class="alert-error" role="alert">
+    We couldn't load this product.
+    <button class="btn btn-secondary" type="button" (click)="product.reload()">Try again</button>
+  </div>
+} @else if (product.value(); as p) {
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a routerLink="/">Home</a>
+    <shr-icon name="chevron-right" />
+    <a routerLink="/shop">Shop</a>
+    <shr-icon name="chevron-right" />
+    <a routerLink="/shop" [queryParams]="{ category: p.category.slug }">{{ p.category.name }}</a>
+  </nav>
+  <div class="layout">
+    <div class="gallery" [class.has-thumbs]="p.media.length > 1">
+      @if (p.media.length > 1) {
+        <div class="thumbs" role="list">
+          @for (m of p.media; track m.id) {
+            <button
+              type="button"
+              role="listitem"
+              [class.active]="m.id === selected()?.id"
+              (click)="selected.set(m)"
+              [attr.aria-label]="'Show image ' + ($index + 1)"
+            >
+              <img [src]="m.url" alt="" loading="lazy" />
+            </button>
+          }
+        </div>
+      }
+      <div
+        class="main-image"
+        [class.zooming]="zoom()"
+        (pointermove)="onZoom($event)"
+        (pointerleave)="zoom.set(null)"
+      >
+        @if (selected(); as m) {
+          @for (shown of [m]; track shown.id) {
+            <img
+              [src]="shown.url"
+              [alt]="shown.alt_text || p.name"
+              [style.transform-origin]="zoom() ?? 'center'"
+            />
+          }
+        } @else {
+          <div class="placeholder"><shr-icon name="image" /></div>
+        }
+        @if (discount()) {
+          <span class="badge">−{{ discount() }}%</span>
+        }
+      </div>
+    </div>
+
+    <div class="info">
+      <span class="eyebrow">{{ p.category.name }}</span>
+      <h1>{{ p.name }}</h1>
+      <p class="number">Product no. {{ p.product_number }}</p>
+      <p class="price">
+        <span [class.sale]="p.compare_at_minor">{{ p.price_minor | money: p.currency }}</span>
+        @if (p.compare_at_minor) {
+          <s>{{ p.compare_at_minor | money: p.currency }}</s>
+        }
+      </p>
+      <p class="tax">Price includes taxes</p>
+      <p class="stock" [class.out]="p.availability === 'OUT_OF_STOCK'">
+        <span class="dot" aria-hidden="true"></span>{{ labels[p.availability] }}
+      </p>
+      @if (p.short_description) {
+        <p class="lead">{{ p.short_description }}</p>
+      }
+      <div class="buy-row">
+        <button
+          class="btn btn-lg buy"
+          type="button"
+          [class.done]="added()"
+          [disabled]="p.availability === 'OUT_OF_STOCK' || adding()"
+          (click)="addToCart(p.sku_id)"
+        >
+          @if (p.availability === 'OUT_OF_STOCK') {
+            Out of stock
+          } @else if (adding()) {
+            <span class="spinner" aria-hidden="true"></span> Adding…
+          } @else if (added()) {
+            <shr-icon name="check" /> Add another
+          } @else {
+            <shr-icon name="bag" /> Add to cart
+          }
+        </button>
+        @if (added()) {
+          <a class="btn btn-lg btn-secondary go" routerLink="/cart">Go to cart</a>
+        }
+      </div>
+      @if (added()) {
+        <p class="note ok" role="status"><shr-icon name="check" /> Added to your cart.</p>
+      }
+      @if (cartError()) {
+        <p class="note err" role="alert">{{ cartError() }}</p>
+      }
+
+      <ul class="perks">
+        <li><shr-icon name="cash" /> Pay with cash when your order arrives</li>
+        <li><shr-icon name="truck" /> Tracked delivery, updated in your account</li>
+        <li><shr-icon name="shield" /> Secure checkout</li>
+      </ul>
+
+      @if (p.description) {
+        <details open>
+          <summary>Description <shr-icon name="chevron-down" /></summary>
+          <p class="description">{{ p.description }}</p>
+        </details>
+      }
+      @if (p.attributes.length) {
+        <details [open]="!p.description">
+          <summary>Specifications <shr-icon name="chevron-down" /></summary>
+          <dl>
+            @for (a of p.attributes; track a.name) {
+              <dt>{{ a.name }}</dt>
+              <dd>{{ a.value }}</dd>
+            }
+          </dl>
+        </details>
+      }
+    </div>
+  </div>
+}

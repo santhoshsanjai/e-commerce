@@ -164,13 +164,30 @@ type Step = 'password' | 'verify' | 'enrol' | 'recovery-codes';
     </main>
   `,
   styles: `
+    :host {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: var(--space-8) var(--space-4);
+      background:
+        radial-gradient(
+          circle at 20% 10%,
+          color-mix(in srgb, var(--color-accent) 30%, transparent),
+          transparent 40%
+        ),
+        linear-gradient(140deg, var(--color-sidebar-bg), var(--color-hero-end));
+    }
     .wrap {
-      max-width: 420px;
-      margin: 10vh auto;
-      padding: 0 var(--space-4);
+      width: 100%;
+      max-width: 440px;
+      animation: fade-up var(--duration-slow) var(--ease-out) both;
+    }
+    .wrap > .card {
+      padding: var(--space-10) var(--space-8);
+      box-shadow: var(--shadow-lg);
     }
     h1 {
-      font-size: var(--font-size-xl);
+      font-size: var(--font-size-2xl);
       margin-top: 0;
     }
     .btn {
@@ -201,7 +218,7 @@ type Step = 'password' | 'verify' | 'enrol' | 'recovery-codes';
       width: 200px;
       height: 200px;
       margin: var(--space-3) 0;
-      background: #fff;
+      background: #fff; /* scanners need a white quiet zone, whatever the theme */
     }
     .secret {
       display: block;

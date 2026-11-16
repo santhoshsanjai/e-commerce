@@ -1,17 +1,61 @@
 :host {
-  display: block;
-  max-width: 420px;
-  margin: var(--space-8) auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  max-width: 1040px;
+  min-height: 600px;
+  margin: var(--space-4) auto;
+}
+.card {
+  align-self: center;
+  padding: var(--space-12) var(--space-10);
+  box-shadow: var(--shadow-md);
+  animation: fade-up var(--duration-slow) var(--ease-out) both;
 }
 h1 {
-  font-size: var(--font-size-xl);
-  margin-top: 0;
+  margin: 0;
+}
+.sub {
+  margin: var(--space-2) 0 var(--space-8);
+  color: var(--color-muted);
 }
 .btn {
   width: 100%;
 }
 .switch {
   text-align: center;
-  margin-top: var(--space-4);
+  margin: var(--space-4) 0 0;
   color: var(--color-muted);
+  font-size: var(--font-size-sm);
+}
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-6) 0 var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--font-size-sm);
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+}
+small.muted {
+  font-size: var(--font-size-xs);
+}
+@media (max-width: 860px) {
+  :host {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 480px;
+    min-height: 0;
+  }
+  buy-auth-panel {
+    display: none;
+  }
+  .card {
+    padding: var(--space-8) var(--space-6);
+  }
 }

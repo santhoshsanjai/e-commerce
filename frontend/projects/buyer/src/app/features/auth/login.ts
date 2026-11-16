@@ -2,13 +2,16 @@ import { Component, inject, input, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { apiErrorMessage, AuthService, safeReturnUrl } from '@shop/shared';
+import { AuthPanel } from './auth-panel';
 
 @Component({
   selector: 'buy-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, AuthPanel],
   template: `
+    <buy-auth-panel heading="Welcome back." />
     <div class="card">
       <h1>Sign in</h1>
+      <p class="sub">Sign in to check out and follow your orders.</p>
       @if (error()) {
         <div class="alert-error" role="alert">{{ error() }}</div>
       }
@@ -31,7 +34,8 @@ import { apiErrorMessage, AuthService, safeReturnUrl } from '@shop/shared';
         </button>
       </form>
       <p class="switch"><a routerLink="/forgot-password">Forgot your password?</a></p>
-      <p class="switch">New here? <a routerLink="/register">Create an account</a></p>
+      <p class="divider"><span>New here?</span></p>
+      <a class="btn btn-secondary btn-block" routerLink="/register">Create account</a>
     </div>
   `,
   styleUrl: './auth-page.scss',

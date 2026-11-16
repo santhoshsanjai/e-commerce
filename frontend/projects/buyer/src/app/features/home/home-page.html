@@ -1,0 +1,154 @@
+<section class="hero">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="hero-inner container">
+    <div class="hero-copy">
+      <span class="eyebrow">The new collection</span>
+      <h1>Considered pieces, <em>beautifully</em> delivered.</h1>
+      <p>
+        Discover our latest arrivals, chosen for quality and made to last. Order online and pay when
+        it reaches your door.
+      </p>
+      <div class="hero-ctas">
+        <a class="btn btn-lg btn-light" routerLink="/shop">
+          Shop the collection <shr-icon name="arrow" />
+        </a>
+        <a class="btn btn-lg btn-ghost" routerLink="/shop" [queryParams]="{ sort: 'newest' }"
+          >New arrivals</a
+        >
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      @for (p of heroImages(); track p.slug) {
+        <div [class]="'frame frame-' + $index">
+          <img [src]="p.image_url" alt="" />
+        </div>
+      } @empty {
+        <div class="rings">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="promises container" aria-label="Why shop with us">
+  <div shrReveal>
+    <shr-icon name="cash" />
+    <div>
+      <strong>Cash on delivery</strong>
+      <span>Pay when your order arrives</span>
+    </div>
+  </div>
+  <div [shrReveal]="80">
+    <shr-icon name="truck" />
+    <div>
+      <strong>Tracked delivery</strong>
+      <span>Follow every order to your door</span>
+    </div>
+  </div>
+  <div [shrReveal]="160">
+    <shr-icon name="shield" />
+    <div>
+      <strong>Secure accounts</strong>
+      <span>Your details stay protected</span>
+    </div>
+  </div>
+  <div [shrReveal]="240">
+    <shr-icon name="sparkle" />
+    <div>
+      <strong>Curated range</strong>
+      <span>Every piece chosen with care</span>
+    </div>
+  </div>
+</section>
+
+@if (categories()?.length) {
+  <section class="section container" aria-labelledby="cat-h">
+    <div class="section-head" shrReveal>
+      <span class="eyebrow">Browse</span>
+      <h2 id="cat-h">Shop by category</h2>
+    </div>
+    <div class="cat-grid">
+      @for (c of categories(); track c.id) {
+        <a
+          class="cat"
+          [shrReveal]="$index * 70"
+          routerLink="/shop"
+          [queryParams]="{ category: c.slug }"
+        >
+          <span class="cat-index">{{ $index + 1 < 10 ? '0' : '' }}{{ $index + 1 }}</span>
+          <span class="cat-name">{{ c.name }}</span>
+          <span class="cat-cta">Explore <shr-icon name="arrow" /></span>
+        </a>
+      }
+    </div>
+  </section>
+}
+
+<section class="section container" aria-labelledby="new-h">
+  <div class="section-head with-controls" shrReveal>
+    <div>
+      <span class="eyebrow">Just landed</span>
+      <h2 id="new-h">New arrivals</h2>
+    </div>
+    <div class="controls">
+      <button
+        type="button"
+        class="round"
+        aria-label="Scroll new arrivals back"
+        (click)="scrollRail(-1)"
+      >
+        <shr-icon name="chevron-left" />
+      </button>
+      <button
+        type="button"
+        class="round"
+        aria-label="Scroll new arrivals forward"
+        (click)="scrollRail(1)"
+      >
+        <shr-icon name="chevron-right" />
+      </button>
+      <a class="view-all" routerLink="/shop" [queryParams]="{ sort: 'newest' }">View all</a>
+    </div>
+  </div>
+
+  @if (newest(); as items) {
+    @if (items.length) {
+      <div class="rail" #rail>
+        @for (p of items; track p.slug) {
+          <buy-product-card [product]="p" [shrReveal]="($index % 4) * 80" />
+        }
+      </div>
+    } @else {
+      <p class="muted">New products are on their way. Please check back soon.</p>
+    }
+  } @else {
+    <div class="rail" aria-busy="true">
+      @for (i of skeletons; track i) {
+        <div class="sk-card">
+          <div class="skeleton sk-image"></div>
+          <div class="skeleton skeleton-text sk-w70"></div>
+          <div class="skeleton skeleton-text sk-w40"></div>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<section class="editorial" aria-labelledby="ed-h">
+  <div class="editorial-inner container" shrReveal>
+    <div>
+      <span class="eyebrow">Our promise</span>
+      <h2 id="ed-h">Quality you can feel, service you can trust.</h2>
+    </div>
+    <div>
+      <p>
+        From the moment you place an order to the knock at your door, every step is handled with
+        care. Track each delivery from your account and pay only when it arrives.
+      </p>
+      <a class="btn" routerLink="/shop">Start shopping <shr-icon name="arrow" /></a>
+    </div>
+  </div>
+</section>

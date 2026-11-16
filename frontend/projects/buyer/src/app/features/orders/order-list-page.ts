@@ -2,14 +2,17 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { MoneyPipe, OrderStatusBadge } from '@shop/shared';
+import { Icon, MoneyPipe, OrderStatusBadge } from '@shop/shared';
 import { OrdersApi } from './orders.api';
 
 @Component({
   selector: 'buy-order-list-page',
-  imports: [RouterLink, MoneyPipe, DatePipe, OrderStatusBadge],
+  imports: [RouterLink, MoneyPipe, DatePipe, OrderStatusBadge, Icon],
   template: `
-    <h1>My orders</h1>
+    <div class="page-head">
+      <span class="eyebrow">Your account</span>
+      <h1>My orders</h1>
+    </div>
     @if (orders.error()) {
       <div class="alert-error" role="alert">
         We couldn't load your orders.
@@ -17,14 +20,14 @@ import { OrdersApi } from './orders.api';
       </div>
     } @else if (orders.value(); as result) {
       @if (result.items.length === 0) {
-        <div class="card">
+        <div class="card empty">
           <p>You haven't placed any orders yet.</p>
-          <a class="btn" routerLink="/">Start shopping</a>
+          <a class="btn" routerLink="/shop">Start shopping</a>
         </div>
       } @else {
         <ul class="order-list">
           @for (o of result.items; track o.order_number) {
-            <li>
+            <li [style.animation-delay.ms]="$index * 50">
               <a class="card order-row" [routerLink]="['/orders', o.order_number]">
                 <span class="main">
                   <strong>{{ o.order_number }}</strong>
@@ -35,6 +38,7 @@ import { OrdersApi } from './orders.api';
                 </span>
                 <shr-order-status [status]="o.status" />
                 <strong class="amount">{{ o.total_minor | money: o.currency }}</strong>
+                <shr-icon name="chevron-right" class="chev" />
               </a>
             </li>
           }
@@ -62,7 +66,11 @@ import { OrdersApi } from './orders.api';
         }
       }
     } @else {
-      <p aria-busy="true">Loading…</p>
+      <div aria-busy="true">
+        @for (i of [0, 1, 2]; track i) {
+          <div class="skeleton sk-row"></div>
+        }
+      </div>
     }
   `,
   styleUrl: './orders.scss',

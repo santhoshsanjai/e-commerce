@@ -1,9 +1,31 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanMatchFn, Router, Routes } from '@angular/router';
 import { authGuard } from '@shop/shared';
+
+const LISTING_PARAMS = ['q', 'category', 'sort', 'page'];
+
+/** Old and shared links such as `/?q=lamp` still open the product listing. */
+const hasListingParams: CanMatchFn = () => {
+  const params = inject(Router).currentNavigation()?.extractedUrl.queryParams ?? {};
+  return LISTING_PARAMS.some((key) => key in params);
+};
 
 export const routes: Routes = [
   {
     path: '',
+    pathMatch: 'full',
+    canMatch: [hasListingParams],
+    loadComponent: () => import('./features/catalog/catalog-page').then((m) => m.CatalogPage),
+    title: 'Shop',
+  },
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./features/home/home-page').then((m) => m.HomePage),
+    data: { fullBleed: true },
+  },
+  {
+    path: 'shop',
     loadComponent: () => import('./features/catalog/catalog-page').then((m) => m.CatalogPage),
     title: 'Shop',
   },

@@ -1,112 +1,153 @@
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: var(--space-10);
   align-items: start;
 }
+
 .empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-16) var(--space-6);
   text-align: center;
-  .btn {
-    text-decoration: none;
+  --icon-size: 44px;
+  shr-icon {
+    color: var(--color-accent);
+  }
+  h2 {
+    margin: var(--space-3) 0 0;
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+  }
+  p {
+    margin: 0 0 var(--space-4);
+    color: var(--color-muted);
   }
 }
+
 .lines {
   list-style: none;
   margin: 0;
   padding: 0;
+  border-top: 1px solid var(--color-border);
   li {
     display: grid;
-    grid-template-columns: 72px 1fr auto auto;
-    gap: var(--space-4);
-    align-items: center;
-    padding: var(--space-4);
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+    gap: var(--space-5);
+    align-items: start;
+    padding: var(--space-6) 0;
     border-bottom: 1px solid var(--color-border);
-    &:last-child {
-      border-bottom: 0;
+    animation: fade-up var(--duration-base) var(--ease-out) both;
+    transition: opacity var(--duration-fast) ease;
+    &.busy {
+      opacity: 0.6;
     }
   }
+}
+
+.thumb {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
   img {
+    display: block;
+    width: 96px;
+    height: 120px;
     object-fit: cover;
-    border-radius: var(--radius-sm);
-    background: var(--color-background);
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+  &:hover img {
+    transform: scale(1.06);
   }
 }
+
 .info {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  a {
-    font-weight: 600;
-    color: var(--color-text);
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
   }
 }
+
 .muted {
-  color: var(--color-muted);
   font-size: var(--font-size-sm);
 }
-.small {
-  text-align: center;
-}
+
 .problem {
   color: var(--color-danger);
   font-size: var(--font-size-sm);
 }
+
 .qty {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+  label {
+    color: var(--color-muted);
+  }
   select {
-    padding: var(--space-1) var(--space-2);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    font: inherit;
+    min-height: 38px;
+    padding: 0 var(--space-3);
   }
 }
-.link {
-  background: none;
-  border: 0;
-  color: var(--color-primary);
-  cursor: pointer;
-  font: inherit;
-  text-decoration: underline;
-  padding: 0;
+
+.total {
+  font-weight: 600;
 }
-.summary dl {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-4);
-  dd {
-    margin: 0;
-    text-align: right;
-  }
-  .grand {
-    font-weight: 700;
-    font-size: var(--font-size-lg);
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--color-border);
-  }
+
+.summary {
+  position: sticky;
+  top: 150px;
+  padding: var(--space-8);
 }
-.checkout {
-  width: 100%;
-  text-decoration: none;
-  &.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+
+.continue {
+  display: block;
+  margin-top: var(--space-4);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
 }
-@media (max-width: 768px) {
+
+.sk-line {
+  height: 140px;
+  margin-bottom: var(--space-4);
+}
+
+.sk-summary {
+  height: 320px;
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 860px) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+  .summary {
+    position: static;
+    padding: var(--space-6);
   }
   .lines li {
-    grid-template-columns: 56px 1fr;
-    img {
-      width: 56px;
-      height: 56px;
-    }
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: var(--space-4);
   }
-  .qty,
+  .thumb img {
+    width: 72px;
+    height: 90px;
+  }
   .total {
     grid-column: 2;
   }

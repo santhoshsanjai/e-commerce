@@ -125,6 +125,13 @@ export const routes: Routes = [
         title: 'Role · Admin',
       },
       {
+        path: 'storefront',
+        canActivate: [permissionGuard('settings.manage')],
+        loadComponent: () =>
+          import('./features/storefront/storefront-page').then((m) => m.StorefrontPage),
+        title: 'Storefront · Admin',
+      },
+      {
         path: 'audit-log',
         canActivate: [permissionGuard('audit_logs.view')],
         loadComponent: () => import('./features/audit/audit-log').then((m) => m.AuditLog),

@@ -6,7 +6,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
-import { AuthService, authInterceptor } from '@shop/shared';
+import { AuthService, authInterceptor, StorefrontService } from '@shop/shared';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -15,5 +15,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideAppInitializer(() => inject(AuthService).restoreSession()),
+    provideAppInitializer(() => {
+      void inject(StorefrontService).load();
+    }),
   ],
 };

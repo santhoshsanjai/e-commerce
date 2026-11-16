@@ -1,0 +1,54 @@
+<div class="shell" [class.collapsed]="collapsed()" [class.drawer-open]="drawerOpen()">
+  <aside aria-label="Admin navigation">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">{{ storefront.settings().store_name.charAt(0) }}</span>
+      <span class="brand-text">
+        <strong>{{ storefront.settings().store_name }}</strong>
+        <small>Admin portal</small>
+      </span>
+    </div>
+    <nav>
+      @for (item of menu(); track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [attr.title]="collapsed() ? item.label : null"
+        >
+          <shr-icon [name]="item.icon" />
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </aside>
+  @if (drawerOpen()) {
+    <div class="scrim" (click)="drawerOpen.set(false)" aria-hidden="true"></div>
+  }
+  <div class="main">
+    <header>
+      <button
+        type="button"
+        class="icon-btn"
+        (click)="toggle()"
+        [attr.aria-expanded]="drawerOpen() || !collapsed()"
+      >
+        <span class="visually-hidden">Toggle navigation</span><shr-icon name="menu" />
+      </button>
+      <span class="spacer"></span>
+      @if (auth.user(); as user) {
+        <span class="who">
+          <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+          <span class="who-text">
+            <strong>{{ user.full_name }}</strong>
+            <small>{{ user.roles.join(', ') }}</small>
+          </span>
+        </span>
+      }
+      <button type="button" class="btn btn-secondary signout" (click)="logout()">
+        <shr-icon name="logout" /> Sign out
+      </button>
+    </header>
+    <main id="main" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>

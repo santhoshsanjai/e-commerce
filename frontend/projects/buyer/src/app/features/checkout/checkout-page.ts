@@ -3,7 +3,7 @@ import { Component, computed, inject, linkedSignal, signal } from '@angular/core
 import { rxResource } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Address, apiErrorMessage, MoneyPipe } from '@shop/shared';
+import { Address, apiErrorMessage, Icon, MoneyPipe } from '@shop/shared';
 import { firstValueFrom } from 'rxjs';
 import { AddressForm } from '../account/address-form';
 import { CartStore } from '../cart/cart.store';
@@ -11,7 +11,7 @@ import { OrdersApi } from '../orders/orders.api';
 
 @Component({
   selector: 'buy-checkout-page',
-  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, AddressForm],
+  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, Icon, AddressForm],
   templateUrl: './checkout-page.html',
   styleUrl: './checkout-page.scss',
 })
