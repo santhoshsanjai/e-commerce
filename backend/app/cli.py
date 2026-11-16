@@ -3,6 +3,7 @@
     python -m app.cli create-superadmin --email you@example.com --name "Your Name"
     python -m app.cli reset-mfa --email someone@example.com
     python -m app.cli rotate-mfa-key
+    python -m app.cli seed-sample-products
 
 reset-mfa is for a staff member who lost their phone when no other Super Admin can reset it in the
 admin portal: it removes their authenticator app and signs them out, and they set up a new app at
@@ -12,6 +13,9 @@ The password is read from the SUPERADMIN_PASSWORD environment variable or prompt
 so it never appears in shell history. On AWS, where there is no prompt, use --random-password:
 the account gets a password nobody knows, and its owner sets their own with "Forgot your
 password?" on the admin sign-in page.
+
+seed-sample-products adds 50 published demo products in 5 categories, each with a picture, for
+local and staging shops. Running it again adds nothing new. It refuses to run in production.
 """
 
 import argparse
@@ -104,6 +108,20 @@ def rotate_mfa_key() -> int:
     return 0
 
 
+def seed_sample_products() -> int:
+    from app.core.config import get_settings
+    from app.infrastructure.storage import get_storage
+    from app.seed.products import seed
+
+    if get_settings().environment == "production":
+        print("Sample products are for local and staging shops only.", file=sys.stderr)
+        return 1
+    with SessionLocal() as db:
+        added, present = seed(db, get_storage())
+    print(f"Added {added} sample product(s); {present} were already there.")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="app.cli")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -114,6 +132,7 @@ def main() -> int:
     reset = sub.add_parser("reset-mfa")
     reset.add_argument("--email", required=True)
     sub.add_parser("rotate-mfa-key")
+    sub.add_parser("seed-sample-products")
     args = parser.parse_args()
     if args.command == "create-superadmin":
         return create_superadmin(args.email, args.name, args.random_password)
@@ -121,6 +140,8 @@ def main() -> int:
         return reset_mfa(args.email)
     if args.command == "rotate-mfa-key":
         return rotate_mfa_key()
+    if args.command == "seed-sample-products":
+        return seed_sample_products()
     return 1
 
 

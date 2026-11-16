@@ -21,6 +21,13 @@ docker compose up --build
 docker compose run --rm api python -m app.cli create-superadmin --email you@example.com --name "Your Name"
 ```
 
+To fill the shop with 50 sample products (5 categories, each product with a picture), run this
+while the stack is up. Running it again adds nothing new, and it refuses to run in production:
+
+```bash
+docker compose run --rm --build api python -m app.cli seed-sample-products
+```
+
 - Buyer site: http://localhost:4200
 - Admin portal: http://localhost:4300
 - API docs (OpenAPI): http://localhost:8000/docs
