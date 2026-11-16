@@ -1,6 +1,7 @@
-import { Component, computed, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { apiErrorMessage, AuthService, Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
+import { CartStore } from '../cart/cart.store';
 
 @Component({
   selector: 'buy-product-card',
@@ -34,39 +35,66 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
               <s class="was">{{ p.compare_at_minor | money: p.currency }}</s>
             }
           </p>
-          <span class="details" aria-hidden="true">View details <shr-icon name="arrow" /></span>
         </div>
       </div>
     </a>
+    <button
+      type="button"
+      class="add"
+      [class.done]="state() === 'added'"
+      [disabled]="p.availability === 'OUT_OF_STOCK' || state() === 'adding'"
+      [attr.aria-label]="'Add ' + p.name + ' to cart'"
+      (click)="addToCart()"
+    >
+      @switch (p.availability === 'OUT_OF_STOCK' ? 'sold' : state()) {
+        @case ('sold') {
+          Sold out
+        }
+        @case ('adding') {
+          Adding…
+        }
+        @case ('added') {
+          <shr-icon name="check" /> Added
+        }
+        @default {
+          <shr-icon name="bag" /> Add to cart
+        }
+      }
+    </button>
+    @if (error()) {
+      <p class="err" role="alert">{{ error() }}</p>
+    }
   `,
   styles: `
     :host {
-      display: block;
-    }
-    .card-link {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      gap: var(--space-3);
       padding: var(--space-3);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
       background: var(--color-surface);
-      color: inherit;
-      text-decoration: none;
       transition:
         border-color var(--duration-fast) ease,
         box-shadow var(--duration-base) var(--ease-out),
         translate var(--duration-base) var(--ease-out);
     }
-    .card-link:hover,
-    .card-link:focus-visible {
+    :host(:hover),
+    :host(:focus-within) {
       translate: 0 -4px;
       border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
       box-shadow: var(--shadow-lg);
     }
-    .card-link:active {
-      translate: 0 -1px;
-      transition-duration: var(--duration-fast);
+    .card-link {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      color: inherit;
+      text-decoration: none;
+    }
+    .card-link:focus-visible {
+      box-shadow: var(--focus-ring);
+      border-radius: var(--radius-md);
     }
     .image {
       position: relative;
@@ -90,7 +118,7 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
       --icon-size: 40px;
       opacity: 0.6;
     }
-    .card-link:hover img,
+    :host(:hover) img,
     .card-link:focus-visible img {
       transform: scale(1.04);
     }
@@ -157,34 +185,6 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
       margin: 0;
       font-weight: 700;
     }
-    .details {
-      padding: 6px var(--space-3);
-      border-radius: var(--radius-md);
-      background: var(--color-primary);
-      color: var(--color-primary-contrast);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: var(--font-size-xs);
-      font-weight: 600;
-      white-space: nowrap;
-      transition: background-color var(--duration-fast) ease;
-      shr-icon {
-        --icon-size: 12px;
-        width: 0;
-        opacity: 0;
-        transition:
-          width var(--duration-base) var(--ease-out),
-          opacity var(--duration-base) var(--ease-out);
-      }
-    }
-    .card-link:hover .details {
-      background: var(--color-primary-hover);
-      shr-icon {
-        width: 12px;
-        opacity: 1;
-      }
-    }
     .now {
       color: var(--color-sale);
     }
@@ -193,12 +193,57 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
       font-weight: 400;
       font-size: var(--font-size-sm);
     }
+    .add {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      width: 100%;
+      min-height: 40px;
+      padding: 0 var(--space-3);
+      border: 1px solid var(--color-primary);
+      border-radius: var(--radius-md);
+      background: var(--color-primary);
+      color: var(--color-primary-contrast);
+      font: inherit;
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      cursor: pointer;
+      --icon-size: 16px;
+      transition:
+        background-color var(--duration-fast) ease,
+        border-color var(--duration-fast) ease,
+        transform var(--duration-fast) var(--ease-out);
+    }
+    .add:hover:not(:disabled) {
+      background: var(--color-primary-hover);
+    }
+    .add:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+    .add:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+    .add.done,
+    .add.done:hover:not(:disabled) {
+      background: var(--color-success);
+      border-color: var(--color-success);
+    }
+    .add.done shr-icon {
+      animation: pop 420ms var(--ease-out);
+    }
+    .err {
+      margin: 0;
+      color: var(--color-danger);
+      font-size: var(--font-size-xs);
+    }
     @media (max-width: 560px) {
-      .card-link {
+      :host {
         padding: var(--space-2);
+        gap: var(--space-2);
       }
-      .short,
-      .details {
+      .short {
         display: none;
       }
     }
@@ -206,6 +251,33 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
 })
 export class ProductCard {
   readonly product = input.required<Card>();
+  private readonly auth = inject(AuthService);
+  private readonly cart = inject(CartStore);
+  private readonly router = inject(Router);
+
+  protected readonly state = signal<'idle' | 'adding' | 'added'>('idle');
+  protected readonly error = signal<string | null>(null);
+  private resetTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /** Adds one of this product straight from the card. Signed-out visitors go to sign in first. */
+  protected async addToCart(): Promise<void> {
+    if (this.auth.user()?.user_type !== 'BUYER') {
+      // ADR 0004: sign-in is required before using the cart.
+      await this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+    clearTimeout(this.resetTimer);
+    this.state.set('adding');
+    this.error.set(null);
+    try {
+      await this.cart.add(this.product().sku_id);
+      this.state.set('added');
+      this.resetTimer = setTimeout(() => this.state.set('idle'), 2000);
+    } catch (err) {
+      this.state.set('idle');
+      this.error.set(apiErrorMessage(err));
+    }
+  }
 
   /**
    * Names this card's picture for the page transition, so it grows into the product page's

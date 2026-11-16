@@ -160,6 +160,7 @@ def _card(product: Product, storage: ObjectStorage) -> ProductCard:
         availability=availability(sku),
         image_url=storage.public_url(image.object_key) if image else None,
         image_alt=image.alt_text or product.name if image else product.name,
+        sku_id=sku.id,
     )
 
 
@@ -483,5 +484,4 @@ def get_published_by_slug(db: Session, storage: ObjectStorage, slug: str) -> Pro
         category=CategoryOut.model_validate(product.category),
         attributes=[AttributeOut.model_validate(a) for a in product.attributes],
         media=[_media_out(m, storage) for m in product.media],
-        sku_id=product.default_sku.id,
     )

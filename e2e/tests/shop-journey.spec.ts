@@ -82,7 +82,7 @@ test('a new buyer finds the product, orders it and sees the confirmation', async
   await shopper.click(`h3:has-text("${product}")`);
   await shopper.click('button.buy');
   await expect(shopper.locator('text=Added to your cart.')).toBeVisible();
-  await shopper.click('text=Go to cart');
+  await shopper.click('text=View cart');
   await shopper.selectOption('select[id^=qty-]', '2');
   await expect(shopper.locator('.count')).toHaveText('2');
   await shopper.click('text=Proceed to checkout');

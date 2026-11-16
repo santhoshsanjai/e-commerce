@@ -84,12 +84,36 @@
       @if (p.short_description) {
         <p class="lead">{{ p.short_description }}</p>
       }
+      @if (p.availability !== 'OUT_OF_STOCK') {
+        <div class="qty-row">
+          <span class="qty-label" id="qty-label">Quantity</span>
+          <div class="stepper" role="group" aria-labelledby="qty-label">
+            <button
+              type="button"
+              aria-label="One fewer"
+              [disabled]="qty() <= 1"
+              (click)="qty.set(qty() - 1)"
+            >
+              −
+            </button>
+            <output aria-live="polite">{{ qty() }}</output>
+            <button
+              type="button"
+              aria-label="One more"
+              [disabled]="qty() >= maxQty"
+              (click)="qty.set(qty() + 1)"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      }
       <div class="buy-row">
         <button
-          class="btn btn-lg buy"
+          class="btn btn-lg btn-secondary buy"
           type="button"
           [class.done]="added()"
-          [disabled]="p.availability === 'OUT_OF_STOCK' || adding()"
+          [disabled]="p.availability === 'OUT_OF_STOCK' || busy()"
           (click)="addToCart(p.sku_id)"
         >
           @if (p.availability === 'OUT_OF_STOCK') {
@@ -97,17 +121,31 @@
           } @else if (adding()) {
             <span class="spinner" aria-hidden="true"></span> Adding…
           } @else if (added()) {
-            <shr-icon name="check" /> Add another
+            <shr-icon name="check" /> Added to cart
           } @else {
             <shr-icon name="bag" /> Add to cart
           }
         </button>
-        @if (added()) {
-          <a class="btn btn-lg btn-secondary go" routerLink="/cart">Go to cart</a>
+        @if (p.availability !== 'OUT_OF_STOCK') {
+          <button
+            class="btn btn-lg buy-now"
+            type="button"
+            [disabled]="busy()"
+            (click)="buyNow(p.sku_id)"
+          >
+            @if (buying()) {
+              <span class="spinner" aria-hidden="true"></span> Going to checkout…
+            } @else {
+              Buy now <shr-icon name="arrow" />
+            }
+          </button>
         }
       </div>
       @if (added()) {
-        <p class="note ok" role="status"><shr-icon name="check" /> Added to your cart.</p>
+        <p class="note ok" role="status">
+          <shr-icon name="check" /> Added to your cart. <a routerLink="/cart">View cart</a> ·
+          <a routerLink="/checkout">Checkout</a>
+        </p>
       }
       @if (cartError()) {
         <p class="note err" role="alert">{{ cartError() }}</p>

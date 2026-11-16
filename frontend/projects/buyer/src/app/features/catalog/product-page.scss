@@ -171,16 +171,62 @@
   color: var(--color-muted);
 }
 
-.buy-row {
+.qty-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-4);
   margin-top: var(--space-8);
+}
+
+.qty-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  button {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    transition: background-color var(--duration-fast) ease;
+    &:hover:not(:disabled) {
+      background: var(--color-surface-alt);
+    }
+    &:active:not(:disabled) {
+      transform: scale(0.92);
+    }
+    &:disabled {
+      color: var(--color-muted);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+  output {
+    min-width: 40px;
+    font-weight: var(--font-weight-semibold);
+    text-align: center;
+  }
+}
+
+.buy-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
   --icon-size: 18px;
 }
 
 .buy {
-  flex: 1 1 240px;
   transition:
     background-color var(--duration-base) var(--ease-out),
     border-color var(--duration-base) var(--ease-out),
@@ -189,29 +235,30 @@
   &.done {
     background: var(--color-success);
     border-color: var(--color-success);
+    color: var(--color-primary-contrast);
     shr-icon {
       animation: pop 420ms var(--ease-out);
     }
   }
 }
 
-.go {
-  flex: 1 1 160px;
-  animation: fade-up var(--duration-base) var(--ease-out) both;
+// The main call to action: straight to checkout.
+.buy-now {
+  shr-icon {
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+  &:hover:not(:disabled) shr-icon {
+    transform: translateX(4px);
+  }
 }
 
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
-  border-top-color: currentColor;
-  border-radius: 50%;
-  animation: spin 700ms linear infinite;
+.buy-row .btn:only-child {
+  grid-column: 1 / -1;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+@media (max-width: 560px) {
+  .buy-row {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -223,8 +270,12 @@
   font-size: var(--font-size-sm);
   animation: fade-up var(--duration-base) var(--ease-out) both;
   --icon-size: 16px;
+  flex-wrap: wrap;
   &.ok {
     color: var(--color-success);
+  }
+  a {
+    font-weight: var(--font-weight-semibold);
   }
   &.err {
     color: var(--color-danger);

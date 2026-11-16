@@ -45,6 +45,8 @@ export interface ProductCard {
   availability: Availability;
   image_url: string | null;
   image_alt: string;
+  /** The default SKU, used to add the product to the cart. */
+  sku_id: string;
 }
 
 export interface ProductDetail extends ProductCard {
@@ -52,7 +54,6 @@ export interface ProductDetail extends ProductCard {
   category: Category;
   attributes: Attribute[];
   media: Media[];
-  sku_id: string;
 }
 
 export interface AdminProductListItem {

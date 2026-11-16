@@ -23,6 +23,11 @@ export class ProductPage {
 
   protected readonly adding = signal(false);
   protected readonly added = signal(false);
+  protected readonly buying = signal(false);
+  protected readonly busy = computed(() => this.adding() || this.buying());
+  /** How many to add; resets to 1 for each product. Capped like a cart line (MAX_LINE_QTY). */
+  protected readonly qty = linkedSignal({ source: () => this.slug(), computation: () => 1 });
+  protected readonly maxQty = 20;
   protected readonly cartError = signal<string | null>(null);
 
   readonly slug = input.required<string>();
@@ -58,21 +63,39 @@ export class ProductPage {
   }
 
   async addToCart(skuId: string): Promise<void> {
-    if (this.auth.user()?.user_type !== 'BUYER') {
-      // ADR 0004: sign-in is required before using the cart.
-      await this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
-      return;
-    }
+    if (!(await this.signedIn())) return;
     this.adding.set(true);
     this.added.set(false);
     this.cartError.set(null);
     try {
-      await this.cart.add(skuId);
+      await this.cart.add(skuId, this.qty());
       this.added.set(true);
     } catch (err) {
       this.cartError.set(apiErrorMessage(err));
     } finally {
       this.adding.set(false);
     }
+  }
+
+  /** Adds the chosen quantity and goes straight to checkout. */
+  async buyNow(skuId: string): Promise<void> {
+    if (!(await this.signedIn())) return;
+    this.buying.set(true);
+    this.cartError.set(null);
+    try {
+      await this.cart.add(skuId, this.qty());
+      await this.router.navigate(['/checkout']);
+    } catch (err) {
+      this.cartError.set(apiErrorMessage(err));
+    } finally {
+      this.buying.set(false);
+    }
+  }
+
+  /** ADR 0004: sign-in is required before using the cart. */
+  private async signedIn(): Promise<boolean> {
+    if (this.auth.user()?.user_type === 'BUYER') return true;
+    await this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+    return false;
   }
 }

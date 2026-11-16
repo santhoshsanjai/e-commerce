@@ -173,6 +173,7 @@ class ProductCard(BaseModel):
     availability: Availability
     image_url: str | None
     image_alt: str
+    sku_id: uuid.UUID  # the default SKU, so a card can add the product to the cart
 
 
 class ProductDetail(ProductCard):
@@ -180,4 +181,3 @@ class ProductDetail(ProductCard):
     category: CategoryOut
     attributes: list[AttributeOut]
     media: list[MediaOut]
-    sku_id: uuid.UUID
