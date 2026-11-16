@@ -12,35 +12,35 @@
 // (shared/src/lib/storefront/theme-colors.ts).
 :root {
   // Brand
-  --color-primary: #1d2b3a; // buttons, links, active states (deep ink navy)
+  --color-primary: #0f2a4a; // buttons, links, active states (navy)
   --color-primary-contrast: #ffffff; // text on primary
-  --color-accent: #b08d57; // highlights, badges, prices on sale banners (antique brass)
+  --color-accent: #1d6fb8; // icons, highlights, small details (clear blue)
   --color-accent-contrast: #ffffff; // text on accent
 
   // Page
-  --color-background: #faf8f5; // page background (warm ivory)
+  --color-background: #ffffff; // page background
   --color-surface: #ffffff; // cards, panels, inputs
-  --color-surface-alt: #f2eee8; // soft bands, image wells, hovers
-  --color-text: #1b1e23;
-  --color-muted: #6b6f76;
-  --color-border: #e6e0d7;
+  --color-surface-alt: #f1f5f9; // soft bands, image wells, hovers
+  --color-text: #0f172a;
+  --color-muted: #5b6676;
+  --color-border: #e2e8f0;
 
-  // Header, announcement bar and footer
+  // Header, trust bar and footer
   --color-header-bg: #ffffff;
-  --color-header-text: #1b1e23;
-  --color-announcement-bg: #1d2b3a;
-  --color-announcement-text: #f4efe7;
-  --color-footer-bg: #151f2a;
-  --color-footer-text: #d8d2c8;
+  --color-header-text: #0f172a;
+  --color-announcement-bg: #e8f1f8; // the light-blue trust bar under the header
+  --color-announcement-text: #0f2a4a;
+  --color-footer-bg: #0f2a4a;
+  --color-footer-text: #dbe4ef;
 
   // Hero band on the home page (a two-stop gradient)
-  --color-hero-start: #1d2b3a;
-  --color-hero-end: #3b4d5f;
-  --color-hero-text: #ffffff;
+  --color-hero-start: #eef4fa;
+  --color-hero-end: #d7e5f2;
+  --color-hero-text: #0f2a4a;
 
   // Admin sidebar
-  --color-sidebar-bg: #151f2a;
-  --color-sidebar-text: #c9ced6;
+  --color-sidebar-bg: #0f2a4a;
+  --color-sidebar-text: #c9d5e3;
 
   // Status (kept apart from the brand colours)
   --color-sale: #a4262c;
@@ -58,19 +58,37 @@
   --color-skeleton: color-mix(in srgb, var(--color-border) 70%, var(--color-surface));
   --color-skeleton-shine: color-mix(in srgb, var(--color-surface) 80%, transparent);
 
-  // Type: a classic serif for display, a clean sans for everything you read and click.
-  --font-display: 'Cormorant Garamond', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  // Type: one clean sans-serif (Inter, self-hosted) for the whole shop, falling back to each
+  // platform's own UI font. Headings use the same family at a heavier weight and tighter tracking.
   --font-family:
     'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.25rem;
-  --font-size-xl: 1.75rem;
-  --font-size-2xl: clamp(2rem, 1.4rem + 2.4vw, 3rem);
-  --font-size-hero: clamp(2.5rem, 1.5rem + 4.5vw, 4.75rem);
-  --tracking-wide: 0.14em;
+  --font-heading: var(--font-family);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  // Size scale (1rem = 16px). Body copy is md; headings step up from lg.
+  --font-size-xs: 0.75rem; // 12px: badges, captions, legal
+  --font-size-sm: 0.875rem; // 14px: labels, buttons, secondary text
+  --font-size-md: 1rem; // 16px: body
+  --font-size-lg: 1.125rem; // 18px: card titles, h3
+  --font-size-xl: 1.5rem; // 24px: section titles, h2
+  --font-size-2xl: clamp(1.75rem, 1.5rem + 1vw, 2.25rem); // 28 to 36px: page titles, h1
+  --font-size-hero: clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem); // 36 to 56px: home hero only
+
+  // Weights
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  // Line heights
+  --line-height-tight: 1.15; // large headings
+  --line-height-heading: 1.3; // small headings
+  --line-height-body: 1.6;
+
+  // Letter spacing
+  --tracking-tight: -0.02em; // headings
+  --tracking-wide: 0.06em; // small uppercase labels
 
   // Space
   --space-1: 0.25rem;
@@ -88,8 +106,8 @@
 
   // Shape and depth
   --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 14px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
   --radius-pill: 999px;
   --shadow-sm: 0 1px 2px color-mix(in srgb, var(--color-text) 6%, transparent);
   --shadow-md:

@@ -10,7 +10,6 @@ import { OrdersApi } from './orders.api';
   imports: [RouterLink, MoneyPipe, DatePipe, OrderStatusBadge, Icon],
   template: `
     <div class="page-head">
-      <span class="eyebrow">Your account</span>
       <h1>My orders</h1>
     </div>
     @if (orders.error()) {

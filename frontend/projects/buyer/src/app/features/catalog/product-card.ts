@@ -21,19 +21,21 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
         } @else if (p.availability === 'LOW_STOCK') {
           <span class="badge low">Only a few left</span>
         }
-        <span class="quick" aria-hidden="true">View details <shr-icon name="arrow" /></span>
       </div>
       <div class="body">
         <h3>{{ p.name }}</h3>
         @if (p.short_description) {
           <p class="short">{{ p.short_description }}</p>
         }
-        <p class="price">
-          <span [class.now]="p.compare_at_minor">{{ p.price_minor | money: p.currency }}</span>
-          @if (p.compare_at_minor) {
-            <s class="was">{{ p.compare_at_minor | money: p.currency }}</s>
-          }
-        </p>
+        <div class="foot">
+          <p class="price">
+            <span [class.now]="p.compare_at_minor">{{ p.price_minor | money: p.currency }}</span>
+            @if (p.compare_at_minor) {
+              <s class="was">{{ p.compare_at_minor | money: p.currency }}</s>
+            }
+          </p>
+          <span class="details" aria-hidden="true">View details</span>
+        </div>
       </div>
     </a>
   `,
@@ -45,14 +47,26 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
       display: flex;
       flex-direction: column;
       height: 100%;
+      padding: var(--space-3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface);
       color: inherit;
       text-decoration: none;
+      transition:
+        border-color var(--duration-fast) ease,
+        box-shadow var(--duration-base) var(--ease-out);
+    }
+    .card-link:hover,
+    .card-link:focus-visible {
+      border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+      box-shadow: var(--shadow-md);
     }
     .image {
       position: relative;
-      aspect-ratio: 4 / 5;
+      aspect-ratio: 1;
       overflow: hidden;
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius-md);
       background: var(--color-surface-alt);
       isolation: isolate;
     }
@@ -72,17 +86,16 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
     }
     .card-link:hover img,
     .card-link:focus-visible img {
-      transform: scale(1.06);
+      transform: scale(1.04);
     }
     .badge {
       position: absolute;
-      top: var(--space-3);
-      left: var(--space-3);
-      padding: 4px var(--space-3);
-      border-radius: var(--radius-pill);
+      top: var(--space-2);
+      left: var(--space-2);
+      padding: 2px var(--space-2);
+      border-radius: var(--radius-sm);
       font-size: var(--font-size-xs);
       font-weight: 600;
-      letter-spacing: 0.04em;
       background: var(--color-surface);
       color: var(--color-text);
       box-shadow: var(--shadow-sm);
@@ -95,42 +108,18 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
       background: var(--color-text);
       color: var(--color-surface);
     }
-    .quick {
-      position: absolute;
-      left: var(--space-3);
-      right: var(--space-3);
-      bottom: var(--space-3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-2);
-      min-height: 42px;
-      border-radius: var(--radius-pill);
-      background: color-mix(in srgb, var(--color-surface) 92%, transparent);
-      backdrop-filter: blur(8px);
-      color: var(--color-text);
-      font-size: var(--font-size-sm);
-      font-weight: 600;
-      opacity: 0;
-      transform: translateY(12px);
-      transition:
-        opacity var(--duration-base) var(--ease-out),
-        transform var(--duration-base) var(--ease-out);
-      --icon-size: 16px;
-    }
-    .card-link:hover .quick,
-    .card-link:focus-visible .quick {
-      opacity: 1;
-      transform: none;
-    }
     .body {
-      padding: var(--space-4) var(--space-1) 0;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: var(--space-3) var(--space-1) 0;
     }
     h3 {
       margin: 0;
       font-size: var(--font-size-md);
-      font-weight: 500;
-      line-height: 1.35;
+      font-weight: var(--font-weight-medium);
+      letter-spacing: 0;
+      line-height: var(--line-height-heading);
       transition: color var(--duration-fast) ease;
     }
     .card-link:hover h3 {
@@ -145,12 +134,31 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    .foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-top: auto;
+      padding-top: var(--space-3);
+    }
     .price {
       display: flex;
+      flex-wrap: wrap;
       align-items: baseline;
-      gap: var(--space-2);
-      margin: var(--space-2) 0 0;
+      gap: 0 var(--space-2);
+      margin: 0;
+      font-weight: 700;
+    }
+    .details {
+      padding: 6px var(--space-3);
+      border-radius: var(--radius-md);
+      background: var(--color-primary);
+      color: var(--color-primary-contrast);
+      font-size: var(--font-size-xs);
       font-weight: 600;
+      white-space: nowrap;
     }
     .now {
       color: var(--color-sale);
@@ -160,8 +168,12 @@ import { Icon, MoneyPipe, ProductCard as Card } from '@shop/shared';
       font-weight: 400;
       font-size: var(--font-size-sm);
     }
-    @media (hover: none) {
-      .quick {
+    @media (max-width: 560px) {
+      .card-link {
+        padding: var(--space-2);
+      }
+      .short,
+      .details {
         display: none;
       }
     }

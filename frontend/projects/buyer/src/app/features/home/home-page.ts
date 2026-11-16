@@ -1,15 +1,15 @@
-import { Component, computed, effect, ElementRef, inject, viewChild } from '@angular/core';
+import { Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { Icon, RevealDirective, StorefrontService } from '@shop/shared';
-import { catchError, map, of } from 'rxjs';
+import { Icon, StorefrontService } from '@shop/shared';
+import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { CatalogApi } from '../catalog/catalog.api';
 import { ProductCard } from '../catalog/product-card';
 
 @Component({
   selector: 'buy-home-page',
-  imports: [RouterLink, Icon, RevealDirective, ProductCard],
+  imports: [RouterLink, Icon, ProductCard],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
 })
@@ -26,25 +26,30 @@ export class HomePage {
   protected readonly heroImages = computed(() =>
     (this.newest() ?? []).filter((p) => p.image_url).slice(0, 3),
   );
-  protected readonly categories = toSignal(
+  /** Up to four top-level categories, each shown with the picture of its newest product. */
+  protected readonly categoryTiles = toSignal(
     this.api.categories().pipe(
-      map((all) => all.filter((c) => !c.parent_id).slice(0, 6)),
+      map((all) => all.filter((c) => !c.parent_id).slice(0, 4)),
+      switchMap((cats) =>
+        cats.length
+          ? forkJoin(
+              cats.map((category) =>
+                this.api.products({ category: category.slug, sort: 'newest', pageSize: 1 }).pipe(
+                  map((page) => ({ category, image: page.items[0]?.image_url ?? null })),
+                  catchError(() => of({ category, image: null })),
+                ),
+              ),
+            )
+          : of([]),
+      ),
       catchError(() => of([])),
     ),
+    { initialValue: [] },
   );
   protected readonly skeletons = [0, 1, 2, 3];
-
-  private readonly rail = viewChild<ElementRef<HTMLElement>>('rail');
 
   constructor() {
     const title = inject(Title);
     effect(() => title.setTitle(this.storefront.settings().store_name));
-  }
-
-  protected scrollRail(direction: 1 | -1): void {
-    const el = this.rail()?.nativeElement;
-    if (!el) return;
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: reduce ? 'auto' : 'smooth' });
   }
 }

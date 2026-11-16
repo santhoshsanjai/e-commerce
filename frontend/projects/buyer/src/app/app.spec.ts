@@ -16,7 +16,7 @@ describe('Buyer App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('nav')?.textContent).toContain('Sign in');
+    expect(el.querySelector('nav[aria-label="Account"]')?.textContent).toContain('Sign in');
     expect(el.querySelector('main#main')).not.toBeNull();
   });
 });
