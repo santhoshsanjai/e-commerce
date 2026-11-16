@@ -32,6 +32,11 @@ export class Header {
   );
 
   protected readonly scrolled = signal(false);
+  /** Hidden while scrolling down the page, back as soon as the visitor scrolls up. */
+  protected readonly tucked = signal(false);
+  protected readonly showTop = signal(false);
+  private lastY = 0;
+  private scrollFrame = 0;
   protected readonly menuOpen = signal(false);
   protected readonly bump = signal(false);
 
@@ -54,7 +59,22 @@ export class Header {
 
   @HostListener('window:scroll')
   protected onScroll(): void {
-    this.scrolled.set(window.scrollY > 8);
+    if (this.scrollFrame) return;
+    this.scrollFrame = requestAnimationFrame(() => {
+      this.scrollFrame = 0;
+      const y = window.scrollY;
+      this.scrolled.set(y > 8);
+      this.showTop.set(y > 900);
+      if (Math.abs(y - this.lastY) > 6) {
+        this.tucked.set(y > this.lastY && y > 240 && !this.menuOpen());
+        this.lastY = y;
+      }
+    });
+  }
+
+  protected toTop(): void {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   }
 
   @HostListener('document:keydown.escape')

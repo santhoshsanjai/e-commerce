@@ -1,10 +1,13 @@
-<section class="hero">
+<section class="hero" shrParallax>
+  <div class="hero-glow" aria-hidden="true"></div>
   <div class="hero-inner container">
     <div class="hero-copy">
       <h1>Quality products, delivered to your door.</h1>
       <p>Shop our latest range online and pay in cash when your order arrives.</p>
       <div class="hero-ctas">
-        <a class="btn btn-lg" routerLink="/shop">Shop all products</a>
+        <a class="btn btn-lg btn-arrow" routerLink="/shop"
+          >Shop all products <shr-icon name="arrow"
+        /></a>
         <a class="btn btn-lg btn-outline" routerLink="/shop" [queryParams]="{ sort: 'newest' }"
           >New arrivals</a
         >
@@ -13,7 +16,9 @@
     <div class="hero-art" aria-hidden="true">
       @for (p of heroImages(); track p.slug) {
         <div [class]="'frame frame-' + $index">
-          <img [src]="p.image_url" alt="" />
+          <div class="frame-body">
+            <img [src]="p.image_url" alt="" />
+          </div>
         </div>
       }
     </div>
@@ -22,10 +27,15 @@
 
 @if (categoryTiles().length) {
   <section class="section container" aria-labelledby="cat-h">
-    <h2 id="cat-h" class="section-title">Featured categories</h2>
+    <h2 id="cat-h" class="section-title" shrReveal>Featured categories</h2>
     <div class="cat-grid">
       @for (t of categoryTiles(); track t.category.id) {
-        <a class="cat" routerLink="/shop" [queryParams]="{ category: t.category.slug }">
+        <a
+          class="cat"
+          routerLink="/shop"
+          [queryParams]="{ category: t.category.slug }"
+          [shrReveal]="$index * 80"
+        >
           <span class="cat-name">{{ t.category.name }}</span>
           @if (t.image) {
             <img class="cat-img" [src]="t.image" alt="" loading="lazy" />
@@ -37,7 +47,7 @@
 }
 
 <section class="section container" aria-labelledby="new-h">
-  <div class="section-head">
+  <div class="section-head" shrReveal>
     <h2 id="new-h" class="section-title">New arrivals</h2>
     <a class="view-all" routerLink="/shop" [queryParams]="{ sort: 'newest' }"
       >View all <shr-icon name="arrow"
@@ -48,7 +58,7 @@
     @if (items.length) {
       <div class="product-grid">
         @for (p of items.slice(0, 8); track p.slug) {
-          <buy-product-card [product]="p" />
+          <buy-product-card [product]="p" [shrReveal]="($index % 4) * 80" />
         }
       </div>
     } @else {

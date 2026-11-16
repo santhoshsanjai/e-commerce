@@ -30,6 +30,12 @@
     align-items: center;
     gap: var(--space-2);
     --icon-size: 16px;
+    animation: fade-up var(--duration-slow) var(--ease-out) both;
+  }
+  @for $i from 2 through 4 {
+    li:nth-child(#{$i}) {
+      animation-delay: #{($i - 1) * 90}ms;
+    }
   }
   shr-icon {
     color: var(--color-accent);
@@ -44,9 +50,40 @@
   color: var(--color-header-text);
   backdrop-filter: saturate(1.4) blur(14px);
   border-bottom: 1px solid var(--color-border);
-  transition: box-shadow var(--duration-base) var(--ease-out);
+  transition:
+    box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
   &.scrolled {
     box-shadow: var(--shadow-md);
+  }
+  &.tucked {
+    transform: translateY(-100%);
+    box-shadow: none;
+  }
+  // Reading progress: a thin line along the bottom edge (scroll-driven, where supported).
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .site-header::after {
+    animation: read-progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+@keyframes read-progress {
+  to {
+    transform: scaleX(1);
   }
 }
 
@@ -73,6 +110,11 @@
   color: inherit;
   text-decoration: none;
   white-space: nowrap;
+  transform-origin: left center;
+  transition: scale var(--duration-base) var(--ease-out);
+  .scrolled & {
+    scale: 0.92;
+  }
 }
 
 .icon-btn {
@@ -183,9 +225,18 @@
   cursor: pointer;
   --icon-size: 22px;
   transition: background-color var(--duration-fast) ease;
+  shr-icon {
+    transition: transform var(--duration-base) var(--ease-out);
+  }
   &:hover,
   &.on {
     background: var(--color-surface-alt);
+  }
+  &:hover shr-icon {
+    transform: translateY(-2px);
+  }
+  &:active shr-icon {
+    transform: scale(0.9);
   }
 }
 
@@ -244,19 +295,34 @@
   min-width: 0;
   overflow: hidden;
   a {
+    position: relative;
     padding-block: var(--space-2);
-    border-bottom: 2px solid transparent;
     color: inherit;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     text-decoration: none;
     white-space: nowrap;
-    transition:
-      color var(--duration-fast) ease,
-      border-color var(--duration-fast) ease;
+    transition: color var(--duration-fast) ease;
+    // Underline that grows from the left on hover.
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 2px;
+      height: 2px;
+      border-radius: 1px;
+      background: currentColor;
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform var(--duration-base) var(--ease-out);
+    }
     &:hover {
       color: var(--color-primary);
-      border-bottom-color: var(--color-primary);
+      &::after {
+        transform: scaleX(1);
+        transform-origin: left;
+      }
     }
   }
 }
@@ -376,5 +442,12 @@
   }
   .action {
     padding-inline: var(--space-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header::after {
+    animation: none;
+    display: none;
   }
 }
