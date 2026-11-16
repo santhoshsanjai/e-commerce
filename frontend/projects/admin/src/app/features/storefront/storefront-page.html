@@ -52,7 +52,7 @@
           />
         </div>
         <div class="field">
-          <label for="announcement">Announcement bar <span class="muted">(optional)</span></label>
+          <label for="announcement">Trust bar message <span class="muted">(optional)</span></label>
           <input
             id="announcement"
             maxlength="160"
@@ -61,7 +61,8 @@
             (ngModelChange)="announcement.set($event)"
           />
           <small class="muted"
-            >Shown above the shop's header. Leave blank for the standard message.</small
+            >Shown in the bar under the shop's header. Leave blank to show the standard trust
+            points.</small
           >
         </div>
       </section>
@@ -136,15 +137,14 @@
     <aside class="preview" aria-label="Preview">
       <p class="preview-title">Live preview</p>
       <div class="mock">
-        <div class="m-announce">{{ announcement() || 'Cash on delivery on every order' }}</div>
         <div class="m-header">
           <span class="m-brand">{{ storeName() || 'Shop' }}</span>
           <span class="m-search"></span>
           <shr-icon name="bag" />
         </div>
+        <div class="m-announce">{{ announcement() || 'Cash on delivery · Tracked delivery' }}</div>
         <div class="m-hero">
-          <span class="m-eyebrow">New collection</span>
-          <span class="m-title">Considered pieces</span>
+          <span class="m-title">Quality pieces</span>
           <span class="m-btn">Shop now</span>
         </div>
         <div class="m-body">

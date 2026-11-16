@@ -109,10 +109,8 @@
 .info {
   animation: fade-up var(--duration-slow) var(--ease-out) 80ms both;
   h1 {
-    margin: var(--space-2) 0 var(--space-2);
-    font-size: clamp(2rem, 1.5rem + 1.6vw, 2.75rem);
-    font-weight: 500;
-    line-height: 1.1;
+    margin: 0 0 var(--space-2);
+    font-size: var(--font-size-2xl);
   }
 }
 
@@ -127,8 +125,8 @@
   align-items: baseline;
   gap: var(--space-3);
   margin: var(--space-6) 0 0;
-  font-size: 1.625rem;
-  font-weight: 600;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
   s {
     color: var(--color-muted);
     font-size: var(--font-size-md);

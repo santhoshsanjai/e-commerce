@@ -2,17 +2,37 @@
   display: contents;
 }
 
-.announcement {
+// Light trust bar under the header: the standard points, or the staff's own announcement.
+.trust {
   background: var(--color-announcement-bg);
   color: var(--color-announcement-text);
-  text-align: center;
+  border-bottom: 1px solid var(--color-border);
   font-size: var(--font-size-xs);
-  letter-spacing: 0.08em;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  p {
-    margin: 0;
-    padding: var(--space-2) var(--gutter);
-    animation: fade-in var(--duration-slow) ease both;
+  p,
+  ul {
+    margin: 0 auto;
+    padding-block: var(--space-2);
+    text-align: center;
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-10);
+    padding-inline: var(--gutter);
+    list-style: none;
+  }
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    --icon-size: 16px;
+  }
+  shr-icon {
+    color: var(--color-accent);
   }
 }
 
@@ -32,8 +52,8 @@
 
 .bar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas: 'brand search actions';
+  grid-template-columns: auto 1fr auto auto;
+  grid-template-areas: 'brand nav search actions';
   align-items: center;
   gap: var(--space-8);
   padding-block: var(--space-4);
@@ -45,10 +65,10 @@
 
 .brand {
   grid-area: brand;
-  font-family: var(--font-display);
-  font-size: 1.85rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   line-height: 1;
   color: inherit;
   text-decoration: none;
@@ -80,16 +100,15 @@
   position: relative;
   display: flex;
   align-items: center;
-  max-width: 560px;
-  width: 100%;
-  justify-self: center;
+  width: 240px;
+  justify-self: end;
   input {
     width: 100%;
-    min-height: 46px;
-    padding: var(--space-2) 104px var(--space-2) 44px;
+    min-height: 40px;
+    padding: var(--space-2) var(--space-3) var(--space-2) 40px;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-pill);
-    background: var(--color-surface-alt);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
     color: var(--color-text);
     font: inherit;
     font-size: var(--font-size-sm);
@@ -103,21 +122,26 @@
     &:focus-visible {
       background: var(--color-surface);
       border-color: var(--color-primary);
-      border-radius: var(--radius-pill);
     }
   }
 }
 
 .search-icon {
   position: absolute;
-  left: 16px;
+  left: 13px;
   color: var(--color-muted);
   pointer-events: none;
   --icon-size: 18px;
 }
 
+// Enter submits the search; the button stays for screen readers and keyboard users.
 .search-go {
   position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
   right: 4px;
   min-height: 38px;
   padding: 0 var(--space-5);
@@ -211,44 +235,29 @@
   box-shadow: 0 0 0 2px var(--color-header-bg);
 }
 
-// Category row with an underline that grows on hover.
-.categories {
-  border-top: 1px solid var(--color-border);
-  .container {
-    display: flex;
-    justify-content: center;
-    gap: var(--space-8);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
+// Inline category links.
+.nav {
+  grid-area: nav;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  min-width: 0;
+  overflow: hidden;
   a {
-    position: relative;
-    padding: var(--space-3) 0;
+    padding-block: var(--space-2);
+    border-bottom: 2px solid transparent;
     color: inherit;
     font-size: var(--font-size-sm);
-    font-weight: 500;
-    letter-spacing: 0.02em;
+    font-weight: var(--font-weight-medium);
     text-decoration: none;
     white-space: nowrap;
-    &::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 8px;
-      height: 1px;
-      background: currentColor;
-      transform: scaleX(0);
-      transform-origin: right;
-      transition: transform var(--duration-base) var(--ease-out);
+    transition:
+      color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease;
+    &:hover {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
     }
-    &:hover::after {
-      transform: scaleX(1);
-      transform-origin: left;
-    }
-  }
-  .highlight {
-    color: var(--color-accent);
   }
 }
 
@@ -283,7 +292,7 @@
     font-weight: 500;
   }
   .brand {
-    font-size: 1.5rem;
+    font-size: var(--font-size-lg);
   }
 }
 
@@ -306,6 +315,21 @@
 @keyframes drawer-in {
   from {
     transform: translateX(-100%);
+  }
+}
+
+// Sign out is an icon everywhere; its name is on the button for screen readers.
+.signout .label {
+  display: none;
+}
+
+// Laptop widths: one category fewer and a narrower search so labels still fit.
+@media (max-width: 1360px) {
+  .nav a:nth-child(4) {
+    display: none;
+  }
+  .search {
+    width: 200px;
   }
 }
 
@@ -334,12 +358,18 @@
   }
   .brand {
     justify-self: center;
-    font-size: 1.6rem;
+    font-size: var(--font-size-lg);
   }
   .search {
-    max-width: none;
+    width: 100%;
   }
-  .categories,
+  .trust ul {
+    gap: var(--space-1) var(--space-5);
+  }
+  .trust li:nth-child(n + 3) {
+    display: none;
+  }
+  .nav,
   .orders,
   .signout {
     display: none;

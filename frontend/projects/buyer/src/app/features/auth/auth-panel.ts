@@ -50,16 +50,17 @@ import { Icon, StorefrontService } from '@shop/shared';
       top: var(--space-10);
       left: var(--space-10);
       margin: 0;
-      font-family: var(--font-display);
-      font-size: 1.75rem;
-      font-weight: 600;
+      font-family: var(--font-heading);
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: var(--tracking-tight);
     }
     h2 {
       margin: 0;
-      font-family: var(--font-display);
-      font-size: 2.5rem;
-      font-weight: 500;
-      line-height: 1.1;
+      font-family: var(--font-heading);
+      color: inherit;
+      font-size: var(--font-size-2xl);
+      line-height: var(--line-height-tight);
     }
     ul {
       display: grid;

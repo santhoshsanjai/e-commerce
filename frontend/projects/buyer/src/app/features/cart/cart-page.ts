@@ -14,7 +14,6 @@ const PROBLEM: Record<string, string> = {
   imports: [RouterLink, MoneyPipe, Icon],
   template: `
     <div class="page-head">
-      <span class="eyebrow">Shopping bag</span>
       <h1>Your cart</h1>
     </div>
     @if (error()) {

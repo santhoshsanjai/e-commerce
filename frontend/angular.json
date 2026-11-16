@@ -31,9 +31,6 @@
             ],
             "styles": [
               "@fontsource-variable/inter/index.css",
-              "@fontsource/cormorant-garamond/latin-500.css",
-              "@fontsource/cormorant-garamond/latin-600.css",
-              "@fontsource/cormorant-garamond/latin-500-italic.css",
               "projects/buyer/src/styles.scss"
             ]
           },
@@ -122,9 +119,6 @@
             ],
             "styles": [
               "@fontsource-variable/inter/index.css",
-              "@fontsource/cormorant-garamond/latin-500.css",
-              "@fontsource/cormorant-garamond/latin-600.css",
-              "@fontsource/cormorant-garamond/latin-500-italic.css",
               "projects/admin/src/styles.scss"
             ]
           },

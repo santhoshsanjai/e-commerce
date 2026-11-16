@@ -182,7 +182,7 @@ function readable(action: string): string {
       color: var(--color-muted);
     }
     .mono {
-      font-family: ui-monospace, monospace;
+      font-family: var(--font-mono);
       overflow-wrap: anywhere;
     }
     .details td {

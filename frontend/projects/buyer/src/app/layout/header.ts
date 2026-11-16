@@ -24,10 +24,11 @@ export class Header {
       .filter((c) => !c.parent_id)
       .slice(0, 8),
   );
-  protected readonly announcement = computed(
-    () =>
-      this.storefront.settings().announcement ||
-      'Cash on delivery on every order · Tracked delivery to your door',
+  /** Categories shown inline in the desktop header; the rest are one click away in the shop. */
+  protected readonly navCategories = computed(() => this.topCategories().slice(0, 3));
+  /** Text staff set in Admin → Storefront replaces the standard trust points. */
+  protected readonly customAnnouncement = computed(() =>
+    this.storefront.settings().announcement?.trim(),
   );
 
   protected readonly scrolled = signal(false);

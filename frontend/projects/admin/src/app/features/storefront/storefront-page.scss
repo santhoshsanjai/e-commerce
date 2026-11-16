@@ -135,7 +135,7 @@ h2 {
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   text-transform: lowercase;
 }
@@ -165,7 +165,7 @@ h2 {
   margin: 0 0 var(--space-2);
   font-size: var(--font-size-xs);
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--color-muted);
 }
@@ -183,9 +183,8 @@ h2 {
   background: var(--color-announcement-bg);
   color: var(--color-announcement-text);
   text-align: center;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 9px;
+  font-size: 10px;
+  font-weight: 500;
 }
 .m-header {
   display: flex;
@@ -198,9 +197,9 @@ h2 {
   --icon-size: 16px;
 }
 .m-brand {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
 }
 .m-search {
   flex: 1;
@@ -217,16 +216,12 @@ h2 {
   background: linear-gradient(125deg, var(--color-hero-start), var(--color-hero-end));
   color: var(--color-hero-text);
 }
-.m-eyebrow {
-  color: var(--color-accent);
-  font-size: 8px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
 .m-title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  line-height: 1;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 .m-btn {
   align-self: flex-start;

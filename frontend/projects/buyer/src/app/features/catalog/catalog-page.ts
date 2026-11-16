@@ -234,6 +234,7 @@ const PAGE_SIZE = 24;
       --icon-size: 16px;
     }
     .result-count {
+      white-space: nowrap;
       flex: 1;
       margin: 0;
       color: var(--color-muted);
@@ -258,7 +259,7 @@ const PAGE_SIZE = 24;
       color: var(--color-muted);
       h2 {
         margin: var(--space-2) 0 0;
-        font-family: var(--font-display);
+        font-family: var(--font-heading);
         font-size: var(--font-size-xl);
         color: var(--color-text);
       }
