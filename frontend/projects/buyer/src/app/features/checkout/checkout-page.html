@@ -1,4 +1,13 @@
-<h1>Checkout</h1>
+<div class="page-head">
+  <ol class="progress" aria-label="Checkout progress">
+    <li class="done">
+      <a routerLink="/cart"><shr-icon name="check" /> Cart</a>
+    </li>
+    <li class="current" aria-current="step"><span>2</span> Details</li>
+    <li><span>3</span> Confirmation</li>
+  </ol>
+  <h1>Checkout</h1>
+</div>
 
 @if (error()) {
   <div class="alert-error" role="alert">
@@ -11,15 +20,15 @@
 
 @if (cartStore.cart(); as cart) {
   @if (cart.items.length === 0) {
-    <div class="card">
+    <div class="card empty">
       <p>Your cart is empty.</p>
-      <a class="btn" routerLink="/">Browse products</a>
+      <a class="btn" routerLink="/shop">Browse products</a>
     </div>
   } @else {
     <div class="layout">
       <div class="steps">
         <section class="card" aria-labelledby="addr-h">
-          <h2 id="addr-h">1. Delivery address</h2>
+          <h2 id="addr-h"><span class="step">1</span> Delivery address</h2>
           @if (addresses.isLoading()) {
             <p aria-busy="true">Loading addresses…</p>
           } @else if (addresses.error()) {
@@ -66,9 +75,10 @@
         </section>
 
         <section class="card" aria-labelledby="pay-h">
-          <h2 id="pay-h">2. Payment</h2>
+          <h2 id="pay-h"><span class="step">2</span> Payment</h2>
           <label class="address selected">
             <input type="radio" name="payment" checked />
+            <shr-icon name="cash" class="pay-icon" />
             <span
               ><strong>Cash on delivery</strong><br /><span class="muted"
                 >Pay when your order arrives.</span
@@ -78,7 +88,9 @@
         </section>
 
         <section class="card" aria-labelledby="note-h">
-          <h2 id="note-h">3. Delivery instructions (optional)</h2>
+          <h2 id="note-h">
+            <span class="step">3</span> Delivery instructions <small>(optional)</small>
+          </h2>
           <div class="field">
             <label class="visually-hidden" for="instructions">Delivery instructions</label>
             <textarea
@@ -97,7 +109,10 @@
         <ul class="items">
           @for (line of cart.items; track line.sku_id) {
             <li>
-              <span>{{ line.product_name }} × {{ line.qty }}</span>
+              <img [src]="line.image_url" alt="" width="48" height="60" />
+              <span class="item-name"
+                >{{ line.product_name }} <small>× {{ line.qty }}</small></span
+              >
               <span>{{ line.line_total_minor | money: cart.currency }}</span>
             </li>
           }
@@ -110,9 +125,15 @@
           <dt class="grand">Total to pay</dt>
           <dd class="grand">{{ cart.total_minor | money: cart.currency }}</dd>
         </dl>
-        <button class="btn place" type="button" [disabled]="!canPlace()" (click)="placeOrder()">
+        <button
+          class="btn btn-lg btn-block place"
+          type="button"
+          [disabled]="!canPlace()"
+          (click)="placeOrder()"
+        >
           {{ placing() ? 'Placing order…' : 'Place order' }}
         </button>
+        <p class="reassure"><shr-icon name="lock" /> Your details are sent securely</p>
         @if (!selectedId()) {
           <p class="muted small">Add a delivery address to continue.</p>
         } @else if (!cart.can_checkout) {
@@ -124,5 +145,8 @@
     </div>
   }
 } @else {
-  <p aria-busy="true">Loading…</p>
+  <div class="layout" aria-busy="true">
+    <div class="skeleton sk-block"></div>
+    <div class="skeleton sk-block"></div>
+  </div>
 }

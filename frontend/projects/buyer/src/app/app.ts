@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { Footer } from './layout/footer';
 import { Header } from './layout/header';
 
@@ -9,7 +11,7 @@ import { Header } from './layout/header';
   template: `
     <a class="skip-link" href="#main">Skip to content</a>
     <buy-header />
-    <main id="main" class="container" tabindex="-1">
+    <main id="main" tabindex="-1" [class.contained]="!fullBleed()">
       <router-outlet />
     </main>
     <buy-footer />
@@ -23,21 +25,28 @@ import { Header } from './layout/header';
     main {
       flex: 1;
       width: 100%;
-      max-width: 1200px;
+      outline: none;
+    }
+    main.contained {
+      max-width: var(--container);
       margin: 0 auto;
-      padding: var(--space-6) var(--space-4);
-    }
-    .skip-link {
-      position: absolute;
-      left: -999px;
-    }
-    .skip-link:focus {
-      left: var(--space-4);
-      top: var(--space-4);
-      z-index: 10;
-      background: var(--color-surface);
-      padding: var(--space-2) var(--space-4);
+      padding: var(--space-8) var(--gutter) var(--space-16);
     }
   `,
 })
-export class App {}
+export class App {
+  private readonly route = inject(ActivatedRoute);
+
+  /** Pages such as home run edge to edge; the rest sit in the centred column. */
+  protected readonly fullBleed = toSignal(
+    inject(Router).events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => {
+        let r = this.route.snapshot;
+        while (r.firstChild) r = r.firstChild;
+        return !!r.data['fullBleed'];
+      }),
+    ),
+    { initialValue: false },
+  );
+}

@@ -1,0 +1,174 @@
+<div class="page-head">
+  <div>
+    <h1>Storefront</h1>
+    <p class="muted">
+      The shop's name, announcement bar and colours. Changes preview here straight away and reach
+      the shop when you save.
+    </p>
+  </div>
+  <div class="head-actions">
+    <button
+      class="btn btn-secondary"
+      type="button"
+      [disabled]="!dirty() || saving()"
+      (click)="discard()"
+    >
+      Discard changes
+    </button>
+    <button
+      class="btn"
+      type="button"
+      [disabled]="!dirty() || saving() || !storeName().trim()"
+      (click)="save()"
+    >
+      {{ saving() ? 'Saving…' : 'Save changes' }}
+    </button>
+  </div>
+</div>
+
+<div aria-live="polite">
+  @if (notice()) {
+    <div class="notice" role="status">{{ notice() }}</div>
+  }
+  @if (error()) {
+    <div class="alert-error" role="alert">{{ error() }}</div>
+  }
+</div>
+
+@if (loading()) {
+  <div class="skeleton sk-block" aria-busy="true"></div>
+} @else {
+  <div class="layout">
+    <div class="settings">
+      <section class="card">
+        <h2>Shop details</h2>
+        <div class="field">
+          <label for="store_name">Shop name</label>
+          <input
+            id="store_name"
+            maxlength="60"
+            [ngModel]="storeName()"
+            (ngModelChange)="storeName.set($event); preview()"
+          />
+        </div>
+        <div class="field">
+          <label for="announcement">Announcement bar <span class="muted">(optional)</span></label>
+          <input
+            id="announcement"
+            maxlength="160"
+            placeholder="E.g. Free delivery this weekend"
+            [ngModel]="announcement()"
+            (ngModelChange)="announcement.set($event)"
+          />
+          <small class="muted"
+            >Shown above the shop's header. Leave blank for the standard message.</small
+          >
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <h2>Palettes</h2>
+          @if (overrideCount()) {
+            <button class="link" type="button" (click)="resetAll()">Reset all colours</button>
+          }
+        </div>
+        <p class="muted">Start from a palette, then fine-tune any colour below.</p>
+        <div class="presets">
+          @for (p of presets; track p.name) {
+            <button type="button" class="preset" (click)="applyPreset(p)">
+              <span class="swatches" aria-hidden="true">
+                <span [style.background]="presetValue(p, 'primary')"></span>
+                <span [style.background]="presetValue(p, 'accent')"></span>
+                <span [style.background]="presetValue(p, 'background')"></span>
+              </span>
+              {{ p.name }}
+            </button>
+          }
+        </div>
+      </section>
+
+      @for (g of groups; track g.title) {
+        <section class="card">
+          <h2>{{ g.title }}</h2>
+          <div class="colors">
+            @for (c of g.colors; track c.name) {
+              <div class="color" [class.changed]="isOverridden(c.name)">
+                <input
+                  type="color"
+                  class="picker"
+                  [id]="'color-' + c.name"
+                  [value]="value(c.name)"
+                  (input)="setColor(c.name, $any($event.target).value)"
+                />
+                <div class="color-text">
+                  <label [for]="'color-' + c.name">{{ c.label }}</label>
+                  @if (c.hint) {
+                    <small class="muted">{{ c.hint }}</small>
+                  }
+                </div>
+                <input
+                  class="hex"
+                  [attr.aria-label]="c.label + ' hex code'"
+                  maxlength="7"
+                  spellcheck="false"
+                  [value]="value(c.name)"
+                  (change)="setColor(c.name, $any($event.target).value)"
+                />
+                @if (isOverridden(c.name)) {
+                  <button
+                    type="button"
+                    class="reset"
+                    [attr.aria-label]="'Reset ' + c.label + ' to default'"
+                    title="Reset to default"
+                    (click)="resetColor(c.name)"
+                  >
+                    <shr-icon name="returns" />
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    <aside class="preview" aria-label="Preview">
+      <p class="preview-title">Live preview</p>
+      <div class="mock">
+        <div class="m-announce">{{ announcement() || 'Cash on delivery on every order' }}</div>
+        <div class="m-header">
+          <span class="m-brand">{{ storeName() || 'Shop' }}</span>
+          <span class="m-search"></span>
+          <shr-icon name="bag" />
+        </div>
+        <div class="m-hero">
+          <span class="m-eyebrow">New collection</span>
+          <span class="m-title">Considered pieces</span>
+          <span class="m-btn">Shop now</span>
+        </div>
+        <div class="m-body">
+          <div class="m-card">
+            <span class="m-img"><span class="m-badge">−20%</span></span>
+            <span class="m-name">Ceramic vase</span>
+            <span class="m-price"><span class="m-sale">₹1,999</span> <s>₹2,499</s></span>
+          </div>
+          <div class="m-card">
+            <span class="m-img"></span>
+            <span class="m-name">Linen lamp</span>
+            <span class="m-price">₹6,499</span>
+          </div>
+        </div>
+        <div class="m-actions">
+          <span class="m-primary">Add to cart</span>
+          <span class="m-accent">Only a few left</span>
+        </div>
+        <div class="m-status">
+          <span class="ok">Delivered</span><span class="warn">On hold</span
+          ><span class="bad">Cancelled</span>
+        </div>
+        <div class="m-footer">{{ storeName() || 'Shop' }} · Footer</div>
+      </div>
+    </aside>
+  </div>
+}

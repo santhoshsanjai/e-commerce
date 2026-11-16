@@ -8,13 +8,19 @@ import { AuthService } from './auth.service';
 const PAGE_STYLES = `
   :host {
     display: block;
-    max-width: 420px;
-    margin: var(--space-8) auto;
+    max-width: 460px;
+    margin: var(--space-12) auto;
     padding: 0 var(--space-4);
+    animation: fade-up var(--duration-slow) var(--ease-out) both;
+  }
+  .card {
+    padding: var(--space-10) var(--space-8);
+    box-shadow: var(--shadow-md);
   }
   h1 {
-    font-size: var(--font-size-xl);
-    margin-top: 0;
+    font-size: var(--font-size-2xl);
+    margin: 0 0 var(--space-6);
+    text-align: center;
   }
   .btn {
     width: 100%;
@@ -23,13 +29,12 @@ const PAGE_STYLES = `
     text-align: center;
     margin-top: var(--space-4);
     color: var(--color-muted);
+    font-size: var(--font-size-sm);
   }
-  .notice {
-    padding: var(--space-3);
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--color-success) 10%, transparent);
-    color: var(--color-success);
-    margin-bottom: var(--space-4);
+  @media (max-width: 480px) {
+    .card {
+      padding: var(--space-8) var(--space-5);
+    }
   }
 `;
 

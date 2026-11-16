@@ -8,7 +8,7 @@ import {
   ProductDetail,
   ProductSort,
 } from '@shop/shared';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay } from 'rxjs';
 
 export interface ProductQuery {
   q?: string;
@@ -23,8 +23,13 @@ export class CatalogApi {
   private readonly http = inject(HttpClient);
   private readonly base = inject(API_BASE_URL);
 
+  // Shared by the header, home page and listing; loaded once per visit.
+  private readonly categories$ = this.http
+    .get<Category[]>(`${this.base}/categories`)
+    .pipe(shareReplay({ bufferSize: 1, refCount: false }));
+
   categories(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${this.base}/categories`);
+    return this.categories$;
   }
 
   products(query: ProductQuery): Observable<Page<ProductCard>> {

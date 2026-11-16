@@ -1,38 +1,109 @@
-// Design tokens: the single source for colours, spacing and type.
-// Brand colours are placeholders until branding is confirmed (decision 14).
-// Change --color-primary / --color-secondary here and every button, link, focus ring and accent follows.
+// Design tokens: the single source for colours, type, spacing and motion.
+//
+// Colours
+// -------
+// Every colour in both apps comes from the `--color-*` variables below. Nothing else in the
+// codebase may hard-code a colour; tints and hover shades are derived with color-mix().
+//
+// These are the defaults. Staff with the "settings.manage" permission can override any of them
+// in Admin → Storefront; overrides are saved by the API and applied at start-up by
+// StorefrontService (shared/src/lib/storefront). A colour that isn't overridden uses the value here.
+// To add an editable colour: add the variable here and an entry in THEME_COLORS
+// (shared/src/lib/storefront/theme-colors.ts).
 :root {
-  --color-primary: #1f4e79;
-  --color-primary-contrast: #ffffff;
-  --color-secondary: #f2a541;
-  --color-secondary-contrast: #1b1b1b;
+  // Brand
+  --color-primary: #1d2b3a; // buttons, links, active states (deep ink navy)
+  --color-primary-contrast: #ffffff; // text on primary
+  --color-accent: #b08d57; // highlights, badges, prices on sale banners (antique brass)
+  --color-accent-contrast: #ffffff; // text on accent
 
-  --color-background: #f7f8fa;
-  --color-surface: #ffffff;
-  --color-text: #202733;
-  --color-muted: #667085;
-  --color-border: #e4e7ec;
+  // Page
+  --color-background: #faf8f5; // page background (warm ivory)
+  --color-surface: #ffffff; // cards, panels, inputs
+  --color-surface-alt: #f2eee8; // soft bands, image wells, hovers
+  --color-text: #1b1e23;
+  --color-muted: #6b6f76;
+  --color-border: #e6e0d7;
 
-  // Semantic status colours stay separate from brand colours.
-  --color-success: #16803c;
-  --color-warning: #b54708;
+  // Header, announcement bar and footer
+  --color-header-bg: #ffffff;
+  --color-header-text: #1b1e23;
+  --color-announcement-bg: #1d2b3a;
+  --color-announcement-text: #f4efe7;
+  --color-footer-bg: #151f2a;
+  --color-footer-text: #d8d2c8;
+
+  // Hero band on the home page (a two-stop gradient)
+  --color-hero-start: #1d2b3a;
+  --color-hero-end: #3b4d5f;
+  --color-hero-text: #ffffff;
+
+  // Admin sidebar
+  --color-sidebar-bg: #151f2a;
+  --color-sidebar-text: #c9ced6;
+
+  // Status (kept apart from the brand colours)
+  --color-sale: #a4262c;
+  --color-success: #1f7a4d;
+  --color-warning: #a15c07;
   --color-danger: #b42318;
 
-  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  // Derived colours: follow the ones above automatically.
+  --color-secondary: var(--color-accent);
+  --color-secondary-contrast: var(--color-accent-contrast);
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 86%, var(--color-text));
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  --color-overlay: color-mix(in srgb, var(--color-text) 45%, transparent);
+  --color-skeleton: color-mix(in srgb, var(--color-border) 70%, var(--color-surface));
+  --color-skeleton-shine: color-mix(in srgb, var(--color-surface) 80%, transparent);
+
+  // Type: a classic serif for display, a clean sans for everything you read and click.
+  --font-display: 'Cormorant Garamond', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-family:
+    'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.25rem;
   --font-size-xl: 1.75rem;
+  --font-size-2xl: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+  --font-size-hero: clamp(2.5rem, 1.5rem + 4.5vw, 4.75rem);
+  --tracking-wide: 0.14em;
 
+  // Space
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --container: 1280px;
+  --gutter: clamp(1rem, 0.6rem + 1.6vw, 2rem);
 
+  // Shape and depth
   --radius-sm: 4px;
   --radius-md: 8px;
-  --shadow-sm: 0 1px 2px rgb(16 24 40 / 6%);
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px color-mix(in srgb, var(--color-text) 6%, transparent);
+  --shadow-md:
+    0 2px 6px color-mix(in srgb, var(--color-text) 5%, transparent),
+    0 10px 24px -8px color-mix(in srgb, var(--color-text) 12%, transparent);
+  --shadow-lg:
+    0 4px 10px color-mix(in srgb, var(--color-text) 5%, transparent),
+    0 24px 48px -16px color-mix(in srgb, var(--color-text) 22%, transparent);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 30%, transparent);
+
+  // Motion. Durations drop to ~0 when the visitor asks for reduced motion (see _base.scss).
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 160ms;
+  --duration-base: 280ms;
+  --duration-slow: 700ms;
 }

@@ -3,16 +3,19 @@ import { Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MoneyPipe, ORDER_STATUS_LABEL, OrderStatusBadge } from '@shop/shared';
+import { Icon, MoneyPipe, ORDER_STATUS_LABEL, OrderStatusBadge } from '@shop/shared';
 import { OrdersApi } from './orders.api';
 
 @Component({
   selector: 'buy-order-detail-page',
-  imports: [RouterLink, MoneyPipe, DatePipe, OrderStatusBadge],
+  imports: [RouterLink, MoneyPipe, DatePipe, OrderStatusBadge, Icon],
   template: `
-    <a routerLink="/orders" class="back">← My orders</a>
+    <a routerLink="/orders" class="back"><shr-icon name="chevron-left" /> My orders</a>
     @if (order.isLoading()) {
-      <p aria-busy="true">Loading…</p>
+      <div aria-busy="true">
+        <div class="skeleton sk-title"></div>
+        <div class="skeleton sk-block"></div>
+      </div>
     } @else if (notFound()) {
       <h1>Order not found</h1>
       <p>Check the order number, or see <a routerLink="/orders">all your orders</a>.</p>
@@ -24,11 +27,13 @@ import { OrdersApi } from './orders.api';
     } @else if (order.value(); as o) {
       @if (justPlaced()) {
         <div class="card thanks" role="status">
+          <span class="tick" aria-hidden="true"><shr-icon name="check" /></span>
           <h1>Thank you, your order is placed</h1>
           <p>
             Your order number is <strong>{{ o.order_number }}</strong>. Please keep
             {{ o.total_minor | money: o.currency }} ready to pay in cash on delivery.
           </p>
+          <a class="btn btn-secondary" routerLink="/shop">Continue shopping</a>
         </div>
       }
       <div class="head">
@@ -48,7 +53,7 @@ import { OrdersApi } from './orders.api';
             @for (item of o.items; track item.sku) {
               <li>
                 <span>
-                  {{ item.product_name }}
+                  <span class="item-name">{{ item.product_name }}</span>
                   <span class="muted"
                     >{{ item.product_number }} · {{ item.unit_price_minor | money: o.currency }} ×
                     {{ item.qty }}</span

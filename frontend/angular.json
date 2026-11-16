@@ -29,7 +29,13 @@
                 "input": "projects/buyer/public"
               }
             ],
-            "styles": ["projects/buyer/src/styles.scss"]
+            "styles": [
+              "@fontsource-variable/inter/index.css",
+              "@fontsource/cormorant-garamond/latin-500.css",
+              "@fontsource/cormorant-garamond/latin-600.css",
+              "@fontsource/cormorant-garamond/latin-500-italic.css",
+              "projects/buyer/src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -41,8 +47,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "10kB"
                 }
               ],
               "outputHashing": "all",
@@ -114,7 +120,13 @@
                 "input": "projects/admin/public"
               }
             ],
-            "styles": ["projects/admin/src/styles.scss"]
+            "styles": [
+              "@fontsource-variable/inter/index.css",
+              "@fontsource/cormorant-garamond/latin-500.css",
+              "@fontsource/cormorant-garamond/latin-600.css",
+              "@fontsource/cormorant-garamond/latin-500-italic.css",
+              "projects/admin/src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -126,8 +138,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "10kB"
                 }
               ],
               "outputHashing": "all",

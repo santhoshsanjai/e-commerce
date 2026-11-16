@@ -84,6 +84,23 @@ QR code and are shown ten one-time recovery codes for a lost phone.
   every staff member sets up their app again:
   `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
 
+## Look and feel: colours, name and announcement
+
+Every colour in both apps is a design token (`--color-*`) defined once in
+`frontend/projects/shared/styles/_tokens.scss`; components never hard-code colours, and hover shades and
+tints are derived with `color-mix()`. Staff with the **settings.manage** permission (Super Admin and
+Admin by default) can change the shop's name, the announcement bar and any of these colours in
+**Admin → Storefront**, starting from a ready-made palette if they like. Changes preview live in the
+admin portal and are saved by the API (`/api/v1/admin/storefront`); both apps read them at start-up
+from the public `/api/v1/storefront`.
+
+To make another colour editable, add the variable to `_tokens.scss` and an entry to
+`THEME_COLOR_GROUPS` in `frontend/projects/shared/src/lib/storefront/theme-colors.ts`.
+
+Type is self-hosted (Cormorant Garamond for display, Inter for text) so the Content Security Policy
+stays `font-src 'self'`. Animations (page transitions, scroll reveals, hover effects, loading
+skeletons) all switch off for visitors who ask their device for reduced motion.
+
 ## Checks
 
 ```bash
