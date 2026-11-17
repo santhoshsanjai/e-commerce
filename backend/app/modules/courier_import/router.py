@@ -8,6 +8,7 @@ from app.core.exceptions import AppError
 from app.infrastructure.storage import FileStore, get_file_store
 from app.modules.courier_import import service
 from app.modules.courier_import.schemas import CourierImportDetail, CourierImportOut
+from app.modules.notifications.dependencies import SendQueuedEmails
 from app.modules.users.models import User
 from app.shared.pagination import Page, PageParams, page_params
 
@@ -50,7 +51,7 @@ def get_import(import_id: uuid.UUID, db: DbSession, _: CanImport) -> CourierImpo
     return service.detail(db, service.get(db, import_id))
 
 
-@router.post("/{import_id}/confirm")
+@router.post("/{import_id}/confirm", dependencies=[SendQueuedEmails])
 def confirm(
     import_id: uuid.UUID, request: Request, db: DbSession, actor: CanImport
 ) -> CourierImportDetail:

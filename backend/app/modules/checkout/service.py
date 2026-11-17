@@ -20,6 +20,7 @@ from app.modules.cart.models import Cart
 from app.modules.cart.service import line_problem
 from app.modules.catalog.models import Product, ProductSku
 from app.modules.checkout.schemas import CheckoutRequest
+from app.modules.notifications.service import queue_order_email
 from app.modules.orders.lifecycle import EventSource, OrderStatus, PaymentMethod, PaymentStatus
 from app.modules.orders.models import Order, OrderItem, OrderStatusEvent
 from app.modules.users.models import User
@@ -142,6 +143,7 @@ def place_order(
         ],
     )
     db.add(order)
+    queue_order_email(db, order, None, initial)
     cart.items.clear()
     try:
         db.commit()

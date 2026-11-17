@@ -5,13 +5,14 @@ from fastapi import APIRouter, Header, Response, status
 from app.core.dependencies import CurrentBuyer, DbSession
 from app.modules.checkout import service
 from app.modules.checkout.schemas import CheckoutRequest
+from app.modules.notifications.dependencies import SendQueuedEmails
 from app.modules.orders.schemas import OrderDetail
 from app.modules.orders.service import to_detail
 
 router = APIRouter(tags=["buyer: checkout"])
 
 
-@router.post("/checkout", status_code=status.HTTP_201_CREATED)
+@router.post("/checkout", status_code=status.HTTP_201_CREATED, dependencies=[SendQueuedEmails])
 def checkout(
     data: CheckoutRequest,
     response: Response,

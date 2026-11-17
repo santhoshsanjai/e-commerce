@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from app.core.dependencies import CurrentBuyer, DbSession, require_permission
 from app.modules.access_control.service import permissions_for
+from app.modules.notifications.dependencies import SendQueuedEmails
 from app.modules.orders import service
 from app.modules.orders.lifecycle import OrderStatus
 from app.modules.orders.schemas import (
@@ -54,7 +55,7 @@ def admin_order(order_id: uuid.UUID, db: DbSession, _: CanViewOrders) -> AdminOr
     return service.to_admin_detail(service.get_order(db, order_id))
 
 
-@admin_router.post("/{order_id}/status")
+@admin_router.post("/{order_id}/status", dependencies=[SendQueuedEmails])
 def change_status(
     order_id: uuid.UUID,
     data: StatusChangeIn,

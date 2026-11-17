@@ -253,6 +253,30 @@ resource "aws_ecs_task_definition" "backup" {
   }])
 }
 
+# Scheduled API jobs (see jobs.tf): the API image and settings, without the web server.
+resource "aws_ecs_task_definition" "jobs" {
+  family                   = "${var.name}-jobs"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
+  execution_role_arn       = aws_iam_role.execution.arn
+  task_role_arn            = aws_iam_role.api.arn
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+  container_definitions = jsonencode([{
+    name             = "job"
+    image            = local.image["api"]
+    essential        = true
+    command          = ["python", "-m", "app.cli", "send-emails"]
+    environment      = local.api_environment
+    secrets          = local.api_secrets
+    logConfiguration = local.log_config["api"]
+  }])
+}
+
 # --- services --------------------------------------------------------------------------------
 
 locals {

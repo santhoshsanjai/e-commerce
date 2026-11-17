@@ -21,15 +21,18 @@ resource "aws_iam_role_policy" "scheduler" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
-        Action    = ["ecs:RunTask"]
-        Resource  = [replace(aws_ecs_task_definition.backup.arn, "/:\\d+$/", ":*")]
+        Effect = "Allow"
+        Action = ["ecs:RunTask"]
+        Resource = [
+          replace(aws_ecs_task_definition.backup.arn, "/:\\d+$/", ":*"),
+          replace(aws_ecs_task_definition.jobs.arn, "/:\\d+$/", ":*"),
+        ]
         Condition = { ArnEquals = { "ecs:cluster" = aws_ecs_cluster.main.arn } }
       },
       {
         Effect   = "Allow"
         Action   = ["iam:PassRole"]
-        Resource = [aws_iam_role.execution.arn, aws_iam_role.backup.arn]
+        Resource = [aws_iam_role.execution.arn, aws_iam_role.backup.arn, aws_iam_role.api.arn]
       },
     ]
   })

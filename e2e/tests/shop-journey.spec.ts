@@ -6,7 +6,15 @@
 import { expect, Page, test } from '@playwright/test';
 import ExcelJS from 'exceljs';
 import path from 'node:path';
-import { ADMIN_URL, BUYER_URL, noSidewaysScroll, RUN, staffSignIn, watchConsole } from './env';
+import {
+  ADMIN_URL,
+  BUYER_URL,
+  noSidewaysScroll,
+  readEmail,
+  RUN,
+  staffSignIn,
+  watchConsole,
+} from './env';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -105,6 +113,10 @@ test('a new buyer finds the product, orders it and sees the confirmation', async
   orderNumber = (await shopper.locator('strong:has-text("ORD-")').first().innerText()).trim();
   expect(orderNumber).toMatch(/^ORD-\d{4}-\d+$/);
   await expect(shopper.locator('main')).toContainText('₹999.00');
+
+  const email = await readEmail(buyer.email, `Order ${orderNumber} confirmed`);
+  expect(email).toContain(`2 x ${product}`);
+  expect(email).toContain('Total: ₹999');
 });
 
 test('the dashboard and order list show the new order', async () => {
@@ -179,6 +191,9 @@ test('the buyer sees the order as delivered', async () => {
   await shopper.click(`text=${orderNumber}`);
   await expect(shopper.locator('main')).toContainText('Delivered');
   await expect(shopper.locator('main')).toContainText(`AWB${RUN}`);
+  expect(await readEmail(buyer.email, `Order ${orderNumber} delivered`)).toContain(
+    `/orders/${orderNumber}`,
+  );
 });
 
 test('the sale shows in the sales report and the Excel download', async () => {

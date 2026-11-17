@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import AppError, PermissionDenied
 from app.modules.audit import service as audit
 from app.modules.catalog.models import ProductSku
+from app.modules.notifications.service import queue_order_email
 from app.modules.orders.lifecycle import (
     CANCELLABLE_WITH_RESTOCK,
     REASON_REQUIRED,
@@ -116,7 +117,7 @@ def apply_transition(
     Callers lock the order row first and check permissions; `override` skips the lifecycle map
     and is only passed for staff holding `orders.status.override`.
     Side effects: cancelling before courier handover puts stock back; a cash-on-delivery order is
-    marked paid when delivered.
+    marked paid when delivered; the buyer's email for the change (if any) is queued.
     """
     if target == order.status:
         raise AppError(
@@ -153,6 +154,7 @@ def apply_transition(
         )
     )
     order.status = target
+    queue_order_email(db, order, previous, target)
 
 
 def _restock(db: Session, order: Order) -> None:

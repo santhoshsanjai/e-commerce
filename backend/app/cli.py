@@ -122,6 +122,19 @@ def seed_sample_products() -> int:
     return 0
 
 
+def send_emails() -> int:
+    """Send queued order emails (retrying failed ones) and delete sent ones older than 30 days.
+    Runs every few minutes as a scheduled task."""
+    from app.infrastructure.email import get_email_sender
+    from app.modules.notifications.service import deliver_pending, purge_sent
+
+    sent = deliver_pending(get_email_sender(), limit=500)
+    with SessionLocal() as db:
+        purged = purge_sent(db)
+    print(f"Sent {sent} email(s); removed {purged} old sent email(s).")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="app.cli")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -133,6 +146,7 @@ def main() -> int:
     reset.add_argument("--email", required=True)
     sub.add_parser("rotate-mfa-key")
     sub.add_parser("seed-sample-products")
+    sub.add_parser("send-emails")
     args = parser.parse_args()
     if args.command == "create-superadmin":
         return create_superadmin(args.email, args.name, args.random_password)
@@ -142,6 +156,8 @@ def main() -> int:
         return rotate_mfa_key()
     if args.command == "seed-sample-products":
         return seed_sample_products()
+    if args.command == "send-emails":
+        return send_emails()
     return 1
 
 
