@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     # Public base URL that serves the media bucket (CDN in production).
     media_public_base_url: str = "http://localhost:8333/product-media"
     max_image_bytes: int = 10 * 1024 * 1024
+    max_video_bytes: int = 100 * 1024 * 1024
 
     default_currency: str = "INR"
     # Flat delivery charge in minor units (decision 8 default: free delivery).

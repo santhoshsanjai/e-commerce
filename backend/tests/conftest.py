@@ -82,6 +82,9 @@ class FakeStorage:
     def put(self, key: str, data: bytes, content_type: str) -> None:
         self.objects[key] = (data, content_type)
 
+    def put_file(self, key: str, file, content_type: str) -> None:
+        self.objects[key] = (file.read(), content_type)
+
     def delete(self, key: str) -> None:
         self.objects.pop(key, None)
 

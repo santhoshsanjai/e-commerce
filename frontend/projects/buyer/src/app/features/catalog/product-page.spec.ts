@@ -29,6 +29,7 @@ const PRODUCT: ProductDetail = {
   },
   attributes: [],
   media: [],
+  prices_include_gst: true,
 };
 
 describe('ProductPage addresses', () => {
@@ -82,6 +83,33 @@ describe('ProductPage addresses', () => {
     await harness.fixture.whenStable();
 
     expect(TestBed.inject(Router).url).toBe('/p/glazed-stoneware-mug-navy/P-000002');
+  });
+
+  it('plays a product video from the gallery', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/p/glazed-stoneware-mug-navy/P-000002');
+    const media = (type: 'IMAGE' | 'VIDEO', id: string) => ({
+      id,
+      type,
+      url: `https://cdn.test/${id}`,
+      alt_text: type === 'VIDEO' ? 'Mug being filled' : '',
+      width: null,
+      height: null,
+      is_primary: type === 'IMAGE',
+      sort_order: 0,
+    });
+    http
+      .expectOne('/api/v1/products/by-number/P-000002')
+      .flush({ ...PRODUCT, media: [media('IMAGE', 'img'), media('VIDEO', 'vid')] });
+    await harness.fixture.whenStable();
+    const el = harness.routeNativeElement as HTMLElement;
+    expect(el.querySelector('.main-image img')).not.toBeNull();
+    el.querySelector<HTMLButtonElement>('button[aria-label="Play video 2"]')!.click();
+    await harness.fixture.whenStable();
+    const video = el.querySelector<HTMLVideoElement>('.main-image video')!;
+    expect(video.getAttribute('src')).toBe('https://cdn.test/vid');
+    expect(video.getAttribute('aria-label')).toBe('Mug being filled');
+    expect(el.textContent).toContain('Price includes GST');
   });
 
   it('shows "Product not found" for an unknown number', async () => {

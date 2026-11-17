@@ -54,6 +54,8 @@ export interface ProductDetail extends ProductCard {
   category: Category;
   attributes: Attribute[];
   media: Media[];
+  /** Whether the price shown already includes GST. */
+  prices_include_gst: boolean;
 }
 
 export interface AdminProductListItem {

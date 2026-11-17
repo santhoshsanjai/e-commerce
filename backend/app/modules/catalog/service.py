@@ -1,6 +1,6 @@
 import uuid
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, BinaryIO
 
 from fastapi import Request, status
 from sqlalchemy import ColumnElement, Select, func, or_, select, text
@@ -36,6 +36,8 @@ from app.modules.catalog.schemas import (
     SkuOut,
 )
 from app.modules.media.images import process_image
+from app.modules.media.videos import check_video
+from app.modules.pricing import service as pricing
 from app.modules.users.models import User
 from app.shared.pagination import Page, PageParams
 from app.shared.text import slugify
@@ -390,6 +392,52 @@ def add_image(
     return product
 
 
+MAX_VIDEOS = 3
+
+
+def add_video(
+    db: Session,
+    storage: ObjectStorage,
+    product_id: uuid.UUID,
+    file: BinaryIO,
+    size: int,
+    alt_text: str,
+    actor: User,
+) -> Product:
+    product = get_product(db, product_id)
+    if product.status is ProductStatus.ARCHIVED:
+        raise AppError("product_archived", "Archived products cannot be edited")
+    if sum(m.type is MediaType.VIDEO for m in product.media) >= MAX_VIDEOS:
+        raise AppError(
+            "too_many_videos",
+            f"A product can have at most {MAX_VIDEOS} videos",
+            status.HTTP_409_CONFLICT,
+        )
+    kind = check_video(file.read(64))
+    file.seek(0)
+    key = f"products/{product.id}/{uuid.uuid4().hex}.{kind.extension}"
+    storage.put_file(key, file, kind.mime_type)
+    product.media.append(
+        ProductMedia(
+            type=MediaType.VIDEO,
+            object_key=key,
+            mime_type=kind.mime_type,
+            size_bytes=size,
+            alt_text=alt_text.strip()[:300],
+            sort_order=len(product.media),
+            is_primary=False,
+        )
+    )
+    product.updated_by = actor.id
+    try:
+        db.commit()
+    except Exception:
+        storage.delete(key)
+        raise
+    db.refresh(product)
+    return product
+
+
 def remove_media(
     db: Session, storage: ObjectStorage, product_id: uuid.UUID, media_id: uuid.UUID, actor: User
 ) -> Product:
@@ -397,13 +445,15 @@ def remove_media(
     media = next((m for m in product.media if m.id == media_id), None)
     if media is None:
         raise _not_found("media")
-    if product.status is ProductStatus.PUBLISHED and media.is_primary and len(product.media) == 1:
+    images = [m for m in product.media if m.type is MediaType.IMAGE]
+    if product.status is ProductStatus.PUBLISHED and media.is_primary and len(images) == 1:
         raise AppError("last_image", "A published product must keep at least one image")
     was_primary = media.is_primary
     product.media.remove(media)
     db.flush()
-    if was_primary and product.media:
-        product.media[0].is_primary = True
+    next_image = next((m for m in product.media if m.type is MediaType.IMAGE), None)
+    if was_primary and next_image is not None:
+        next_image.is_primary = True
     product.updated_by = actor.id
     db.commit()
     storage.delete(media.object_key)
@@ -483,7 +533,7 @@ def get_published_by_slug(db: Session, storage: ObjectStorage, slug: str) -> Pro
     product = db.scalar(_published().where(Product.slug == slug))
     if product is None:
         raise _not_found("product")
-    return _detail(product, storage)
+    return _detail(db, product, storage)
 
 
 def get_published_by_number(
@@ -493,12 +543,13 @@ def get_published_by_number(
     product = db.scalar(_published().where(Product.product_number == product_number.upper()))
     if product is None:
         raise _not_found("product")
-    return _detail(product, storage)
+    return _detail(db, product, storage)
 
 
-def _detail(product: Product, storage: ObjectStorage) -> ProductDetail:
+def _detail(db: Session, product: Product, storage: ObjectStorage) -> ProductDetail:
     card = _card(product, storage)
     return ProductDetail(
+        prices_include_gst=pricing.get(db).prices_include_gst,
         **card.model_dump(),
         description=product.description,
         category=CategoryOut.model_validate(product.category),
