@@ -27,5 +27,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Staff', icon: 'users', path: '/staff', permission: 'users.view' },
   { label: 'Roles', icon: 'key', path: '/roles', permission: 'roles.view' },
   { label: 'Storefront', icon: 'palette', path: '/storefront', permission: 'settings.manage' },
+  { label: 'Delivery and GST', icon: 'truck', path: '/charges', permission: 'settings.manage' },
   { label: 'Audit log', icon: 'file', path: '/audit-log', permission: 'audit_logs.view' },
 ];

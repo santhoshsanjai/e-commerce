@@ -64,16 +64,16 @@ def _address(order: Order) -> str:
 
 
 def _totals(order: Order) -> str:
-    rows = [("Items", order.subtotal_minor)]
+    rows = [f"  Items: {rupees(order.subtotal_minor)}"]
     if order.discount_minor:
-        rows.append(("Discount", -order.discount_minor))
-    rows.append(("Delivery", order.shipping_minor))
+        rows.append(f"  Discount: -{rupees(order.discount_minor)}")
+    rows.append(f"  Delivery: {rupees(order.shipping_minor) if order.shipping_minor else 'free'}")
     if order.tax_minor:
-        rows.append(("Tax", order.tax_minor))
-    rows.append(("Total", order.total_minor))
-    return "\n".join(
-        f"  {label}: {'free' if label == 'Delivery' and v == 0 else rupees(v)}" for label, v in rows
-    )
+        rows.append(f"  GST: {rupees(order.tax_minor)}")
+    total = f"  Total: {rupees(order.total_minor)}"
+    if order.prices_include_gst and order.gst_minor:
+        total += f" (includes GST of {rupees(order.gst_minor)})"
+    return "\n".join([*rows, total])
 
 
 def _compose(order: Order, previous: OrderStatus | None, target: OrderStatus) -> tuple[str, str]:

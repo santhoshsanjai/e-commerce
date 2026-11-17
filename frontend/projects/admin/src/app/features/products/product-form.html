@@ -100,6 +100,25 @@
         <label for="stock">Stock quantity</label>
         <input id="stock" type="number" min="0" step="1" formControlName="stock_qty" />
       </div>
+      <div class="field">
+        <label for="gst_rate">GST rate (%)</label>
+        <input
+          id="gst_rate"
+          inputmode="decimal"
+          list="gst-slabs"
+          formControlName="gst_rate"
+          placeholder="Shop default"
+        />
+        <datalist id="gst-slabs">
+          <option value="0"></option>
+          <option value="5"></option>
+          <option value="18"></option>
+          <option value="40"></option>
+        </datalist>
+        @if (form.controls.gst_rate.touched && form.controls.gst_rate.invalid) {
+          <span class="field-error">Enter a rate from 0 to 40, or leave blank.</span>
+        }
+      </div>
     </div>
     <div class="field">
       <label for="short">Short description</label>

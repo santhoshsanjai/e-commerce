@@ -217,3 +217,7 @@ Health checks, logs, alerts, backups, restoring and secret rotation are in
     cancelled and returned. Sent through an outbox so none is lost if email is briefly down
     ([docs/operations.md](docs/operations.md#emails-to-buyers)). Locally they arrive in Mailpit
     (http://localhost:8025) when the API runs with `EMAIL_BACKEND=smtp`.
+  - Delivery and GST: a "Delivery and GST" admin page sets the delivery charge, free delivery
+    from an amount, whether prices include GST and the default rate; each product can have its
+    own rate. The cart, checkout, order pages and emails show the GST
+    ([ADR 0009](docs/adr/0009-delivery-charges-and-gst.md)).

@@ -15,6 +15,8 @@ class OrderItemOut(BaseModel):
     unit_price_minor: int
     qty: int
     line_total_minor: int
+    gst_rate_bp: int
+    gst_minor: int
 
 
 class StatusEventOut(BaseModel):
@@ -55,6 +57,8 @@ class OrderDetail(OrderSummary):
     shipping_minor: int
     tax_minor: int
     discount_minor: int
+    gst_minor: int
+    prices_include_gst: bool
     items: list[OrderItemOut]
     shipping_address: ShippingAddressOut
     delivery_instructions: str

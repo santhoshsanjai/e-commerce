@@ -256,3 +256,10 @@ address {
     display: none;
   }
 }
+
+.gst {
+  margin: var(--space-2) 0 0;
+  text-align: right;
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}

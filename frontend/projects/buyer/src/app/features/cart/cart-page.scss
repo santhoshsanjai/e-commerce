@@ -152,3 +152,14 @@
     grid-column: 2;
   }
 }
+
+.gst,
+.free-hint {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.free-hint {
+  color: var(--color-text);
+}

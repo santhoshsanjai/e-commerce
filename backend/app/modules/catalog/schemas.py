@@ -63,6 +63,9 @@ class AttributeIn(BaseModel):
 
 
 class _ProductFields(BaseModel):
+    gst_rate_bp: int | None = Field(
+        default=None, ge=0, le=4000, description="GST in basis points (1800 = 18%); null: default"
+    )
     short_description: str = Field(default="", max_length=300)
     description: str = Field(default="", max_length=20000)
     attributes: list[AttributeIn] = Field(default_factory=list, max_length=50)
@@ -98,6 +101,7 @@ class ProductUpdate(BaseModel):
     price_minor: int | None = Field(default=None, ge=0)
     compare_at_minor: int | None = Field(default=None, ge=0)
     stock_qty: int | None = Field(default=None, ge=0)
+    gst_rate_bp: int | None = Field(default=None, ge=0, le=4000, description="null: shop default")
 
 
 class MediaOut(BaseModel):
@@ -138,6 +142,7 @@ class AdminProductOut(BaseModel):
     category: CategoryOut
     short_description: str
     description: str
+    gst_rate_bp: int | None
     sku: SkuOut
     attributes: list[AttributeOut]
     media: list[MediaOut]

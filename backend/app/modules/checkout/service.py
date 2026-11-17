@@ -23,6 +23,7 @@ from app.modules.checkout.schemas import CheckoutRequest
 from app.modules.notifications.service import queue_order_email
 from app.modules.orders.lifecycle import EventSource, OrderStatus, PaymentMethod, PaymentStatus
 from app.modules.orders.models import Order, OrderItem, OrderStatusEvent
+from app.modules.pricing import service as pricing
 from app.modules.users.models import User
 
 
@@ -78,9 +79,11 @@ def place_order(
 
     settings = get_settings()
     items: list[OrderItem] = []
+    rates: list[int | None] = []
     for position, item in enumerate(cart.items):
         sku = next(s for s in skus if s.id == item.sku_id)
         product = products[sku.product_id]
+        rates.append(product.gst_rate_bp)
         sku.stock_qty -= item.qty
         items.append(
             OrderItem(
@@ -94,8 +97,13 @@ def place_order(
                 line_total_minor=sku.price_minor * item.qty,
             )
         )
-    subtotal = sum(i.line_total_minor for i in items)
-    shipping = settings.shipping_fee_minor
+    priced = pricing.quote(
+        pricing.get(db),
+        [pricing.Line(i.line_total_minor, r) for i, r in zip(items, rates, strict=True)],
+    )
+    for line, rate, gst in zip(items, priced.line_rates_bp, priced.line_gst_minor, strict=True):
+        line.gst_rate_bp = rate
+        line.gst_minor = gst
     number = db.scalar(text("SELECT nextval('order_number_seq')"))
     now = datetime.now(UTC)
     # Cash on delivery needs no payment step, so the order is confirmed immediately (ADR 0005).
@@ -111,11 +119,13 @@ def place_order(
         payment_method=data.payment_method,
         payment_status=PaymentStatus.PENDING,
         currency=settings.default_currency,
-        subtotal_minor=subtotal,
-        shipping_minor=shipping,
-        tax_minor=0,
+        subtotal_minor=priced.subtotal_minor,
+        shipping_minor=priced.shipping_minor,
+        tax_minor=priced.tax_minor,
         discount_minor=0,
-        total_minor=subtotal + shipping,
+        total_minor=priced.total_minor,
+        gst_minor=priced.gst_minor,
+        prices_include_gst=priced.prices_include_gst,
         customer_name=user.full_name,
         customer_email=user.email,
         ship_name=address.recipient_name,

@@ -14,5 +14,6 @@ ADR says what that would cost.
 | [0006](0006-country-and-currency.md) | One country and currency (India, INR) | Provisional (handoff Q9) |
 | [0007](0007-auth-and-rbac.md) | Authentication and role-based access | Accepted |
 | [0008](0008-courier-file-format.md) | Our own round-trip courier Excel format | Provisional (owner, 2026-11-14) |
+| [0009](0009-delivery-charges-and-gst.md) | Delivery charges and GST set in the admin portal | Provisional (handoff Q8) |
 
 Template: Context, Decision, Consequences, and (for provisional ADRs) What changes if revisited.

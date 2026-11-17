@@ -22,6 +22,8 @@ import { AdminCatalogApi } from './admin-catalog.api';
 import { StatusChip } from './status-chip';
 
 const MONEY = /^\d{1,9}(\.\d{1,2})?$/;
+/** 0 to 40, up to two decimals (e.g. 0.25 for rough diamonds). */
+const GST_RATE = /^(40(\.0{1,2})?|[1-3]?\d(\.\d{1,2})?)$/;
 
 /** Create a product, or edit one when an id is in the route. */
 @Component({
@@ -55,6 +57,8 @@ export class ProductForm implements OnInit {
     price: ['', [Validators.required, Validators.pattern(MONEY)]],
     compare_at: ['', Validators.pattern(MONEY)],
     stock_qty: [0, [Validators.required, Validators.min(0)]],
+    /** Percent as typed; blank uses the shop's default rate. */
+    gst_rate: ['', Validators.pattern(GST_RATE)],
     short_description: ['', Validators.maxLength(300)],
     description: [''],
     attributes: this.fb.array<FormGroup>([]),
@@ -97,6 +101,7 @@ export class ProductForm implements OnInit {
       price_minor: toMinorUnits(v.price),
       compare_at_minor: v.compare_at ? toMinorUnits(v.compare_at) : null,
       stock_qty: Number(v.stock_qty),
+      gst_rate_bp: v.gst_rate === '' ? null : Math.round(Number(v.gst_rate) * 100),
       short_description: v.short_description,
       description: v.description,
       attributes: v.attributes as { name: string; value: string }[],
@@ -163,6 +168,7 @@ export class ProductForm implements OnInit {
       price: toMajorUnits(p.sku.price_minor),
       compare_at: p.sku.compare_at_minor ? toMajorUnits(p.sku.compare_at_minor) : '',
       stock_qty: p.sku.stock_qty,
+      gst_rate: p.gst_rate_bp === null ? '' : String(p.gst_rate_bp / 100),
       short_description: p.short_description,
       description: p.description,
     });
