@@ -62,6 +62,13 @@ export class AdminCatalogApi {
     return this.http.post<AdminProduct>(`${this.base}/products/${id}/media`, form);
   }
 
+  uploadVideo(id: string, file: File, altText: string): Observable<AdminProduct> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('alt_text', altText);
+    return this.http.post<AdminProduct>(`${this.base}/products/${id}/videos`, form);
+  }
+
   deleteMedia(id: string, mediaId: string): Observable<AdminProduct> {
     return this.http.delete<AdminProduct>(`${this.base}/products/${id}/media/${mediaId}`);
   }

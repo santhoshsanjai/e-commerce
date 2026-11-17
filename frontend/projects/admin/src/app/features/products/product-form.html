@@ -170,7 +170,7 @@
 
   @if (product(); as p) {
     <section class="card images" aria-labelledby="images-title">
-      <h2 id="images-title">Images</h2>
+      <h2 id="images-title">Images and videos</h2>
       @if (p.media.length === 0) {
         <p class="hint">
           Add at least one image before publishing. The first image is the main one.
@@ -179,8 +179,15 @@
       <ul>
         @for (m of p.media; track m.id) {
           <li>
-            <img [src]="m.url" [alt]="m.alt_text" />
+            @if (m.type === 'VIDEO') {
+              <video [src]="m.url" preload="metadata" muted controls></video>
+            } @else {
+              <img [src]="m.url" [alt]="m.alt_text" />
+            }
             <div>
+              @if (m.type === 'VIDEO') {
+                <strong>Video</strong>
+              }
               @if (m.is_primary) {
                 <strong>Main image</strong>
               }
@@ -214,6 +221,22 @@
             #file
           />
           <p class="hint">JPEG, PNG or WebP, up to 10 MB.</p>
+          <label class="btn btn-secondary" for="video-file">
+            {{ uploadingVideo() ? 'Uploading video…' : 'Upload video' }}
+          </label>
+          <input
+            id="video-file"
+            class="visually-hidden"
+            type="file"
+            accept="video/mp4,video/webm"
+            [disabled]="busy()"
+            (change)="uploadVideo(videoFile)"
+            #videoFile
+          />
+          <p class="hint">
+            MP4 or WebM, up to 100 MB, at most 3 per product. Videos play after the pictures on the
+            product page; the description above is used for them too.
+          </p>
         </div>
       }
     </section>

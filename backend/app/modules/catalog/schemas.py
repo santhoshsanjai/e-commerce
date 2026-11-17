@@ -182,6 +182,8 @@ class ProductCard(BaseModel):
 
 
 class ProductDetail(ProductCard):
+    # Whether the price shown already includes GST (ADR 0009).
+    prices_include_gst: bool
     description: str
     category: CategoryOut
     attributes: list[AttributeOut]

@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Protocol
+from typing import BinaryIO, Protocol
 
 import boto3
 
@@ -8,6 +8,7 @@ from app.core.config import get_settings
 
 class ObjectStorage(Protocol):
     def put(self, key: str, data: bytes, content_type: str) -> None: ...
+    def put_file(self, key: str, file: BinaryIO, content_type: str) -> None: ...
     def delete(self, key: str) -> None: ...
     def public_url(self, key: str) -> str: ...
 
@@ -34,6 +35,18 @@ class S3Storage:
             Body=data,
             ContentType=content_type,
             CacheControl="public, max-age=31536000, immutable",
+        )
+
+    def put_file(self, key: str, file: BinaryIO, content_type: str) -> None:
+        """Stream a large file (a video) in parts, without holding it in memory."""
+        self._client.upload_fileobj(
+            file,
+            self._bucket,
+            key,
+            ExtraArgs={
+                "ContentType": content_type,
+                "CacheControl": "public, max-age=31536000, immutable",
+            },
         )
 
     def delete(self, key: str) -> None:

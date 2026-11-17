@@ -52,6 +52,7 @@ ADMIN_ENDPOINTS = [
     ("GET", "/api/v1/admin/storefront", "settings.manage"),
     ("PUT", "/api/v1/admin/storefront", "settings.manage"),
     ("GET", "/api/v1/admin/charges", "settings.manage"),
+    ("POST", "/api/v1/admin/products/{product_id}/videos", "products.update"),
     ("PUT", "/api/v1/admin/charges", "settings.manage"),
 ]
 

@@ -21,6 +21,7 @@ import { firstValueFrom, Observable } from 'rxjs';
 import { AdminCatalogApi } from './admin-catalog.api';
 import { StatusChip } from './status-chip';
 
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 const MONEY = /^\d{1,9}(\.\d{1,2})?$/;
 /** 0 to 40, up to two decimals (e.g. 0.25 for rough diamonds). */
 const GST_RATE = /^(40(\.0{1,2})?|[1-3]?\d(\.\d{1,2})?)$/;
@@ -136,9 +137,27 @@ export class ProductForm implements OnInit {
     this.altText = '';
   }
 
+  protected readonly uploadingVideo = signal(false);
+
+  protected async uploadVideo(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    const id = this.id();
+    if (!file || !id) return;
+    if (file.size > MAX_VIDEO_BYTES) {
+      this.error.set('Videos must be 100 MB or smaller.');
+      input.value = '';
+      return;
+    }
+    this.uploadingVideo.set(true);
+    await this.run(this.api.uploadVideo(id, file, this.altText), 'Video added.');
+    this.uploadingVideo.set(false);
+    input.value = '';
+    this.altText = '';
+  }
+
   protected async removeImage(mediaId: string): Promise<void> {
     const id = this.id();
-    if (id) await this.run(this.api.deleteMedia(id, mediaId), 'Image removed.');
+    if (id) await this.run(this.api.deleteMedia(id, mediaId), 'Removed.');
   }
 
   private async run(call: Observable<AdminProduct>, success: string): Promise<AdminProduct | null> {

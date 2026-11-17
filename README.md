@@ -224,3 +224,6 @@ Health checks, logs, alerts, backups, restoring and secret rotation are in
   - Courier import error report: when a courier file has rows that couldn't be applied, "Download
     rows to fix" gives an Excel file with each problem. The courier corrects it and it is uploaded
     again as it is.
+  - Product videos: up to 3 MP4 or WebM videos (100 MB each) per product, uploaded on the product
+    page in the admin portal and played after the pictures in the shop. The file's contents are
+    checked, not its name; QuickTime .mov files are refused with a hint to export as MP4.

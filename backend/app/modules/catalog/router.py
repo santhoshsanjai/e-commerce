@@ -196,6 +196,33 @@ def upload_image(
     return service.to_admin_out(product, storage)
 
 
+@admin_router.post("/products/{product_id}/videos", status_code=status.HTTP_201_CREATED)
+def upload_video(
+    product_id: uuid.UUID,
+    db: DbSession,
+    storage: Storage,
+    actor: CanUpdateProducts,
+    file: Annotated[UploadFile, File()],
+    alt_text: Annotated[str, Form(max_length=300)] = "",
+) -> AdminProductOut:
+    """Add an MP4 or WebM video (up to 100 MB, 3 per product). It plays on the product page
+    after the pictures."""
+    limit = get_settings().max_video_bytes
+    file.file.seek(0, 2)
+    size = file.file.tell()
+    file.file.seek(0)
+    if size > limit:
+        raise AppError(
+            "video_too_large",
+            f"Videos must be {limit // (1024 * 1024)} MB or smaller",
+            status.HTTP_413_CONTENT_TOO_LARGE,
+        )
+    if size == 0:
+        raise AppError("empty_file", "The file is empty", status.HTTP_422_UNPROCESSABLE_CONTENT)
+    product = service.add_video(db, storage, product_id, file.file, size, alt_text, actor)
+    return service.to_admin_out(product, storage)
+
+
 @admin_router.delete("/products/{product_id}/media/{media_id}")
 def delete_media(
     product_id: uuid.UUID,
