@@ -208,5 +208,12 @@ Health checks, logs, alerts, backups, restoring and secret rotation are in
   - Buyer account page: change name and mobile number, manage saved delivery addresses (add, edit,
     make default, remove), and change password. Changing the password signs out every other device
     and keeps this one signed in; wrong-password attempts share the login rate limit.
-  - Phase 2 complete. Next: Phase 3 (security review, backups, monitoring, staging, then
-    production).
+  - Phase 2 complete.
+- **Phase 3 (hardening and operations), complete:** end-to-end tests, security headers and rate
+  limits, password reset, two-step sign-in for staff, health checks, logs, backups and the AWS
+  staging setup ([infra/README.md](infra/README.md)).
+- **Phase 4 (payments, email, tax), in progress:**
+  - Order emails to buyers: confirmed, shipped, out for delivery, delivered, delivery failed,
+    cancelled and returned. Sent through an outbox so none is lost if email is briefly down
+    ([docs/operations.md](docs/operations.md#emails-to-buyers)). Locally they arrive in Mailpit
+    (http://localhost:8025) when the API runs with `EMAIL_BACKEND=smtp`.

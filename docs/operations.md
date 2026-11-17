@@ -104,6 +104,21 @@ Never restore over the live database. Restore into a new database, check it, the
 **C. One table:** `pg_restore --data-only --table=<name> --dbname=<scratch DATABASE_URL> <dump>`
 into a scratch database, then copy the rows you need.
 
+## Emails to buyers
+
+Order emails (confirmed, shipped, out for delivery, delivered, delivery failed, cancelled, returned)
+are written to the `email_outbox` table in the same transaction as the order change, then sent right
+after the request. A scheduled task (`python -m app.cli send-emails`, every 5 minutes) retries any
+that failed, up to 6 times with growing gaps, and deletes sent emails after 30 days.
+
+```sql
+-- Emails that have given up (check SES, then reset attempts to 0 to send them again)
+select created_at, kind, to_address, attempts, last_error from email_outbox
+where sent_at is null and attempts >= 6 order by created_at desc;
+```
+
+Password reset emails don't use the outbox, so their links are never stored.
+
 ## Secrets
 
 All secrets live in AWS Secrets Manager and reach the API as environment variables. Never put them

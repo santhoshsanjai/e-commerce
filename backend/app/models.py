@@ -20,6 +20,7 @@ from app.modules.catalog.models import (
 )
 from app.modules.courier_import.models import CourierImport
 from app.modules.dispatch.models import DispatchBatch
+from app.modules.notifications.models import EmailOutbox
 from app.modules.orders.models import Order, OrderItem, OrderStatusEvent
 from app.modules.storefront.models import StorefrontSettings
 from app.modules.users.models import User
@@ -33,6 +34,7 @@ __all__ = [
     "Category",
     "CourierImport",
     "DispatchBatch",
+    "EmailOutbox",
     "MfaRecoveryCode",
     "Order",
     "OrderItem",
