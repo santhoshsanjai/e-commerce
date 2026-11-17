@@ -274,3 +274,52 @@ def test_our_export_round_trips_through_the_import(client, buyer_token, admin):
 def test_every_suggested_status_word_is_understood():
     for word in CANONICAL_STATUS_WORDS:
         assert parser_norm(word) in STATUS_WORDS, word
+
+
+def test_error_report_lists_rows_to_fix_and_can_be_uploaded_again(client, buyer_token, admin):
+    n1, oid1, _ = handed_over(client, buyer_token, admin)
+    n2, _, _ = handed_over(client, buyer_token, admin, name="Ravi")
+    data = xlsx(
+        [
+            (n1, "AWB111", "Delivered", None),
+            (n2, "AWB222", "Teleported", "02-01-2026 10:15"),
+            ("ORD-2026-999999", "AWB333", "@SUM(A1)", None),
+        ]
+    )
+    record = upload(client, admin, data).json()
+    resp = client.get(f"{IMPORTS}/{record['id']}/error-report", headers=admin)
+    assert resp.status_code == 200, resp.text
+    assert resp.headers["cache-control"] == "no-store"
+    assert "rows%20to%20fix.xlsx" in resp.headers["content-disposition"]
+
+    ws = load_workbook(io.BytesIO(resp.content)).active
+    rows = list(ws.iter_rows(values_only=True))
+    assert rows[0][:5] == ("Order No", "AWB No", "Courier Status", "Status Date", "Problem")
+    assert [r[0] for r in rows[1:]] == [n2, "ORD-2026-999999"]
+    assert rows[1][3] == "02-01-2026 10:15" and "Unknown courier status" in rows[1][4]
+    assert rows[1][5] == 3  # row number in the courier's file
+    assert rows[2][2] == "'@SUM(A1)"  # never a live formula
+
+    # The courier fixes the status and sends the same file back; the import reads it.
+    ws.cell(2, 3).value = "In Transit"
+    fixed = io.BytesIO()
+    ws.parent.save(fixed)
+    again = upload(client, admin, fixed.getvalue()).json()
+    by_order = {r["order_number"]: r for r in again["rows"]}
+    assert by_order[n2]["outcome"] == "will_update"
+
+    audit = client.get(
+        "/api/v1/admin/audit-logs",
+        params={"action": "courier_import.error_report_downloaded"},
+        headers=admin,
+    ).json()
+    assert audit["total"] == 1
+    assert oid1  # the delivered row isn't in the report
+
+
+def test_error_report_for_a_clean_file_says_so(client, buyer_token, admin):
+    n1, _, _ = handed_over(client, buyer_token, admin)
+    record = upload(client, admin, xlsx([(n1, "AWB111", "In Transit", None)])).json()
+    resp = client.get(f"{IMPORTS}/{record['id']}/error-report", headers=admin)
+    assert resp.status_code == 409
+    assert resp.json()["error"]["code"] == "no_error_rows"

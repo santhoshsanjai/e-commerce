@@ -1,13 +1,15 @@
 import uuid
 from typing import Annotated
+from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, File, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Request, Response, UploadFile, status
 
 from app.core.dependencies import DbSession, require_permission
 from app.core.exceptions import AppError
 from app.infrastructure.storage import FileStore, get_file_store
 from app.modules.courier_import import service
 from app.modules.courier_import.schemas import CourierImportDetail, CourierImportOut
+from app.modules.dispatch.excel import XLSX_CONTENT_TYPE
 from app.modules.notifications.dependencies import SendQueuedEmails
 from app.modules.users.models import User
 from app.shared.pagination import Page, PageParams, page_params
@@ -49,6 +51,23 @@ def list_imports(db: DbSession, _: CanImport, params: Paging) -> Page[CourierImp
 @router.get("/{import_id}")
 def get_import(import_id: uuid.UUID, db: DbSession, _: CanImport) -> CourierImportDetail:
     return service.detail(db, service.get(db, import_id))
+
+
+@router.get("/{import_id}/error-report")
+def error_report(
+    import_id: uuid.UUID, request: Request, db: DbSession, actor: CanImport
+) -> Response:
+    """The rows that couldn't be applied, with the reason, as Excel. The courier can correct the
+    rows in this file and send it back for upload."""
+    data, name = service.error_report_file(db, import_id, actor, request)
+    return Response(
+        content=data,
+        media_type=XLSX_CONTENT_TYPE,
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(name)}",
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.post("/{import_id}/confirm", dependencies=[SendQueuedEmails])

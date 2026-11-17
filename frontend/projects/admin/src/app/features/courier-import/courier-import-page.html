@@ -74,6 +74,17 @@
         />
         Show only problems
       </label>
+      <button
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="busy()"
+        (click)="downloadErrors()"
+      >
+        Download rows to fix (Excel)
+      </button>
+      <p class="muted small">
+        Send this file back to the courier. Once they correct the rows, upload it here as it is.
+      </p>
     }
     <div class="card table-wrap">
       <table>
