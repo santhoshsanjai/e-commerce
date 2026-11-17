@@ -2,6 +2,7 @@ import uuid
 
 from fastapi import status
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -15,12 +16,21 @@ from app.modules.pricing import service as pricing
 from app.modules.users.models import User
 
 
-def get_or_create_cart(db: Session, user: User) -> Cart:
-    cart = db.scalar(select(Cart).where(Cart.user_id == user.id))
+def get_or_create_cart(db: Session, user: User, *, lock: bool = False) -> Cart:
+    """The buyer's cart, made on first use. Two requests at once (two tabs, or a page loading the
+    cart while an item is added) both get the same cart rather than one failing. With lock=True
+    the cart row stays locked until commit, so changes to one cart happen one at a time."""
+    query = select(Cart).where(Cart.user_id == user.id)
+    if lock:
+        query = query.with_for_update()
+    cart = db.scalars(query).one_or_none()
     if cart is None:
-        cart = Cart(user_id=user.id)
-        db.add(cart)
-        db.flush()
+        db.execute(
+            insert(Cart)
+            .values(id=uuid.uuid4(), user_id=user.id)
+            .on_conflict_do_nothing(index_elements=[Cart.user_id])
+        )
+        cart = db.scalars(query).one()
     return cart
 
 
@@ -49,7 +59,7 @@ def line_problem(product: Product, sku: ProductSku, qty: int) -> LineProblem | N
 
 def add_item(db: Session, user: User, data: CartItemAdd) -> Cart:
     sku, _ = _purchasable_sku(db, data.sku_id)
-    cart = get_or_create_cart(db, user)
+    cart = get_or_create_cart(db, user, lock=True)
     item = next((i for i in cart.items if i.sku_id == sku.id), None)
     new_qty = (item.qty if item else 0) + data.qty
     limit = min(MAX_LINE_QTY, sku.stock_qty)
@@ -71,7 +81,7 @@ def add_item(db: Session, user: User, data: CartItemAdd) -> Cart:
 
 
 def set_quantity(db: Session, user: User, sku_id: uuid.UUID, qty: int) -> Cart:
-    cart = get_or_create_cart(db, user)
+    cart = get_or_create_cart(db, user, lock=True)
     item = next((i for i in cart.items if i.sku_id == sku_id), None)
     if item is None:
         raise AppError("not_in_cart", "That item is not in your cart", status.HTTP_404_NOT_FOUND)
@@ -88,7 +98,7 @@ def set_quantity(db: Session, user: User, sku_id: uuid.UUID, qty: int) -> Cart:
 
 
 def remove_item(db: Session, user: User, sku_id: uuid.UUID) -> Cart:
-    cart = get_or_create_cart(db, user)
+    cart = get_or_create_cart(db, user, lock=True)
     cart.items = [i for i in cart.items if i.sku_id != sku_id]
     db.commit()
     return cart

@@ -1,0 +1,11 @@
+{
+  "name": "ecommerce-quality",
+  "private": true,
+  "description": "Lighthouse checks on the shop. The load test (load/) and security scan (zap/) run in containers.",
+  "scripts": {
+    "lighthouse": "lhci autorun"
+  },
+  "devDependencies": {
+    "@lhci/cli": "0.16.0"
+  }
+}

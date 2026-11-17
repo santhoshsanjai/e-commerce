@@ -26,7 +26,8 @@ export class HomePage {
   protected readonly heroImages = computed(() =>
     (this.newest() ?? []).filter((p) => p.image_url).slice(0, 3),
   );
-  /** Up to four top-level categories, each shown with the picture of its newest product. */
+  /** Up to four top-level categories, each shown with the picture of its newest product.
+   * Undefined while loading, so the section keeps its space and nothing below it jumps. */
   protected readonly categoryTiles = toSignal(
     this.api.categories().pipe(
       map((all) => all.filter((c) => !c.parent_id).slice(0, 4)),
@@ -44,7 +45,6 @@ export class HomePage {
       ),
       catchError(() => of([])),
     ),
-    { initialValue: [] },
   );
   protected readonly skeletons = [0, 1, 2, 3];
 

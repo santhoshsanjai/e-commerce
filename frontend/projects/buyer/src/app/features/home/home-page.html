@@ -25,24 +25,33 @@
   </div>
 </section>
 
-@if (categoryTiles().length) {
+@let tiles = categoryTiles();
+@if (!tiles || tiles.length) {
   <section class="section container" aria-labelledby="cat-h">
     <h2 id="cat-h" class="section-title" shrReveal>Featured categories</h2>
-    <div class="cat-grid">
-      @for (t of categoryTiles(); track t.category.id) {
-        <a
-          class="cat"
-          routerLink="/shop"
-          [queryParams]="{ category: t.category.slug }"
-          [shrReveal]="$index * 80"
-        >
-          <span class="cat-name">{{ t.category.name }}</span>
-          @if (t.image) {
-            <img class="cat-img" [src]="t.image" alt="" loading="lazy" />
-          }
-        </a>
-      }
-    </div>
+    @if (tiles) {
+      <div class="cat-grid">
+        @for (t of tiles; track t.category.id) {
+          <a
+            class="cat"
+            routerLink="/shop"
+            [queryParams]="{ category: t.category.slug }"
+            [shrReveal]="$index * 80"
+          >
+            <span class="cat-name">{{ t.category.name }}</span>
+            @if (t.image) {
+              <img class="cat-img" [src]="t.image" alt="" loading="lazy" />
+            }
+          </a>
+        }
+      </div>
+    } @else {
+      <div class="cat-grid" aria-busy="true">
+        @for (i of skeletons; track i) {
+          <div class="cat skeleton"></div>
+        }
+      </div>
+    }
   </section>
 }
 

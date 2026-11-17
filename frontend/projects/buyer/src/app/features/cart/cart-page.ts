@@ -36,6 +36,7 @@ const PROBLEM: Record<string, string> = {
                   class="thumb"
                   [routerLink]="['/p', line.slug, line.product_number]"
                   tabindex="-1"
+                  aria-hidden="true"
                 >
                   <img [src]="line.image_url" alt="" width="96" height="120" />
                 </a>

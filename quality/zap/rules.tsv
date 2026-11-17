@@ -1,0 +1,3 @@
+10055	IGNORE	(CSP: style-src unsafe-inline) Angular sets component styles inline; scripts stay limited to 'self', which is what blocks injected code.
+10109	IGNORE	(Modern Web Application) Informational: the admin portal is a single-page app.
+90022	OUTOFSCOPE	.*/openapi\.json$

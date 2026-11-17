@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { ResolveEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { Footer } from './layout/footer';
 import { Header } from './layout/header';
@@ -26,6 +26,9 @@ import { Header } from './layout/header';
       flex: 1;
       width: 100%;
       outline: none;
+      /* The footer starts below the fold, so it isn't pushed down (a layout shift) when the
+         page's content arrives. */
+      min-height: 100vh;
     }
     main.contained {
       max-width: var(--container);
@@ -35,14 +38,14 @@ import { Header } from './layout/header';
   `,
 })
 export class App {
-  private readonly route = inject(ActivatedRoute);
-
   /** Pages such as home run edge to edge; the rest sit in the centred column. */
   protected readonly fullBleed = toSignal(
     inject(Router).events.pipe(
-      filter((e) => e instanceof NavigationEnd),
-      map(() => {
-        let r = this.route.snapshot;
+      // ResolveEnd comes before the new page is created, so its first frame already has the
+      // right width (deciding on NavigationEnd made the home page jump: a layout shift).
+      filter((e) => e instanceof ResolveEnd),
+      map((e) => {
+        let r = e.state.root;
         while (r.firstChild) r = r.firstChild;
         return !!r.data['fullBleed'];
       }),

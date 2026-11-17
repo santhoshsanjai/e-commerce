@@ -10,11 +10,15 @@ import { DaySales } from './dashboard.api';
   template: `
     <figure>
       <figcaption id="sales-title">Sales, last 7 days</figcaption>
-      <div class="plot" role="img" aria-labelledby="sales-title sales-summary">
+      <div class="plot" role="group" aria-labelledby="sales-title sales-summary">
         @for (d of days(); track d.day; let i = $index) {
           <div
             class="col"
             tabindex="0"
+            role="img"
+            [attr.aria-label]="
+              (d.day | date: 'EEE d MMM') + ': ' + (d.sales_minor | money: currency())
+            "
             (mouseenter)="hover.set(i)"
             (mouseleave)="hover.set(null)"
             (focus)="hover.set(i)"

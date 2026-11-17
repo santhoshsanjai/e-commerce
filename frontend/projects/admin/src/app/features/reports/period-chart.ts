@@ -16,7 +16,7 @@ const MAX_LABELS = 8;
       <figcaption id="period-title">{{ caption() }}</figcaption>
       <div
         class="plot"
-        role="img"
+        role="group"
         aria-labelledby="period-title period-summary"
         [style.grid-template-columns]="'repeat(' + periods().length + ', minmax(0, 1fr))'"
         [class.dense]="periods().length > 60"
@@ -25,6 +25,7 @@ const MAX_LABELS = 8;
           <div
             class="col"
             tabindex="0"
+            role="img"
             [attr.aria-label]="p.label + ': ' + (p.sales_minor | money: currency())"
             (mouseenter)="hover.set(i)"
             (mouseleave)="hover.set(null)"
