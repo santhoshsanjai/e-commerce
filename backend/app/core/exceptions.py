@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import DataError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import request_id_var
@@ -62,6 +63,15 @@ def register_exception_handlers(app: FastAPI) -> None:
         return JSONResponse(
             _body("validation_error", "Request validation failed", details),
             status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
+
+    @app.exception_handler(DataError)
+    async def data_error_handler(_: Request, exc: DataError) -> JSONResponse:
+        # A value the database can't store, such as text with a NUL character (%00) in a search
+        # or a form. It's bad input, not a server fault, and the database's text stays private.
+        return JSONResponse(
+            _body("invalid_input", "The request contains characters or values that can't be used"),
+            status.HTTP_400_BAD_REQUEST,
         )
 
     @app.exception_handler(StarletteHTTPException)

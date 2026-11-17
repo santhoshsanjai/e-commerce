@@ -80,6 +80,35 @@ def test_cart_flags_items_that_became_unavailable(client, admin, buyer):
     assert cart["can_checkout"] is False
 
 
+def test_first_cart_requests_at_once_share_one_cart(client, admin, buyer_token):
+    """A new buyer's first add-to-cart from two tabs at once: neither request fails."""
+    from app.main import app
+
+    mug = published_product(client, admin, stock=10)
+    h = auth(buyer_token())
+    barrier = threading.Barrier(6)
+    results: list[int] = []
+
+    def attempt():
+        with TestClient(app) as c:
+            barrier.wait()
+            results.append(
+                c.post(
+                    "/api/v1/cart/items", json={"sku_id": mug["sku"]["id"]}, headers=h
+                ).status_code
+            )
+
+    threads = [threading.Thread(target=attempt) for _ in range(6)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert results == [200] * 6
+    cart = client.get("/api/v1/cart", headers=h).json()
+    assert [i["qty"] for i in cart["items"]] == [6]
+
+
 def test_cart_requires_buyer_login(client):
     assert client.get("/api/v1/cart").status_code == 401
 

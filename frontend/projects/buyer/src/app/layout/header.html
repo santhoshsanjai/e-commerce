@@ -47,12 +47,7 @@
           <shr-icon name="package" />
           <span class="label"><span class="label-main">Orders</span></span>
         </a>
-        <a
-          routerLink="/cart"
-          class="action cart"
-          routerLinkActive="on"
-          [attr.aria-label]="'Cart, ' + cart.count() + ' items'"
-        >
+        <a routerLink="/cart" class="action cart" routerLinkActive="on">
           <span class="bag" [class.bump]="bump()">
             <shr-icon name="bag" />
             @if (cart.count()) {
@@ -60,6 +55,9 @@
             }
           </span>
           <span class="label"><span class="label-main">Cart</span></span>
+          <span class="visually-hidden"
+            >, {{ cart.count() }} {{ cart.count() === 1 ? 'item' : 'items' }}</span
+          >
         </a>
         <button
           type="button"
@@ -76,7 +74,7 @@
           <shr-icon name="user" />
           <span class="label"><span class="label-main">Sign in</span></span>
         </a>
-        <a routerLink="/cart" class="action cart" aria-label="Cart">
+        <a routerLink="/cart" class="action cart">
           <span class="bag"><shr-icon name="bag" /></span>
           <span class="label"><span class="label-main">Cart</span></span>
         </a>

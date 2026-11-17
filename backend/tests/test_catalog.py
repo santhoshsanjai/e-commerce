@@ -357,3 +357,21 @@ def test_public_payload_does_not_leak_admin_fields(client, admin, category):
     body = client.get(f"/api/v1/products/{product['slug']}").json()
     for field in ("stock_qty", "created_by", "updated_by", "status", "id"):
         assert field not in body
+
+
+def test_text_the_database_cannot_store_is_a_400_not_a_crash(client, buyer_token):
+    # Found by the security scan: a NUL character in a search used to give a 500.
+    resp = client.get("/api/v1/products", params={"q": "mug\x00"})
+    assert resp.status_code == 400
+    assert resp.json()["error"]["code"] == "invalid_input"
+    h = {"Authorization": f"Bearer {buyer_token()}"}
+    address = {
+        "full_name": "A\x00",
+        "phone": "9876543210",
+        "line1": "1 Road",
+        "city": "Bengaluru",
+        "state": "Karnataka",
+        "postal_code": "560001",
+    }
+    resp = client.post("/api/v1/me/addresses", json=address, headers=h)
+    assert resp.status_code in (400, 422)

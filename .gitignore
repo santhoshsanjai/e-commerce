@@ -32,3 +32,8 @@ Thumbs.db
 *.tfstate.*
 *.auto.tfvars
 tfplan
+
+# Quality check outputs
+quality/lighthouse-report/
+quality/.lighthouseci/
+quality/reports/

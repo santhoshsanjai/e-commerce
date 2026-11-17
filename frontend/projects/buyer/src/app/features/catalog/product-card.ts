@@ -44,7 +44,6 @@ import { productLink } from './product-link';
       class="add"
       [class.done]="state() === 'added'"
       [disabled]="p.availability === 'OUT_OF_STOCK' || state() === 'adding'"
-      [attr.aria-label]="'Add ' + p.name + ' to cart'"
       (click)="addToCart()"
     >
       @switch (p.availability === 'OUT_OF_STOCK' ? 'sold' : state()) {
@@ -61,6 +60,7 @@ import { productLink } from './product-link';
           <shr-icon name="bag" /> Add to cart
         }
       }
+      <span class="visually-hidden">: {{ p.name }}</span>
     </button>
     @if (error()) {
       <p class="err" role="alert">{{ error() }}</p>

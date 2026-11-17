@@ -231,3 +231,5 @@ Health checks, logs, alerts, backups, restoring and secret rotation are in
     items within 7 days of delivery. The admin portal's "Returns" page approves or rejects,
     marks items received (restocked) and records the refund
     ([ADR 0010](docs/adr/0010-returns-and-refunds.md)).
+  - Quality checks on every pull request: OWASP ZAP security scan, k6 load test, Lighthouse and
+    axe accessibility checks ([docs/quality-checks.md](docs/quality-checks.md)).
