@@ -11,6 +11,7 @@ from typing import Any
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
 
 from app.modules.dispatch.excel import safe_text
 from app.shared.timezones import IST
@@ -51,7 +52,7 @@ def build(rows: list[dict[str, Any]]) -> bytes:
             ]
         )
     for index, width in enumerate(WIDTHS, start=1):
-        ws.column_dimensions[ws.cell(1, index).column_letter].width = width
+        ws.column_dimensions[get_column_letter(index)].width = width
     for row in ws.iter_rows(min_row=2, min_col=5, max_col=5):
         for cell in row:
             cell.alignment = Alignment(wrap_text=True, vertical="top")
