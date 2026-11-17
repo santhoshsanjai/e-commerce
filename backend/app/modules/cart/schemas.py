@@ -41,6 +41,13 @@ class CartOut(BaseModel):
     item_count: int
     subtotal_minor: int
     shipping_minor: int
+    # Added to the total; 0 when prices include GST.
+    tax_minor: int
+    # All GST in the basket, included in prices or added as tax_minor.
+    gst_minor: int
+    prices_include_gst: bool
+    # Delivery is free once the subtotal reaches this (None: no free delivery).
+    free_shipping_over_minor: int | None
     total_minor: int
     currency: str
     can_checkout: bool

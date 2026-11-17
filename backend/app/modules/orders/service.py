@@ -54,6 +54,8 @@ def _detail_fields(order: Order) -> dict[str, object]:
         "shipping_minor": order.shipping_minor,
         "tax_minor": order.tax_minor,
         "discount_minor": order.discount_minor,
+        "gst_minor": order.gst_minor,
+        "prices_include_gst": order.prices_include_gst,
         "items": [OrderItemOut.model_validate(i) for i in order.items],
         "shipping_address": ShippingAddressOut(
             name=order.ship_name,

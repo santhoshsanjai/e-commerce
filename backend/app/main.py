@@ -27,6 +27,7 @@ from app.modules.dashboard.router import router as dashboard_router
 from app.modules.dispatch.router import router as dispatch_router
 from app.modules.orders.router import admin_router as orders_admin_router
 from app.modules.orders.router import buyer_router as orders_buyer_router
+from app.modules.pricing.router import router as pricing_router
 from app.modules.reports.router import router as reports_router
 from app.modules.storefront.router import admin_router as storefront_admin_router
 from app.modules.storefront.router import public_router as storefront_public_router
@@ -159,6 +160,7 @@ def create_app() -> FastAPI:
     api.include_router(orders_admin_router)
     api.include_router(storefront_public_router)
     api.include_router(storefront_admin_router)
+    api.include_router(pricing_router)
     app.include_router(api)
     return app
 

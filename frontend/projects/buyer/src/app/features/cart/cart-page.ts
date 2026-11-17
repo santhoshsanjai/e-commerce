@@ -84,9 +84,22 @@ const PROBLEM: Record<string, string> = {
               <dd>
                 {{ cart.shipping_minor ? (cart.shipping_minor | money: cart.currency) : 'Free' }}
               </dd>
+              @if (cart.tax_minor) {
+                <dt>GST</dt>
+                <dd>{{ cart.tax_minor | money: cart.currency }}</dd>
+              }
               <dt class="grand">Total</dt>
               <dd class="grand">{{ cart.total_minor | money: cart.currency }}</dd>
             </dl>
+            @if (cart.prices_include_gst && cart.gst_minor) {
+              <p class="gst">Includes GST of {{ cart.gst_minor | money: cart.currency }}</p>
+            }
+            @if (cart.shipping_minor && cart.free_shipping_over_minor) {
+              <p class="free-hint" data-testid="free-delivery-hint">
+                Add {{ cart.free_shipping_over_minor - cart.subtotal_minor | money: cart.currency }}
+                more for free delivery.
+              </p>
+            }
             <a
               class="btn btn-lg btn-block checkout"
               routerLink="/checkout"
@@ -95,7 +108,7 @@ const PROBLEM: Record<string, string> = {
               (click)="!cart.can_checkout && $event.preventDefault()"
               >Proceed to checkout</a
             >
-            <p class="reassure"><shr-icon name="lock" /> Prices include taxes · Secure checkout</p>
+            <p class="reassure"><shr-icon name="lock" /> Secure checkout</p>
             <a class="continue" routerLink="/shop">Continue shopping</a>
           </aside>
         </div>

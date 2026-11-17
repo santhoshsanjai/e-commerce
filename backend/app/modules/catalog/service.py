@@ -137,6 +137,7 @@ def to_admin_out(product: Product, storage: ObjectStorage) -> AdminProductOut:
         category=CategoryOut.model_validate(product.category),
         short_description=product.short_description,
         description=product.description,
+        gst_rate_bp=product.gst_rate_bp,
         sku=SkuOut.model_validate(product.default_sku),
         attributes=[AttributeOut.model_validate(a) for a in product.attributes],
         media=[_media_out(m, storage) for m in product.media],
@@ -179,6 +180,7 @@ def _snapshot(product: Product) -> dict[str, object]:
         "category_id": str(product.category_id),
         "price_minor": sku.price_minor,
         "stock_qty": sku.stock_qty,
+        "gst_rate_bp": product.gst_rate_bp,
     }
 
 
@@ -237,6 +239,7 @@ def create_product(db: Session, data: ProductCreate, actor: User, request: Reque
         category_id=data.category_id,
         short_description=data.short_description,
         description=data.description,
+        gst_rate_bp=data.gst_rate_bp,
         created_by=actor.id,
         updated_by=actor.id,
         skus=[
@@ -286,6 +289,8 @@ def update_product(
     for field in ("name", "short_description", "description"):
         if field in changes and changes[field] is not None:
             setattr(product, field, changes[field].strip() if field == "name" else changes[field])
+    if "gst_rate_bp" in changes:
+        product.gst_rate_bp = changes["gst_rate_bp"]
     if "attributes" in changes and data.attributes is not None:
         product.attributes = [
             ProductAttribute(name=a.name, value=a.value, sort_order=i)

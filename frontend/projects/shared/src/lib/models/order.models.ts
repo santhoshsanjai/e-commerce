@@ -70,6 +70,13 @@ export interface Cart {
   item_count: number;
   subtotal_minor: number;
   shipping_minor: number;
+  /** Added to the total; 0 when prices include GST. */
+  tax_minor: number;
+  /** All GST in the cart, included in prices or added as tax. */
+  gst_minor: number;
+  prices_include_gst: boolean;
+  /** Delivery is free from this subtotal; null when it never is. */
+  free_shipping_over_minor: number | null;
   total_minor: number;
   currency: string;
   can_checkout: boolean;
@@ -82,6 +89,9 @@ export interface OrderItem {
   unit_price_minor: number;
   qty: number;
   line_total_minor: number;
+  /** Basis points: 1800 = 18%. */
+  gst_rate_bp: number;
+  gst_minor: number;
 }
 
 export interface StatusEvent {
@@ -108,6 +118,8 @@ export interface OrderDetail extends OrderSummary {
   shipping_minor: number;
   tax_minor: number;
   discount_minor: number;
+  gst_minor: number;
+  prices_include_gst: boolean;
   items: OrderItem[];
   shipping_address: {
     name: string;

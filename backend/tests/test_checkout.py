@@ -106,6 +106,9 @@ def test_checkout_creates_confirmed_cod_order_with_snapshots(client, admin, buye
             "unit_price_minor": 25000,
             "qty": 2,
             "line_total_minor": 50000,
+            # Prices include 18% GST by default: 50000 * 18 / 118.
+            "gst_rate_bp": 1800,
+            "gst_minor": 7627,
         }
     ]
     assert order["shipping_address"]["postal_code"] == "560001"

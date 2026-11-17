@@ -78,6 +78,8 @@ export interface AdminProduct {
   category: Category;
   short_description: string;
   description: string;
+  /** GST in basis points (1800 = 18%); null uses the shop's default rate. */
+  gst_rate_bp: number | null;
   sku: {
     id: string;
     sku: string;
@@ -99,6 +101,7 @@ export interface ProductInput {
   price_minor: number;
   compare_at_minor: number | null;
   stock_qty: number;
+  gst_rate_bp: number | null;
   short_description: string;
   description: string;
   attributes: Attribute[];

@@ -132,6 +132,12 @@ export const routes: Routes = [
         title: 'Storefront · Admin',
       },
       {
+        path: 'charges',
+        canActivate: [permissionGuard('settings.manage')],
+        loadComponent: () => import('./features/charges/charges-page').then((m) => m.ChargesPage),
+        title: 'Delivery and GST · Admin',
+      },
+      {
         path: 'audit-log',
         canActivate: [permissionGuard('audit_logs.view')],
         loadComponent: () => import('./features/audit/audit-log').then((m) => m.AuditLog),

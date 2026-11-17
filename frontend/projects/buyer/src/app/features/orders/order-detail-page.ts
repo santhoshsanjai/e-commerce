@@ -72,9 +72,16 @@ import { OrdersApi } from './orders.api';
               <dt>Discount</dt>
               <dd>−{{ o.discount_minor | money: o.currency }}</dd>
             }
+            @if (o.tax_minor) {
+              <dt>GST</dt>
+              <dd>{{ o.tax_minor | money: o.currency }}</dd>
+            }
             <dt class="grand">Total</dt>
             <dd class="grand">{{ o.total_minor | money: o.currency }}</dd>
           </dl>
+          @if (o.prices_include_gst && o.gst_minor) {
+            <p class="gst">Includes GST of {{ o.gst_minor | money: o.currency }}</p>
+          }
         </section>
 
         <div class="side">

@@ -3,6 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     Enum,
@@ -56,6 +57,10 @@ class Order(TimestampMixin, Base):
     tax_minor: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
     discount_minor: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
     total_minor: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    # All GST in the order. When prices include GST it is part of the subtotal (tax_minor is 0);
+    # otherwise it equals tax_minor. Copied at order time, so later rule changes don't touch it.
+    gst_minor: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    prices_include_gst: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     # Customer and delivery details copied at order time.
     customer_name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -119,6 +124,9 @@ class OrderItem(Base):
     tax_minor: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
     discount_minor: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
     line_total_minor: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    # GST rate (basis points, 1800 = 18%) and amount for this line, at order time.
+    gst_rate_bp: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    gst_minor: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
 
 
 class OrderStatusEvent(Base):

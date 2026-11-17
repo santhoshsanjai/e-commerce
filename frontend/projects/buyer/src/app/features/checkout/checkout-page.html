@@ -122,9 +122,16 @@
           <dd>{{ cart.subtotal_minor | money: cart.currency }}</dd>
           <dt>Delivery</dt>
           <dd>{{ cart.shipping_minor ? (cart.shipping_minor | money: cart.currency) : 'Free' }}</dd>
+          @if (cart.tax_minor) {
+            <dt>GST</dt>
+            <dd>{{ cart.tax_minor | money: cart.currency }}</dd>
+          }
           <dt class="grand">Total to pay</dt>
           <dd class="grand">{{ cart.total_minor | money: cart.currency }}</dd>
         </dl>
+        @if (cart.prices_include_gst && cart.gst_minor) {
+          <p class="muted small">Includes GST of {{ cart.gst_minor | money: cart.currency }}</p>
+        }
         <button
           class="btn btn-lg btn-block place"
           type="button"

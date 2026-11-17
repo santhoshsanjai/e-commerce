@@ -80,6 +80,8 @@ import { AdminOrdersApi } from './admin-orders.api';
             <dd>{{ o.shipping_minor | money: o.currency }}</dd>
             <dt>Discount</dt>
             <dd>{{ o.discount_minor | money: o.currency }}</dd>
+            <dt>{{ o.prices_include_gst ? 'GST (included)' : 'GST (added)' }}</dt>
+            <dd data-testid="order-gst">{{ o.gst_minor | money: o.currency }}</dd>
             <dt class="grand">Total (COD to collect)</dt>
             <dd class="grand">{{ o.total_minor | money: o.currency }}</dd>
           </dl>

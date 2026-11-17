@@ -11,6 +11,7 @@ from app.modules.cart.models import MAX_LINE_QTY, Cart, CartItem
 from app.modules.cart.schemas import CartItemAdd, CartLine, CartOut, LineProblem
 from app.modules.catalog.models import Product, ProductSku, ProductStatus
 from app.modules.catalog.service import availability
+from app.modules.pricing import service as pricing
 from app.modules.users.models import User
 
 
@@ -96,9 +97,11 @@ def remove_item(db: Session, user: User, sku_id: uuid.UUID) -> Cart:
 def to_out(db: Session, cart: Cart, storage: ObjectStorage) -> CartOut:
     settings = get_settings()
     lines: list[CartLine] = []
+    rates: list[int | None] = []
     for item in cart.items:
         product = db.get(Product, item.sku.product_id)
         assert product is not None
+        rates.append(product.gst_rate_bp)
         image = product.primary_image
         problem = line_problem(product, item.sku, item.qty)
         lines.append(
@@ -116,14 +119,23 @@ def to_out(db: Session, cart: Cart, storage: ObjectStorage) -> CartOut:
                 max_qty=max(0, min(MAX_LINE_QTY, item.sku.stock_qty)),
             )
         )
-    subtotal = sum(line.line_total_minor for line in lines)
-    shipping = settings.shipping_fee_minor if lines else 0
+    priced = pricing.quote(
+        pricing.get(db),
+        [
+            pricing.Line(line.line_total_minor, rate)
+            for line, rate in zip(lines, rates, strict=True)
+        ],
+    )
     return CartOut(
         items=lines,
         item_count=sum(line.qty for line in lines),
-        subtotal_minor=subtotal,
-        shipping_minor=shipping,
-        total_minor=subtotal + shipping,
+        subtotal_minor=priced.subtotal_minor,
+        shipping_minor=priced.shipping_minor,
+        tax_minor=priced.tax_minor,
+        gst_minor=priced.gst_minor,
+        prices_include_gst=priced.prices_include_gst,
+        free_shipping_over_minor=priced.free_shipping_over_minor,
+        total_minor=priced.total_minor,
         currency=settings.default_currency,
         can_checkout=bool(lines) and all(line.problem is None for line in lines),
     )

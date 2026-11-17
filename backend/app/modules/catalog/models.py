@@ -63,6 +63,7 @@ class Product(TimestampMixin, Base):
             postgresql_ops={"name": "gin_trgm_ops"},
         ),
         Index("ix_products_status_published_at", "status", "published_at"),
+        CheckConstraint("gst_rate_bp BETWEEN 0 AND 4000", name="gst_rate_range"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
@@ -77,6 +78,8 @@ class Product(TimestampMixin, Base):
         Uuid, ForeignKey("brands.id", ondelete="RESTRICT")
     )
     short_description: Mapped[str] = mapped_column(String(300), nullable=False, default="")
+    # GST rate in basis points (1800 = 18%); None uses the shop's default rate.
+    gst_rate_bp: Mapped[int | None] = mapped_column(Integer)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     status: Mapped[ProductStatus] = mapped_column(
         Enum(ProductStatus, name="product_status", native_enum=False, length=16),
