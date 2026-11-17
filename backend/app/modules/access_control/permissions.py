@@ -25,6 +25,8 @@ PERMISSIONS: dict[str, str] = {
     "reports.view": "View reports",
     "audit_logs.view": "View the audit log",
     "settings.manage": "Change the shop's name, announcement and colours",
+    "returns.view": "View return requests",
+    "returns.manage": "Approve or reject returns, mark them received and record refunds",
 }
 
 SUPER_ADMIN = "Super Admin"
@@ -51,6 +53,8 @@ DEFAULT_ROLE_GRANTS: dict[str, list[str]] = {
         "reports.view",
         "audit_logs.view",
         "settings.manage",
+        "returns.view",
+        "returns.manage",
     ],
     MANAGER: [
         "dashboard.view",
@@ -60,5 +64,6 @@ DEFAULT_ROLE_GRANTS: dict[str, list[str]] = {
         "orders.export",
         "orders.import_courier",
         "orders.status.update",
+        "returns.view",
     ],
 }

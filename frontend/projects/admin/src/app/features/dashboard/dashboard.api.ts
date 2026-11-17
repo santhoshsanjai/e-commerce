@@ -21,6 +21,7 @@ export interface DashboardData {
     on_hold: number;
     returning: number;
     imports_not_applied: number;
+    returns_open: number;
     low_stock: { product_id: string; product_number: string; name: string; stock_qty: number }[];
   };
 }

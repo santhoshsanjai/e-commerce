@@ -100,6 +100,7 @@ def test_checkout_creates_confirmed_cod_order_with_snapshots(client, admin, buye
     assert order["total_minor"] == 50000
     assert order["items"] == [
         {
+            "id": order["items"][0]["id"],
             "product_number": mug["product_number"],
             "product_name": "Blue Mug",
             "sku": mug["sku"]["sku"],

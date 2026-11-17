@@ -129,24 +129,28 @@ def _compose(order: Order, previous: OrderStatus | None, target: OrderStatus) ->
     return ("", "")
 
 
+def queue_buyer_email(db: Session, order: Order, kind: str, subject: str, middle: str) -> None:
+    """Add an email about `order` to its buyer to the outbox, with the shop's name and a link."""
+    shop = storefront.get(db).store_name
+    link = f"{get_settings().buyer_site_url}/orders/{order.order_number}"
+    db.add(
+        EmailOutbox(
+            kind=kind,
+            order=order,
+            to_address=order.customer_email,
+            subject=f"{subject} · {shop}",
+            body=f"Hello {order.customer_name},\n\n{middle}See your order: {link}\n\n{shop}",
+        )
+    )
+
+
 def queue_order_email(
     db: Session, order: Order, previous: OrderStatus | None, target: OrderStatus
 ) -> None:
     """Add the buyer email for this status change, if there is one, to the outbox."""
     subject, middle = _compose(order, previous, target)
-    if not subject:
-        return
-    shop = storefront.get(db).store_name
-    link = f"{get_settings().buyer_site_url}/orders/{order.order_number}"
-    db.add(
-        EmailOutbox(
-            kind=f"order.{target.value.lower()}",
-            order=order,
-            to_address=order.customer_email,
-            subject=f"{subject} · {shop}",
-            body=(f"Hello {order.customer_name},\n\n{middle}See your order: {link}\n\n{shop}"),
-        )
-    )
+    if subject:
+        queue_buyer_email(db, order, f"order.{target.value.lower()}", subject, middle)
 
 
 def _retry_delay(attempts: int) -> timedelta:

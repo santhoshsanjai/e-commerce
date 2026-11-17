@@ -21,6 +21,7 @@ export const NAV_ITEMS: NavItem[] = [
     path: '/courier-import',
     permission: 'orders.import_courier',
   },
+  { label: 'Returns', icon: 'returns', path: '/returns', permission: 'returns.view' },
   { label: 'Products', icon: 'tag', path: '/products', permission: 'products.view' },
   { label: 'Categories', icon: 'folder', path: '/categories', permission: 'categories.view' },
   { label: 'Sales report', icon: 'chart', path: '/reports/sales', permission: 'reports.view' },

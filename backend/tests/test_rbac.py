@@ -53,6 +53,12 @@ ADMIN_ENDPOINTS = [
     ("PUT", "/api/v1/admin/storefront", "settings.manage"),
     ("GET", "/api/v1/admin/charges", "settings.manage"),
     ("POST", "/api/v1/admin/products/{product_id}/videos", "products.update"),
+    ("GET", "/api/v1/admin/returns", "returns.view"),
+    ("GET", "/api/v1/admin/returns/{return_id}", "returns.view"),
+    ("POST", "/api/v1/admin/returns/{return_id}/approve", "returns.manage"),
+    ("POST", "/api/v1/admin/returns/{return_id}/reject", "returns.manage"),
+    ("POST", "/api/v1/admin/returns/{return_id}/receive", "returns.manage"),
+    ("POST", "/api/v1/admin/returns/{return_id}/refund", "returns.manage"),
     ("PUT", "/api/v1/admin/charges", "settings.manage"),
 ]
 

@@ -1,6 +1,16 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Address, AddressInput, API_BASE_URL, OrderDetail, OrderSummary, Page } from '@shop/shared';
+import {
+  Address,
+  AddressInput,
+  API_BASE_URL,
+  OrderDetail,
+  OrderSummary,
+  Page,
+  ReturnEligibility,
+  ReturnReason,
+  ReturnRequest,
+} from '@shop/shared';
 import { Observable } from 'rxjs';
 
 export interface CheckoutInput {
@@ -44,5 +54,35 @@ export class OrdersApi {
 
   myOrder(orderNumber: string): Observable<OrderDetail> {
     return this.http.get<OrderDetail>(`${this.base}/me/orders/${encodeURIComponent(orderNumber)}`);
+  }
+
+  cancel(orderNumber: string, reason: string): Observable<OrderDetail> {
+    return this.http.post<OrderDetail>(
+      `${this.base}/me/orders/${encodeURIComponent(orderNumber)}/cancel`,
+      { reason },
+    );
+  }
+
+  returnStatus(orderNumber: string): Observable<ReturnEligibility> {
+    return this.http.get<ReturnEligibility>(
+      `${this.base}/me/orders/${encodeURIComponent(orderNumber)}/return`,
+    );
+  }
+
+  requestReturn(
+    orderNumber: string,
+    body: { items: { order_item_id: string; qty: number }[]; reason: ReturnReason; note: string },
+  ): Observable<ReturnRequest> {
+    return this.http.post<ReturnRequest>(
+      `${this.base}/me/orders/${encodeURIComponent(orderNumber)}/return`,
+      body,
+    );
+  }
+
+  withdrawReturn(returnNumber: string): Observable<ReturnRequest> {
+    return this.http.post<ReturnRequest>(
+      `${this.base}/me/returns/${encodeURIComponent(returnNumber)}/withdraw`,
+      {},
+    );
   }
 }

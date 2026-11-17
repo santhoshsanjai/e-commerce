@@ -1,14 +1,22 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Icon, MoneyPipe, ORDER_STATUS_LABEL, OrderStatusBadge } from '@shop/shared';
+import { firstValueFrom } from 'rxjs';
+import {
+  apiErrorMessage,
+  Icon,
+  MoneyPipe,
+  ORDER_STATUS_LABEL,
+  OrderStatusBadge,
+} from '@shop/shared';
+import { OrderReturn } from './order-return';
 import { OrdersApi } from './orders.api';
 
 @Component({
   selector: 'buy-order-detail-page',
-  imports: [RouterLink, MoneyPipe, DatePipe, OrderStatusBadge, Icon],
+  imports: [RouterLink, MoneyPipe, DatePipe, OrderStatusBadge, Icon, OrderReturn],
   template: `
     <a routerLink="/orders" class="back"><shr-icon name="chevron-left" /> My orders</a>
     @if (order.isLoading()) {
@@ -50,7 +58,7 @@ import { OrdersApi } from './orders.api';
         <section class="card">
           <h3>Items</h3>
           <ul class="items">
-            @for (item of o.items; track item.sku) {
+            @for (item of o.items; track item.id) {
               <li>
                 <span>
                   <span class="item-name">{{ item.product_name }}</span>
@@ -109,6 +117,47 @@ import { OrdersApi } from './orders.api';
               </p>
             }
           </section>
+          @if (o.can_cancel) {
+            <section class="card cancel">
+              @if (!confirmCancel()) {
+                <p class="muted">
+                  Changed your mind? You can cancel until we hand it to the courier.
+                </p>
+                <button class="btn btn-secondary" type="button" (click)="confirmCancel.set(true)">
+                  Cancel order
+                </button>
+              } @else {
+                <p>
+                  <strong>Cancel order {{ o.order_number }}?</strong>
+                </p>
+                <div class="field">
+                  <label for="cancel-reason">Reason (optional)</label>
+                  <input id="cancel-reason" maxlength="300" #cancelReason />
+                </div>
+                @if (cancelError()) {
+                  <div class="alert-error" role="alert">{{ cancelError() }}</div>
+                }
+                <div class="actions">
+                  <button
+                    class="btn btn-danger"
+                    type="button"
+                    [disabled]="cancelling()"
+                    (click)="cancel(cancelReason.value)"
+                  >
+                    {{ cancelling() ? 'Cancelling…' : 'Yes, cancel it' }}
+                  </button>
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                    (click)="confirmCancel.set(false)"
+                  >
+                    Keep my order
+                  </button>
+                </div>
+              }
+            </section>
+          }
+          <buy-order-return [order]="o" (changed)="order.reload()" />
           <section class="card">
             <h3>Progress</h3>
             <ol class="timeline">
@@ -143,4 +192,21 @@ export class OrderDetailPage {
     const err = this.order.error();
     return err instanceof HttpErrorResponse && err.status === 404;
   });
+
+  protected readonly confirmCancel = signal(false);
+  protected readonly cancelling = signal(false);
+  protected readonly cancelError = signal<string | null>(null);
+
+  protected async cancel(reason: string): Promise<void> {
+    this.cancelling.set(true);
+    this.cancelError.set(null);
+    try {
+      this.order.set(await firstValueFrom(this.api.cancel(this.orderNumber(), reason.trim())));
+      this.confirmCancel.set(false);
+    } catch (err) {
+      this.cancelError.set(apiErrorMessage(err));
+    } finally {
+      this.cancelling.set(false);
+    }
+  }
 }

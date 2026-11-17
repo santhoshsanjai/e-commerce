@@ -193,6 +193,15 @@ a {
     }
   }
 
+  &.btn-danger {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+    color: #fff;
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-danger) 88%, #000);
+    }
+  }
+
   &.btn-ghost {
     background: transparent;
     color: currentColor;

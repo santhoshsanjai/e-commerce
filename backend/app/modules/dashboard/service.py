@@ -9,6 +9,7 @@ from app.modules.courier_import.models import CourierImport, ImportStatus
 from app.modules.dashboard.schemas import Attention, Dashboard, DaySales, LowStockItem
 from app.modules.orders.lifecycle import OrderStatus
 from app.modules.orders.models import Order
+from app.modules.returns import service as returns_service
 from app.shared.timezones import IST
 
 S = OrderStatus
@@ -78,6 +79,7 @@ def build(db: Session, today: date | None = None) -> Dashboard:
             on_hold=counts.get(S.ON_HOLD, 0),
             returning=counts.get(S.RETURN_IN_TRANSIT, 0),
             imports_not_applied=pending_imports or 0,
+            returns_open=returns_service.open_count(db),
             low_stock=[
                 LowStockItem(product_id=i, product_number=n, name=nm, stock_qty=q)
                 for i, n, nm, q in low

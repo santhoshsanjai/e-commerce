@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     default_currency: str = "INR"
     # Flat delivery charge in minor units (decision 8 default: free delivery).
     shipping_fee_minor: int = 0
+    # Days after delivery during which a buyer can ask to return items (ADR 0010).
+    return_window_days: int = 7
 
     login_rate_limit_attempts: int = 5
     login_rate_limit_window_seconds: int = 300

@@ -76,6 +76,10 @@ CANCELLABLE_WITH_RESTOCK = frozenset(
 )
 
 
+# Buyers can cancel their own order until it is handed to the courier.
+BUYER_CANCELLABLE = frozenset({S.PENDING_CONFIRMATION, S.CONFIRMED, S.READY_FOR_DISPATCH})
+
+
 def can_transition(current: OrderStatus, target: OrderStatus) -> bool:
     return target in TRANSITIONS[current]
 

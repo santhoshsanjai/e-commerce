@@ -46,6 +46,7 @@ export class Dashboard {
       !a.on_hold &&
       !a.returning &&
       !a.imports_not_applied &&
+      !a.returns_open &&
       !a.low_stock.length
     );
   });
