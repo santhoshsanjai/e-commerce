@@ -23,6 +23,19 @@ export class CourierImportApi {
     return firstValueFrom(this.http.post<CourierImportDetail>(this.base, body));
   }
 
+  /** The rows that couldn't be applied, as Excel to send back to the courier. */
+  async downloadErrorReport(imp: Pick<CourierImport, 'id' | 'file_name'>): Promise<void> {
+    const blob = await firstValueFrom(
+      this.http.get(`${this.base}/${imp.id}/error-report`, { responseType: 'blob' }),
+    );
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${imp.file_name.replace(/\.xlsx$/i, '')} - rows to fix.xlsx`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
   confirm(id: string): Promise<CourierImportDetail> {
     return firstValueFrom(this.http.post<CourierImportDetail>(`${this.base}/${id}/confirm`, {}));
   }

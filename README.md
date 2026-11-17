@@ -221,3 +221,6 @@ Health checks, logs, alerts, backups, restoring and secret rotation are in
     from an amount, whether prices include GST and the default rate; each product can have its
     own rate. The cart, checkout, order pages and emails show the GST
     ([ADR 0009](docs/adr/0009-delivery-charges-and-gst.md)).
+  - Courier import error report: when a courier file has rows that couldn't be applied, "Download
+    rows to fix" gives an Excel file with each problem. The courier corrects it and it is uploaded
+    again as it is.

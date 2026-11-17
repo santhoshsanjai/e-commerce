@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import AppError
 from app.infrastructure.storage import FileStore
 from app.modules.audit import service as audit
+from app.modules.courier_import import error_report
 from app.modules.courier_import.models import CourierImport, ImportStatus
 from app.modules.courier_import.parser import FileError, RawRow, parse
 from app.modules.courier_import.schemas import CourierImportDetail, CourierImportOut
@@ -251,6 +252,29 @@ def detail(db: Session, record: CourierImport) -> CourierImportDetail:
             "rows": [r["plan"] for r in record.rows],
         }
     )
+
+
+def error_report_file(
+    db: Session, import_id: uuid.UUID, actor: User, request: Request
+) -> tuple[bytes, str]:
+    """The rows that couldn't be applied, to send back to the courier. Audited like other
+    courier file downloads."""
+    record = get(db, import_id)
+    rows = error_report.error_rows(record.rows)
+    if not rows:
+        raise AppError("no_error_rows", "Every row in this file was fine", status.HTTP_409_CONFLICT)
+    audit.record(
+        db,
+        "courier_import.error_report_downloaded",
+        actor_id=actor.id,
+        request=request,
+        entity_type="courier_import",
+        entity_id=str(record.id),
+        after={"rows": len(rows)},
+    )
+    db.commit()
+    stem = record.file_name.rsplit(".", 1)[0][:80] or "courier"
+    return error_report.build(rows), f"{stem} - rows to fix.xlsx"
 
 
 def get(db: Session, import_id: uuid.UUID) -> CourierImport:

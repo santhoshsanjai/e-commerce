@@ -75,6 +75,13 @@ export class CourierImportPage {
     });
   }
 
+  async downloadErrors(): Promise<void> {
+    const current = this.current();
+    if (current) {
+      await this.run(() => this.api.downloadErrorReport(current));
+    }
+  }
+
   async open(item: CourierImport): Promise<void> {
     await this.run(async () => this.current.set(await this.api.get(item.id)));
   }
