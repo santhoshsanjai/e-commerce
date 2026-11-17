@@ -42,6 +42,14 @@ export class CatalogApi {
     return this.http.get<Page<ProductCard>>(`${this.base}/products`, { params });
   }
 
+  /** The canonical lookup, by product number (see product-link.ts). */
+  productByNumber(productNumber: string): Observable<ProductDetail> {
+    return this.http.get<ProductDetail>(
+      `${this.base}/products/by-number/${encodeURIComponent(productNumber)}`,
+    );
+  }
+
+  /** Only for old /products/{slug} links. */
   product(slug: string): Observable<ProductDetail> {
     return this.http.get<ProductDetail>(`${this.base}/products/${encodeURIComponent(slug)}`);
   }

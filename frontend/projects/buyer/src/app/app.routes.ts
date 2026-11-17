@@ -30,6 +30,13 @@ export const routes: Routes = [
     title: 'Shop',
   },
   {
+    // Canonical product address: the product number finds it, the slug is for readability.
+    path: 'p/:slug/:productNumber',
+    loadComponent: () => import('./features/catalog/product-page').then((m) => m.ProductPage),
+    title: 'Product',
+  },
+  {
+    // Old links: the page looks the product up by slug and moves to the address above.
     path: 'products/:slug',
     loadComponent: () => import('./features/catalog/product-page').then((m) => m.ProductPage),
     title: 'Product',
