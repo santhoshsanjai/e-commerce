@@ -83,6 +83,7 @@ export interface Cart {
 }
 
 export interface OrderItem {
+  id: string;
   product_number: string;
   product_name: string;
   sku: string;
@@ -135,6 +136,8 @@ export interface OrderDetail extends OrderSummary {
   delivery_instructions: string;
   /** The courier's tracking number, once known. */
   awb_number: string | null;
+  /** The buyer may still cancel it (before handover to the courier). */
+  can_cancel: boolean;
   timeline: StatusEvent[];
 }
 

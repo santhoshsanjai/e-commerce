@@ -132,6 +132,18 @@ export const routes: Routes = [
         title: 'Storefront · Admin',
       },
       {
+        path: 'returns',
+        canActivate: [permissionGuard('returns.view')],
+        loadComponent: () => import('./features/returns/return-list').then((m) => m.ReturnList),
+        title: 'Returns · Admin',
+      },
+      {
+        path: 'returns/:id',
+        canActivate: [permissionGuard('returns.view')],
+        loadComponent: () => import('./features/returns/return-detail').then((m) => m.ReturnDetail),
+        title: 'Return · Admin',
+      },
+      {
         path: 'charges',
         canActivate: [permissionGuard('settings.manage')],
         loadComponent: () => import('./features/charges/charges-page').then((m) => m.ChargesPage),

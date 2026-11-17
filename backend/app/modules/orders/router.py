@@ -12,6 +12,7 @@ from app.modules.orders.lifecycle import OrderStatus
 from app.modules.orders.schemas import (
     AdminOrderDetail,
     AdminOrderListItem,
+    BuyerCancelIn,
     OrderDetail,
     OrderSummary,
     StatusChangeIn,
@@ -35,6 +36,14 @@ def my_orders(db: DbSession, user: CurrentBuyer, params: Paging) -> Page[OrderSu
 @buyer_router.get("/{order_number}")
 def my_order(order_number: str, db: DbSession, user: CurrentBuyer) -> OrderDetail:
     return service.to_detail(service.get_my_order(db, user, order_number))
+
+
+@buyer_router.post("/{order_number}/cancel", dependencies=[SendQueuedEmails])
+def cancel_my_order(
+    order_number: str, data: BuyerCancelIn, request: Request, db: DbSession, user: CurrentBuyer
+) -> OrderDetail:
+    """Cancel before the order is handed to the courier. The stock goes back on sale."""
+    return service.to_detail(service.cancel_by_buyer(db, user, order_number, data.reason, request))
 
 
 @admin_router.get("")

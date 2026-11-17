@@ -25,6 +25,8 @@ class Attention(BaseModel):
     on_hold: int
     returning: int
     imports_not_applied: int
+    # Return requests waiting for staff: to decide, to receive or to refund.
+    returns_open: int
     low_stock: list[LowStockItem]
 
 

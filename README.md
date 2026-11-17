@@ -227,3 +227,7 @@ Health checks, logs, alerts, backups, restoring and secret rotation are in
   - Product videos: up to 3 MP4 or WebM videos (100 MB each) per product, uploaded on the product
     page in the admin portal and played after the pictures in the shop. The file's contents are
     checked, not its name; QuickTime .mov files are refused with a hint to export as MP4.
+  - Returns and refunds: buyers cancel their own order before it is dispatched, or ask to return
+    items within 7 days of delivery. The admin portal's "Returns" page approves or rejects,
+    marks items received (restocked) and records the refund
+    ([ADR 0010](docs/adr/0010-returns-and-refunds.md)).

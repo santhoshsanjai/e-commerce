@@ -56,7 +56,7 @@ def _clean_tables() -> Iterator[None]:
                 "categories, brands, products, product_skus, product_attributes, product_media, "
                 "addresses, carts, "
                 "cart_items, orders, order_items, order_status_events, storefront_settings, "
-                "email_outbox, shop_charges CASCADE"
+                "email_outbox, shop_charges, return_requests, return_items CASCADE"
             )
         )
         # Put roles back to the seeded defaults: drop custom roles, reset grants.

@@ -10,6 +10,7 @@ from app.modules.audit import service as audit
 from app.modules.catalog.models import ProductSku
 from app.modules.notifications.service import queue_order_email
 from app.modules.orders.lifecycle import (
+    BUYER_CANCELLABLE,
     CANCELLABLE_WITH_RESTOCK,
     REASON_REQUIRED,
     TRANSITIONS,
@@ -71,6 +72,7 @@ def _detail_fields(order: Order) -> dict[str, object]:
         "delivery_instructions": order.delivery_instructions,
         "awb_number": order.awb_number,
         "timeline": [StatusEventOut.model_validate(e) for e in order.events],
+        "can_cancel": order.status in BUYER_CANCELLABLE,
     }
 
 
@@ -255,6 +257,47 @@ def get_my_order(db: Session, user: User, order_number: str) -> Order:
     )
     if order is None:
         raise AppError("order_not_found", "Order not found", status.HTTP_404_NOT_FOUND)
+    return order
+
+
+def cancel_by_buyer(
+    db: Session, user: User, order_number: str, reason: str, request: Request
+) -> Order:
+    """A buyer cancels their own order before it is handed to the courier; stock goes back."""
+    order = db.scalar(
+        select(Order)
+        .where(Order.order_number == order_number, Order.user_id == user.id)
+        .with_for_update()
+    )
+    if order is None:
+        raise AppError("order_not_found", "Order not found", status.HTTP_404_NOT_FOUND)
+    if order.status not in BUYER_CANCELLABLE:
+        raise AppError(
+            "cannot_cancel",
+            "This order is already with the courier, so it can't be cancelled here. "
+            "You can return it after delivery.",
+            status.HTTP_409_CONFLICT,
+        )
+    previous = order.status
+    apply_transition(
+        db,
+        order,
+        OrderStatus.CANCELLED,
+        source=EventSource.BUYER,
+        actor_id=user.id,
+        reason=f"Cancelled by the buyer{': ' + reason if reason else ''}",
+    )
+    audit.record(
+        db,
+        "orders.cancelled_by_buyer",
+        actor_id=user.id,
+        request=request,
+        entity_type="order",
+        entity_id=str(order.id),
+        before={"status": previous},
+        after={"status": OrderStatus.CANCELLED, "reason": reason},
+    )
+    db.commit()
     return order
 
 

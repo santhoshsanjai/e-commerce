@@ -97,6 +97,17 @@
             }
           </li>
         }
+        @if (d.attention.returns_open) {
+          <li>
+            <span
+              ><strong>{{ d.attention.returns_open }}</strong>
+              {{ d.attention.returns_open === 1 ? 'return needs' : 'returns need' }} action</span
+            >
+            @if (can('returns.view')) {
+              <a routerLink="/returns">View</a>
+            }
+          </li>
+        }
         @for (p of d.attention.low_stock; track p.product_id) {
           <li>
             <span>

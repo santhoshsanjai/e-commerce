@@ -23,6 +23,7 @@ from app.modules.dispatch.models import DispatchBatch
 from app.modules.notifications.models import EmailOutbox
 from app.modules.orders.models import Order, OrderItem, OrderStatusEvent
 from app.modules.pricing.models import ShopCharges
+from app.modules.returns.models import ReturnItem, ReturnRequest
 from app.modules.storefront.models import StorefrontSettings
 from app.modules.users.models import User
 
@@ -48,6 +49,8 @@ __all__ = [
     "ProductSku",
     "RateLimitHit",
     "RefreshToken",
+    "ReturnItem",
+    "ReturnRequest",
     "Role",
     "ShopCharges",
     "StorefrontSettings",

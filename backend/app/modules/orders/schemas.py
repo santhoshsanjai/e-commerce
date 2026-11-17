@@ -9,6 +9,7 @@ from app.modules.orders.lifecycle import EventSource, OrderStatus, PaymentMethod
 class OrderItemOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: uuid.UUID
     product_number: str
     product_name: str
     sku: str
@@ -65,6 +66,8 @@ class OrderDetail(OrderSummary):
     # The courier's tracking number, once the courier file has supplied it.
     awb_number: str | None
     timeline: list[StatusEventOut]
+    # The buyer may still cancel it themselves (before handover to the courier).
+    can_cancel: bool
 
 
 class AdminOrderListItem(OrderSummary):
@@ -80,6 +83,15 @@ class AdminOrderDetail(OrderDetail):
     customer_email: str
     # Statuses the lifecycle allows next; anything else needs the override permission.
     allowed_next: list[OrderStatus]
+
+
+class BuyerCancelIn(BaseModel):
+    reason: str = Field(default="", max_length=300)
+
+    @field_validator("reason")
+    @classmethod
+    def _strip(cls, value: str) -> str:
+        return value.strip()
 
 
 class StatusChangeIn(BaseModel):

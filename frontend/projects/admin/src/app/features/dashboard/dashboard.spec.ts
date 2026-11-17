@@ -23,6 +23,7 @@ const DATA = {
     on_hold: 1,
     returning: 0,
     imports_not_applied: 0,
+    returns_open: 0,
     low_stock: [{ product_id: 'p1', product_number: 'P-000001', name: 'Mug', stock_qty: 2 }],
   },
 } as unknown as DashboardData;
