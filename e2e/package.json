@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
-    "@types/node": "22.19.1",
+    "@types/node": "26.6.10",
     "exceljs": "4.4.0",
     "typescript": "6.0.3"
   }
