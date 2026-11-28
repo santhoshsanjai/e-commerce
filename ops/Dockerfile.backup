@@ -1,6 +1,6 @@
 # Nightly database backup task (ops/db-backup.sh): pg_dump matching the database's major version,
 # plus the AWS CLI. Built and pushed by the deploy pipeline; run on a schedule in AWS.
-FROM postgres:18-alpine
+FROM postgres:19-alpine
 RUN apk add --no-cache aws-cli bash
 COPY db-backup.sh db-restore.sh /usr/local/bin/
 USER postgres
