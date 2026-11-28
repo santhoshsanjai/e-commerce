@@ -8,7 +8,7 @@ RUN npm ci --no-audit --no-fund
 COPY . .
 RUN npx ng build ${APP} --configuration production
 
-FROM nginx:1.29-alpine AS runtime
+FROM nginx:1.31-alpine AS runtime
 ARG APP=buyer
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /src/dist/${APP}/browser /usr/share/nginx/html
